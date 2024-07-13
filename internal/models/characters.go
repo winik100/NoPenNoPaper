@@ -31,14 +31,19 @@ type CharacterModel struct {
 }
 
 func (c *CharacterModel) Insert(info PersonalInfo, attributes map[string]int) (int, error) {
-	stmt := "INSERT INTO characters (name, profession, age, gender, residence, birthplace) VALUES (?,?,?,?,?,?);"
-
-	result, err := c.DB.Exec(stmt, info.Name, info.Profession, info.Age, info.Gender, info.Residence, info.Birthplace)
+	stmt1 := "INSERT INTO characters (id) VALUES (null);"
+	result, err := c.DB.Exec(stmt1)
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
 	}
 
-	id, err := result.LastInsertId()
+	stmt2 := "INSERT INTO character_info (character_id, name, profession, age, gender, residence, birthplace) VALUES (?,?,?,?,?,?,?);"
+
+	_, err = c.DB.Exec(stmt2, id, info.Name, info.Profession, info.Age, info.Gender, info.Residence, info.Birthplace)
 	if err != nil {
 		return 0, err
 	}
@@ -47,12 +52,12 @@ func (c *CharacterModel) Insert(info PersonalInfo, attributes map[string]int) (i
 }
 
 func (c *CharacterModel) Get(id int) (Character, error) {
-	stmt := "SELECT id, name, profession, age, gender, residence, birthplace FROM characters WHERE id=?;"
+	stmt := "SELECT name, profession, age, gender, residence, birthplace FROM character_info WHERE id=?;"
 
 	result := c.DB.QueryRow(stmt, id)
 	var character Character
 
-	err := result.Scan(&character.ID, &character.Info.Name, &character.Info.Profession, &character.Info.Age, &character.Info.Gender, &character.Info.Residence, &character.Info.Birthplace)
+	err := result.Scan(&character.Info.Name, &character.Info.Profession, &character.Info.Age, &character.Info.Gender, &character.Info.Residence, &character.Info.Birthplace)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Character{}, ErrNoRecord
@@ -60,11 +65,12 @@ func (c *CharacterModel) Get(id int) (Character, error) {
 		return Character{}, err
 	}
 
+	character.ID = id
 	return character, nil
 }
 
 func (c *CharacterModel) Latest() ([]Character, error) {
-	stmt := "SELECT id, name, profession, age, gender, residence, birthplace FROM characters ORDER BY id DESC LIMIT 5;"
+	stmt := "SELECT character_id, name, profession, age, gender, residence, birthplace FROM character_info ORDER BY character_id DESC LIMIT 5;"
 
 	rows, err := c.DB.Query(stmt)
 	if err != nil {
