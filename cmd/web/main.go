@@ -2,31 +2,44 @@ package main
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"flag"
 	"html/template"
-	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/alexedwards/scs/v2"
-	"github.com/winik100/NoPenNoPaper/ui"
+	"github.com/go-playground/form/v4"
+	"github.com/winik100/NoPenNoPaper/internal/models"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type application struct {
 	log            *slog.Logger
+	characters     models.CharacterModelInterface
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
+	formDecoder    *form.Decoder
 }
 
 func main() {
 
 	port := flag.String("port", ":8080", "HTTP Port")
+	dsn := flag.String("dsn", "web:mellon@/NoPenNoPaper", "MySQL Data Source Name")
 	flag.Parse()
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	db, err := openDB(*dsn)
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
+
 	cache, err := newTemplateCache()
 	if err != nil {
 		log.Error(err.Error())
@@ -34,13 +47,18 @@ func main() {
 	}
 
 	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
 	sessionManager.Cookie.Secure = true
 
+	formDecoder := form.NewDecoder()
+
 	app := &application{
 		log:            log,
+		characters:     &models.CharacterModel{DB: db},
 		templateCache:  cache,
 		sessionManager: sessionManager,
+		formDecoder:    formDecoder,
 	}
 
 	tlsConfig := &tls.Config{
@@ -63,27 +81,17 @@ func main() {
 	os.Exit(1)
 }
 
-func newTemplateCache() (map[string]*template.Template, error) {
-	cache := map[string]*template.Template{}
-	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl.html")
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, page := range pages {
-		name := filepath.Base(page)
-
-		patterns := []string{
-			"html/base.tmpl.html",
-			"html/partials/*.tmpl.html",
-			page,
-		}
-		ts, err := template.New(name).ParseFS(ui.Files, patterns...)
-		if err != nil {
-			return nil, err
-		}
-
-		cache[name] = ts
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
 	}
-	return cache, nil
+
+	return db, nil
 }

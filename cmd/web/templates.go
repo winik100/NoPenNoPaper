@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+
+	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
 type templateData struct {
+	Characters []models.Character
+	Form       any
 }
 
-func (app *application) newTemplateData(r *http.Request) templateData {
+func (app *application) newTemplateData() templateData {
 	return templateData{}
 }
 
@@ -17,14 +21,14 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, statusCod
 	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
-		app.log.Error(err.Error())
+		app.serverError(w, r, err)
 		return
 	}
 
 	buf := new(bytes.Buffer)
 	err := ts.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		app.log.Error(err.Error())
+		app.serverError(w, r, err)
 		return
 	}
 	w.WriteHeader(statusCode)
