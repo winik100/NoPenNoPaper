@@ -13,16 +13,20 @@ type characterCreateForm struct {
 	Gender     string `form:"gender"`
 	Residence  string `form:"residence"`
 	Birthplace string `form:"birthplace"`
+
+	ST int `form:"st"`
+	GE int `form:"ge"`
+	MA int `form:"ma"`
+	KO int `form:"ko"`
+	ER int `form:"er"`
+	BI int `form:"bi"`
+	GR int `form:"gr"`
+	IN int `form:"in"`
+	BW int `form:"bw"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	characters, err := app.characters.Latest()
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
 	data := app.newTemplateData()
-	data.Characters = characters
 
 	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
@@ -51,7 +55,18 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		Residence:  form.Residence,
 		Birthplace: form.Birthplace}
 
-	_, err = app.characters.Insert(personalInfo, map[string]int{})
+	attributes := models.Attributes{
+		ST: form.ST,
+		GE: form.GE,
+		MA: form.MA,
+		KO: form.KO,
+		ER: form.ER,
+		BI: form.BI,
+		GR: form.GR,
+		IN: form.IN,
+		BW: form.BW,
+	}
+	_, err = app.characters.Insert(personalInfo, attributes)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

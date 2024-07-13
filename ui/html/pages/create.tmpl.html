@@ -2,30 +2,92 @@
 
 {{define "main"}}
 <form action='/create' method='POST'>
-    <div>
-        <label>Name:</label>
-        <input type='text' name='name' value='{{.Form.Name}}'>
-    </div>
-    <div>
-        <label>Beruf:</label>
-        <input type='text' name='profession' value='{{.Form.Profession}}'>
-    </div>
-    <div>
-        <label>Alter:</label>
-        <input type='text' name='age' {{if (eq .Form.Age 0)}} value='' {{else}} value='{{.Form.Age}}' {{end}}>
-    </div>
-    <div>
-        <label>Geschlecht:</label>
-        <input type='radio' name='gender'value='männlich' checked> Männlich
-        <input type='radio' name='gender'value='weiblich'> Weiblich
-    </div>
-    <div>
-        <label>Wohnort:</label>
-        <input type='text' name='residence' value='{{.Form.Residence}}'>
-    </div>
-    <div>
-        <label>Geburtsort:</label>
-        <input type='text' name='birthplace' value='{{.Form.Birthplace}}'>
+    <div id="info">
+        <table>
+            <tr>
+                <td>
+                    <label>Name:</label>
+                    <input type='text' name='name' value='{{.Form.Name}}'>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Beruf:</label>
+                    <input type='text' name='profession' value='{{.Form.Profession}}'>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Alter:</label>
+                    <input type='text' name='age' {{if (eq .Form.Age 0)}} value='' {{else}} value='{{.Form.Age}}' {{end}}>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Geschlecht:</label>
+                    <input type='radio' name='gender' value='männlich' {{if (eq .Form.Gender "männlich")}} checked {{end}} checked> Männlich
+                    <input type='radio' name='gender' value='weiblich' {{if (eq .Form.Gender "männlich")}} checked {{end}}> Weiblich
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Wohnort:</label>
+                    <input type='text' name='residence' value='{{.Form.Residence}}'>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Geburtsort:</label>
+                    <input type='text' name='birthplace' value='{{.Form.Birthplace}}'>
+                </td>
+            </tr>
+        </table>
+    </div> 
+    <div id="attributes">
+        <table>
+            <tr>
+                <td>
+                    <label>ST</label>
+                    <input type='text' name='st' {{if (eq .Form.ST 0)}} value='' {{else}} value='{{.Form.ST}}' {{end}}>
+                </td>
+                <td>
+                    <label>GE</label>
+                    <input type='text' name='ge' {{if (eq .Form.GE 0)}} value='' {{else}} value='{{.Form.GE}}' {{end}}>
+                </td>
+                <td>
+                    <label>MA</label>
+                    <input type='text' name='ma' {{if (eq .Form.MA 0)}} value='' {{else}} value='{{.Form.MA}}' {{end}}>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>KO</label>
+                    <input type='text' name='ko' {{if (eq .Form.KO 0)}} value='' {{else}} value='{{.Form.KO}}' {{end}}>
+                </td>
+                <td>
+                    <label>ER</label>
+                    <input type='text' name='er' {{if (eq .Form.ER 0)}} value='' {{else}} value='{{.Form.ER}}' {{end}}>
+                </td>
+                <td>
+                    <label>BI</label>
+                    <input type='text' name='bi' {{if (eq .Form.BI 0)}} value='' {{else}} value='{{.Form.BI}}' {{end}}>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>GR</label>
+                    <input type='text' name='gr' {{if (eq .Form.GR 0)}} value='' {{else}} value='{{.Form.GR}}' {{end}}>
+                </td>
+                <td>
+                    <label>IN</label>
+                    <input type='text' name='in' {{if (eq .Form.IN 0)}} value='' {{else}} value='{{.Form.IN}}' {{end}}>
+                </td>
+                <td>
+                    <label>BW</label>
+                    <input type='text' name='bw' {{if (eq .Form.BW 0)}} value='' {{else}} value='{{.Form.BW}}' {{end}}>
+                </td>
+            </tr>
+        </table>
     </div>
     <div>
         <input type="submit" value="Charakter erstellen">
