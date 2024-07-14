@@ -2,6 +2,7 @@
 
 {{define "main"}}
 <form action='/create' method='POST'>
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     {{range .Form.GenericErrors}}
         <div class='error'>{{.}}</div>
     {{end}}

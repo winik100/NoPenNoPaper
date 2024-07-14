@@ -5,16 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/justinas/nosurf"
 	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
 type templateData struct {
 	Characters []models.Character
 	Form       any
+	CSRFToken  string
 }
 
-func (app *application) newTemplateData() templateData {
-	return templateData{}
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		CSRFToken: nosurf.Token(r),
+	}
 }
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, statusCode int, page string, data templateData) {

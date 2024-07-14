@@ -30,13 +30,13 @@ type characterCreateForm struct {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData()
+	data := app.newTemplateData(r)
 
 	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
 
 func (app *application) create(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData()
+	data := app.newTemplateData(r)
 	data.Form = characterCreateForm{}
 
 	app.render(w, r, http.StatusOK, "create.tmpl.html", data)
@@ -96,7 +96,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	form.CheckField(validators.PermittedValue(attributes.BW, 10, 20, 30, 40, 50, 60, 70, 80, 90), "bw", "Ungültiger Wert.")
 
 	if !form.Valid() {
-		data := app.newTemplateData()
+		data := app.newTemplateData(r)
 		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
 		return
