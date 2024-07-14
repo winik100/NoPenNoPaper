@@ -2,6 +2,14 @@ CREATE DATABASE IF NOT EXISTS NoPenNoPaper CHARACTER SET utf8mb4 COLLATE utf8mb4
 
 USE NoPenNoPaper;
 
+CREATE TABLE IF NOT EXISTS sessions (
+    token CHAR(43) PRIMARY KEY,
+    data BLOB NOT NULL,
+    expiry TIMESTAMP(6) NOT NULL
+);
+
+CREATE INDEX sessions_expiry_idx ON sessions (expiry);
+
 CREATE TABLE IF NOT EXISTS characters (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT
 );
@@ -30,3 +38,12 @@ CREATE TABLE IF NOT EXISTS character_attributes (
     bw INTEGER NOT NULL,
     FOREIGN KEY (character_id) REFERENCES characters(id)
 );
+
+CREATE TABLE IF NOT EXISTS character_stats (
+    character_id INTEGER NOT NULL PRIMARY KEY,
+    tp INTEGER NOT NULL,
+    sta INTEGER NOT NULL,
+    mp INTEGER NOT NULL,
+    luck INTEGER NOT NULL,
+    FOREIGN KEY (character_id) REFERENCES characters(id)
+)

@@ -11,4 +11,7 @@ require (
 	github.com/justinas/nosurf v1.1.1
 )
 
-require filippo.io/edwards25519 v1.1.0 // indirect
+require (
+	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/justinian/dice v1.0.2 // indirect
+)

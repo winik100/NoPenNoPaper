@@ -3,37 +3,19 @@ package models
 import (
 	"database/sql"
 	"errors"
+
+	"github.com/justinian/dice"
 )
 
-type PersonalInfo struct {
-	Name       string
-	Profession string
-	Age        string
-	Gender     string
-	Residence  string
-	Birthplace string
-}
-
-type Attributes struct {
-	ST int
-	GE int
-	MA int
-	KO int
-	ER int
-	BI int
-	GR int
-	IN int
-	BW int
-}
-
 type Character struct {
-	ID         int
-	Info       map[string]string
-	Attributes map[string]int
+	ID                int
+	Info              map[string]string
+	Attributes        map[string]int
+	DerivedAttributes map[string]int
 }
 
 type CharacterModelInterface interface {
-	Insert(info map[string]string, attributes map[string]int) (int, error)
+	Insert(character Character) (int, error)
 	Get(id int) (Character, error)
 }
 
@@ -41,9 +23,15 @@ type CharacterModel struct {
 	DB *sql.DB
 }
 
-func (c *CharacterModel) Insert(info map[string]string, attributes map[string]int) (int, error) {
+func (c *CharacterModel) Insert(character Character) (int, error) {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
 	stmt := "INSERT INTO characters (id) VALUES (null);"
-	result, err := c.DB.Exec(stmt)
+	result, err := tx.Exec(stmt)
 	if err != nil {
 		return 0, err
 	}
@@ -53,13 +41,27 @@ func (c *CharacterModel) Insert(info map[string]string, attributes map[string]in
 	}
 
 	stmt = "INSERT INTO character_info (character_id, name, profession, age, gender, residence, birthplace) VALUES (?,?,?,?,?,?,?);"
-	_, err = c.DB.Exec(stmt, id, info["name"], info["profession"], info["age"], info["gender"], info["residence"], info["birthplace"])
+	_, err = tx.Exec(stmt, id, character.Info["name"], character.Info["profession"], character.Info["age"], character.Info["gender"], character.Info["residence"], character.Info["birthplace"])
 	if err != nil {
 		return 0, err
 	}
 
 	stmt = "INSERT INTO character_attributes (character_id, st, ge, ma, ko, er, bi, gr, i, bw) VALUES (?,?,?,?,?,?,?,?,?,?);"
-	_, err = c.DB.Exec(stmt, id, attributes["ST"], attributes["GE"], attributes["MA"], attributes["KO"], attributes["ER"], attributes["BI"], attributes["GR"], attributes["IN"], attributes["BW"])
+	_, err = tx.Exec(stmt, id, character.Attributes["st"], character.Attributes["ge"], character.Attributes["ma"],
+		character.Attributes["ko"], character.Attributes["er"], character.Attributes["bi"],
+		character.Attributes["gr"], character.Attributes["in"], character.Attributes["bw"])
+	if err != nil {
+		return 0, err
+	}
+
+	derivedAttributes := character.deriveAttributes()
+	stmt = "INSERT INTO character_stats (character_id, tp, sta, mp, luck) VALUES (?,?,?,?,?);"
+	_, err = tx.Exec(stmt, id, derivedAttributes["tp"], derivedAttributes["sta"], derivedAttributes["mp"], derivedAttributes["luck"])
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return 0, err
 	}
@@ -94,4 +96,23 @@ func (c *CharacterModel) Get(id int) (Character, error) {
 
 	character.ID = id
 	return character, nil
+}
+
+func (c *Character) deriveAttributes() map[string]int {
+	tp := (c.Attributes["ko"] + c.Attributes["gr"]) / 10
+	sta := c.Attributes["ma"]
+	mp := c.Attributes["ma"] / 5
+
+	res, _, err := dice.Roll("3d6kh3")
+	if err != nil {
+		return nil
+	}
+	luck := res.Int() * 5
+
+	return map[string]int{
+		"tp":   tp,
+		"sta":  sta,
+		"mp":   mp,
+		"luck": luck,
+	}
 }
