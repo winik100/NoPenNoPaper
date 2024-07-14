@@ -2,43 +2,64 @@
 
 {{define "main"}}
 <form action='/create' method='POST'>
+    {{range .Form.GenericErrors}}
+        <div class='error'>{{.}}</div>
+    {{end}}
     <div id="info">
         <table>
             <tr>
                 <td>
                     <label>Name:</label>
                     <input type='text' name='name' value='{{.Form.Name}}'>
+                    {{with .Form.FieldErrors.name}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>Beruf:</label>
                     <input type='text' name='profession' value='{{.Form.Profession}}'>
+                    {{with .Form.FieldErrors.profession}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>Alter:</label>
                     <input type='text' name='age' {{if (eq .Form.Age 0)}} value='' {{else}} value='{{.Form.Age}}' {{end}}>
+                    {{with .Form.FieldErrors.age}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>Geschlecht:</label>
                     <input type='radio' name='gender' value='männlich' {{if (eq .Form.Gender "männlich")}} checked {{end}} checked> Männlich
-                    <input type='radio' name='gender' value='weiblich' {{if (eq .Form.Gender "männlich")}} checked {{end}}> Weiblich
+                    <input type='radio' name='gender' value='weiblich' {{if (eq .Form.Gender "weiblich")}} checked {{end}}> Weiblich
+                    {{with .Form.FieldErrors.gender}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>Wohnort:</label>
                     <input type='text' name='residence' value='{{.Form.Residence}}'>
+                    {{with .Form.FieldErrors.residence}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>Geburtsort:</label>
                     <input type='text' name='birthplace' value='{{.Form.Birthplace}}'>
+                    {{with .Form.FieldErrors.birthplace}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
         </table>
@@ -49,42 +70,69 @@
                 <td>
                     <label>ST</label>
                     <input type='text' name='st' {{if (eq .Form.ST 0)}} value='' {{else}} value='{{.Form.ST}}' {{end}}>
+                    {{with .Form.FieldErrors.st}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
                 <td>
                     <label>GE</label>
                     <input type='text' name='ge' {{if (eq .Form.GE 0)}} value='' {{else}} value='{{.Form.GE}}' {{end}}>
+                    {{with .Form.FieldErrors.ge}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
                 <td>
                     <label>MA</label>
                     <input type='text' name='ma' {{if (eq .Form.MA 0)}} value='' {{else}} value='{{.Form.MA}}' {{end}}>
+                    {{with .Form.FieldErrors.ma}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>KO</label>
                     <input type='text' name='ko' {{if (eq .Form.KO 0)}} value='' {{else}} value='{{.Form.KO}}' {{end}}>
+                    {{with .Form.FieldErrors.ko}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
                 <td>
                     <label>ER</label>
                     <input type='text' name='er' {{if (eq .Form.ER 0)}} value='' {{else}} value='{{.Form.ER}}' {{end}}>
+                    {{with .Form.FieldErrors.er}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
                 <td>
                     <label>BI</label>
                     <input type='text' name='bi' {{if (eq .Form.BI 0)}} value='' {{else}} value='{{.Form.BI}}' {{end}}>
+                    {{with .Form.FieldErrors.bi}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
             <tr>
                 <td>
                     <label>GR</label>
                     <input type='text' name='gr' {{if (eq .Form.GR 0)}} value='' {{else}} value='{{.Form.GR}}' {{end}}>
+                    {{with .Form.FieldErrors.gr}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
                 <td>
                     <label>IN</label>
                     <input type='text' name='in' {{if (eq .Form.IN 0)}} value='' {{else}} value='{{.Form.IN}}' {{end}}>
+                    {{with .Form.FieldErrors.in}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
                 <td>
                     <label>BW</label>
                     <input type='text' name='bw' {{if (eq .Form.BW 0)}} value='' {{else}} value='{{.Form.BW}}' {{end}}>
+                    {{with .Form.FieldErrors.bw}}
+                        <label class='error'>{{.}}</label>
+                    {{end}}
                 </td>
             </tr>
         </table>
