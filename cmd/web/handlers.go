@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 
+	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
@@ -22,11 +23,16 @@ type characterCreateForm struct {
 	BI int `form:"bi"`
 	GR int `form:"gr"`
 	IN int `form:"in"`
-	BW int `form:"bw"`
+	BW int
 
 	validators.FormValidator `form:"-"`
 }
 
+func newCharacterCreateForm() characterCreateForm {
+	return characterCreateForm{
+		BW: 8,
+	}
+}
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
@@ -41,7 +47,7 @@ func (app *application) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
-	var form characterCreateForm
+	form := newCharacterCreateForm()
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -80,7 +86,9 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for key, attr := range attributes {
-		form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
+		if key != "bw" {
+			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
+		}
 	}
 
 	if !validators.ValidAttributeDistribution(attributes) {
@@ -94,7 +102,10 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.characters.Insert(info, attributes)
+	_, err = app.characters.Insert(models.Character{
+		Info:       info,
+		Attributes: attributes,
+	})
 	if err != nil {
 		app.serverError(w, r, err)
 		return

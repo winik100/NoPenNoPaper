@@ -62,7 +62,7 @@ func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 }
 
 func ValidAttributeDistribution(attributes map[string]int) bool {
-	spendable := []int{40, 40, 50, 50, 50, 60, 60, 70, 80}
+	spendable := []int{40, 50, 50, 50, 60, 60, 70, 80}
 
 	for _, attrValue := range attributes {
 		spendable = removeIfPresent(spendable, attrValue)

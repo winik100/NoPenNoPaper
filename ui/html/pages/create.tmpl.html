@@ -130,10 +130,7 @@
                 </td>
                 <td>
                     <label>BW</label>
-                    <input type='text' name='bw' {{if (eq .Form.BW 0)}} value='' {{else}} value='{{.Form.BW}}' {{end}}>
-                    {{with .Form.FieldErrors.bw}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
+                    <input type='text' name='bw' value="8" disabled>
                 </td>
             </tr>
         </table>
