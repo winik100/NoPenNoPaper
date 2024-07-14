@@ -2,6 +2,7 @@ package validators
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 )
@@ -46,10 +47,34 @@ func MaxChars(value string, n int) bool {
 	return utf8.RuneCountInString(value) <= n
 }
 
-func InBetween(value, low, high int) bool {
-	return low <= value && value <= high
+func IsInteger(value string) bool {
+	_, err := strconv.Atoi(value)
+	return err == nil
+}
+
+func InBetween(value string, low, high int) bool {
+	v, _ := strconv.Atoi(value)
+	return low <= v && v <= high
 }
 
 func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 	return slices.Contains(permittedValues, value)
+}
+
+func ValidAttributeDistribution(attributes map[string]int) bool {
+	spendable := []int{40, 40, 50, 50, 50, 60, 60, 70, 80}
+
+	for _, attrValue := range attributes {
+		spendable = removeIfPresent(spendable, attrValue)
+	}
+	return len(spendable) == 0
+}
+
+func removeIfPresent(s []int, value int) []int {
+	for i, v := range s {
+		if v == value {
+			return append(s[:i], s[i+1:]...)
+		}
+	}
+	return s
 }

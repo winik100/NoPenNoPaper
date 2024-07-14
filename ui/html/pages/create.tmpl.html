@@ -29,7 +29,7 @@
             <tr>
                 <td>
                     <label>Alter:</label>
-                    <input type='text' name='age' {{if (eq .Form.Age 0)}} value='' {{else}} value='{{.Form.Age}}' {{end}}>
+                    <input type='text' name='age' value='{{.Form.Age}}'>
                     {{with .Form.FieldErrors.age}}
                         <label class='error'>{{.}}</label>
                     {{end}}
