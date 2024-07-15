@@ -11,7 +11,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
-	dynamicChain := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
+	dynamicChain := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate, app.Restrict)
 
 	mux.Handle("GET /{$}", dynamicChain.ThenFunc(app.home))
 	mux.Handle("GET /signup", dynamicChain.ThenFunc(app.signup))

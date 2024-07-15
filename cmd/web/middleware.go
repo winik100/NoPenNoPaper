@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/justinas/nosurf"
+	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
 func headers(next http.Handler) http.Handler {
@@ -92,5 +94,37 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 		//dont allow caching for pages requiring authentication
 		w.Header().Add("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
+	})
+}
+
+func permissible(role string, url string) bool {
+	return slices.Contains(models.Permissions[role], url)
+}
+
+func (app *application) Restrict(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		if id == 0 {
+			app.sessionManager.Put(r.Context(), "role", models.RoleAnon)
+			if permissible(models.RoleAnon, r.URL.Path) {
+				next.ServeHTTP(w, r)
+				return
+			}
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		role, err := app.users.GetRole(id)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		if permissible(role, r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		w.WriteHeader(http.StatusUnauthorized)
 	})
 }

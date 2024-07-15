@@ -3,5 +3,6 @@ USE NoPenNoPaper;
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(30) NOT NULL,
-    hashed_password VARCHAR(60) NOT NULL
+    hashed_password VARCHAR(60) NOT NULL,
+    role VARCHAR(10) NOT NULL
 );

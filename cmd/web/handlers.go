@@ -202,6 +202,13 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+	role, err := app.users.GetRole(id)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	app.sessionManager.Put(r.Context(), "role", role)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -213,7 +220,7 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-
+	app.sessionManager.Put(r.Context(), "role", models.RoleAnon)
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

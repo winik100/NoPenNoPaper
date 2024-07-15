@@ -17,6 +17,7 @@ type UserModelInterface interface {
 	Insert(name, password string) error
 	Authenticate(name, password string) (int, error)
 	Exists(id int) (bool, error)
+	GetRole(id int) (string, error)
 }
 
 type UserModel struct {
@@ -29,8 +30,8 @@ func (u *UserModel) Insert(name, password string) error {
 		return err
 	}
 
-	stmt := "INSERT INTO users (name, hashed_password) VALUES (?,?);"
-	_, err = u.DB.Exec(stmt, name, hashedPassword)
+	stmt := "INSERT INTO users (name, hashed_password, role) VALUES (?,?,?);"
+	_, err = u.DB.Exec(stmt, name, hashedPassword, RolePlayer)
 	if err != nil {
 		return err
 	}
@@ -70,4 +71,16 @@ func (u *UserModel) Exists(id int) (bool, error) {
 	err := u.DB.QueryRow(stmt, id).Scan(&exists)
 
 	return exists, err
+}
+
+func (u *UserModel) GetRole(id int) (string, error) {
+	stmt := "SELECT role FROM users WHERE id=?;"
+
+	var role string
+	err := u.DB.QueryRow(stmt, id).Scan(&role)
+	if err != nil {
+		return "", err
+	}
+
+	return role, nil
 }
