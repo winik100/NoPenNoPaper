@@ -8,9 +8,9 @@
         <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700'>
     </head>
     <body>
-        <header>
-            <h1><a href='/'>No Pen No Paper</a></h1>
-        </header>
+        {{with .Flash}}
+            <div class="flash">{{.}}</div>
+        {{end}}
         {{template "nav" .}}
         <main>
             {{template "main" .}}

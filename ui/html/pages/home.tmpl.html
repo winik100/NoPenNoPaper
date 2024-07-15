@@ -1,31 +1,5 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-    <h2>Latest Characters</h2>
-    {{if .Characters}}
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Beruf</th>
-            <th>Alter</th>
-            <th>Geschlecht</th>
-            <th>Wohnort</th>
-            <th>Geburtsort</th>
-        </tr>
-        {{range .Characters}}
-        <tr>
-            <td>{{.ID}}</td>
-            <td>{{.Info.Name}}</td>
-            <td>{{.Info.Profession}}</td>
-            <td>{{.Info.Age}}</td>
-            <td>{{.Info.Gender}}</td>
-            <td>{{.Info.Residence}}</td>
-            <td>{{.Info.Birthplace}}</td>
-        </tr>
-        {{end}}
-    </table>
-    {{else}}
     <p>There's nothing to see here... yet!</p>
-    {{end}}
 {{end}}
