@@ -5,4 +5,3 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(30) NOT NULL,
     hashed_password VARCHAR(60) NOT NULL
 );
-
