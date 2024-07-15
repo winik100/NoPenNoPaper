@@ -15,7 +15,7 @@ type Character struct {
 }
 
 type CharacterModelInterface interface {
-	Insert(character Character) (int, error)
+	Insert(character Character, created_by int) (int, error)
 	Get(id int) (Character, error)
 }
 
@@ -23,15 +23,15 @@ type CharacterModel struct {
 	DB *sql.DB
 }
 
-func (c *CharacterModel) Insert(character Character) (int, error) {
+func (c *CharacterModel) Insert(character Character, created_by int) (int, error) {
 	tx, err := c.DB.Begin()
 	if err != nil {
 		return 0, err
 	}
 	defer tx.Rollback()
 
-	stmt := "INSERT INTO characters (id) VALUES (null);"
-	result, err := tx.Exec(stmt)
+	stmt := "INSERT INTO characters (created_by) VALUES (?);"
+	result, err := tx.Exec(stmt, created_by)
 	if err != nil {
 		return 0, err
 	}

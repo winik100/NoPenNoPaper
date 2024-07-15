@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/winik100/NoPenNoPaper/internal/models"
@@ -34,8 +35,7 @@ func newCharacterCreateForm() characterCreateForm {
 	}
 }
 
-type signupForm struct {
-	ID                       int    `form:"id"`
+type userForm struct {
 	Name                     string `form:"name"`
 	Password                 string `form:"password"`
 	validators.FormValidator `form:"-"`
@@ -113,7 +113,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	_, err = app.characters.Insert(models.Character{
 		Info:       info,
 		Attributes: attributes,
-	})
+	}, app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -124,21 +124,21 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = signupForm{}
+	data.Form = userForm{}
 	app.render(w, r, http.StatusOK, "signup.tmpl.html", data)
 }
 
 func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
-	var form signupForm
+	var form userForm
 	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	form.CheckField(validators.NotBlank(form.Name), "name", "This field cannot be blank.")
-	form.CheckField(validators.NotBlank(form.Password), "password", "This field cannot be blank.")
-	form.CheckField(validators.MinChars(form.Password, 8), "password", "Password must contain at least 8 characters.")
+	form.CheckField(validators.NotBlank(form.Name), "name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Password), "password", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.MinChars(form.Password, 8), "password", "Passwort muss mindestens 8 Zeichen lang sein.")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -153,7 +153,67 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please Login.")
+	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich registriert! Bitte einloggen.")
 
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) login(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = userForm{}
+	app.render(w, r, http.StatusOK, "login.tmpl.html", data)
+}
+
+func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
+	var form userForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validators.NotBlank(form.Name), "name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Password), "password", "Dieses Feld kann nicht leer sein.")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+		return
+	}
+
+	id, err := app.users.Authenticate(form.Name, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddGenericError("Name und/oder Password sind falsch.")
+
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl.html", data)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+
+	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

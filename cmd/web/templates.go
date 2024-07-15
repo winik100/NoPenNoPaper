@@ -10,14 +10,18 @@ import (
 )
 
 type templateData struct {
-	Characters []models.Character
-	Form       any
-	CSRFToken  string
+	Characters      []models.Character
+	Form            any
+	CSRFToken       string
+	Flash           string
+	IsAuthenticated bool
 }
 
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
-		CSRFToken: nosurf.Token(r),
+		CSRFToken:       nosurf.Token(r),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
 	}
 }
 
