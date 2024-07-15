@@ -33,6 +33,14 @@ func newCharacterCreateForm() characterCreateForm {
 		BW: 8,
 	}
 }
+
+type signupForm struct {
+	ID                       int    `form:"id"`
+	Name                     string `form:"name"`
+	Password                 string `form:"password"`
+	validators.FormValidator `form:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 
@@ -110,6 +118,42 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) signup(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = signupForm{}
+	app.render(w, r, http.StatusOK, "signup.tmpl.html", data)
+}
+
+func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
+	var form signupForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validators.NotBlank(form.Name), "name", "This field cannot be blank.")
+	form.CheckField(validators.NotBlank(form.Password), "password", "This field cannot be blank.")
+	form.CheckField(validators.MinChars(form.Password, 8), "password", "Password must contain at least 8 characters.")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+		return
+	}
+
+	err = app.users.Insert(form.Name, form.Password)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	//app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please Login.")
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

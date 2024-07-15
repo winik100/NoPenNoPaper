@@ -21,6 +21,7 @@ import (
 type application struct {
 	log            *slog.Logger
 	characters     models.CharacterModelInterface
+	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
 	formDecoder    *form.Decoder
@@ -56,6 +57,7 @@ func main() {
 	app := &application{
 		log:            log,
 		characters:     &models.CharacterModel{DB: db},
+		users:          &models.UserModel{DB: db},
 		templateCache:  cache,
 		sessionManager: sessionManager,
 		formDecoder:    formDecoder,
