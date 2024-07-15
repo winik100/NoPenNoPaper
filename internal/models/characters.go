@@ -84,9 +84,19 @@ func (c *CharacterModel) Get(id int) (Character, error) {
 
 	stmt = "SELECT st, ge, ma, ko, er, bi, gr, i, bw FROM character_attributes WHERE character_id=?;"
 	result = c.DB.QueryRow(stmt, id)
-	err = result.Scan(character.Attributes["ST"], character.Attributes["GE"], character.Attributes["MA"],
-		character.Attributes["KO"], character.Attributes["ER"], character.Attributes["BI"],
-		character.Attributes["GR"], character.Attributes["IN"], character.Attributes["BW"])
+	err = result.Scan(character.Attributes["st"], character.Attributes["ge"], character.Attributes["ma"],
+		character.Attributes["ko"], character.Attributes["er"], character.Attributes["bi"],
+		character.Attributes["gr"], character.Attributes["in"], character.Attributes["bw"])
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Character{}, ErrNoRecord
+		}
+		return Character{}, err
+	}
+
+	stmt = "SELECT tp, sta, mp, luck FROM character_stats WHERE character_id=?;"
+	result = c.DB.QueryRow(stmt, id)
+	err = result.Scan(character.DerivedAttributes["tp"], character.DerivedAttributes["sta"], character.DerivedAttributes["mp"], character.DerivedAttributes["luck"])
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Character{}, ErrNoRecord

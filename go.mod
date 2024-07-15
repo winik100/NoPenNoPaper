@@ -14,4 +14,5 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/justinian/dice v1.0.2 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
 )
