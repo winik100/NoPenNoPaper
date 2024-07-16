@@ -11,6 +11,7 @@ import (
 
 type templateData struct {
 	Characters      []models.Character
+	Character       models.Character
 	User            models.User
 	Form            any
 	CSRFToken       string

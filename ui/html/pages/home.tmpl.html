@@ -1,5 +1,24 @@
 {{define "title"}}Home{{end}}
 
 {{define "main"}}
-    <p>There's nothing to see here... yet!</p>
+    {{if .IsAuthenticated}}
+        {{if .Characters}}
+        <table>
+            <tr>
+                <th>Charakter-ID</th>
+                <th>Charaktername</th>
+            </tr>
+            {{range .Characters}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td><a href='/characters/{{.ID}}'>{{.Info.Name}}</a></td>
+            </tr>
+            {{end}}
+        </table>
+        {{else}}
+        <p>Du hast noch keine Charaktere erstellt.</p>
+        {{end}}
+    {{else}}
+        <p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>
+    {{end}}
 {{end}}

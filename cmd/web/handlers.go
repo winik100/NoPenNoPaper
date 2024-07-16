@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
@@ -42,8 +44,20 @@ type userForm struct {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	if userId == 0 {
+		data := app.newTemplateData(r)
+		app.render(w, r, http.StatusOK, "home.tmpl.html", data)
+		return
+	}
 
+	characters, err := app.characters.GetAll(userId)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := app.newTemplateData(r)
+	data.Characters = characters
 	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
 
@@ -115,6 +129,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		Info:       info,
 		Attributes: attributes,
 	}, app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -221,21 +236,29 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-	app.sessionManager.Put(r.Context(), "role", models.RoleAnon)
+	app.sessionManager.Put(r.Context(), "role", RoleAnon)
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (app *application) viewPlayer(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
-
-	characters, err := app.characters.GetAll(userId)
+func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		app.serverError(w, r, err)
+		http.NotFound(w, r)
+		return
+	}
+
+	character, err := app.characters.Get(id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
 		return
 	}
 
 	data := app.newTemplateData(r)
-	data.Characters = characters
-	app.render(w, r, http.StatusOK, "player.tmpl.html", data)
+	data.Character = character
+	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
 }
