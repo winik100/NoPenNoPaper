@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/justinas/nosurf"
-	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
 func headers(next http.Handler) http.Handler {
@@ -98,7 +97,7 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 }
 
 func permissible(role string, url string) bool {
-	perms := models.Permissions[role]
+	perms := Permissions[role]
 	for _, path := range perms {
 		ok, err := regexp.MatchString(path, url)
 		if err != nil {
@@ -115,8 +114,8 @@ func (app *application) Restrict(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
 		if id == 0 {
-			app.sessionManager.Put(r.Context(), "role", models.RoleAnon)
-			if permissible(models.RoleAnon, r.URL.Path) {
+			app.sessionManager.Put(r.Context(), "role", RoleAnon)
+			if permissible(RoleAnon, r.URL.Path) {
 				next.ServeHTTP(w, r)
 				return
 			}

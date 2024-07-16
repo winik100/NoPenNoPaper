@@ -23,8 +23,20 @@ func (app *application) routes() http.Handler {
 	protectedChain := dynamicChain.Append(app.requireAuthentication, app.Restrict)
 	mux.Handle("GET /create", protectedChain.ThenFunc(app.create))
 	mux.Handle("POST /create", protectedChain.ThenFunc(app.createPost))
-	mux.Handle("GET /player", protectedChain.ThenFunc(app.viewPlayer))
+	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)
+}
+
+const (
+	RoleAnon   string = "anonymous"
+	RolePlayer string = "player"
+	RoleGM     string = "gm"
+)
+
+var Permissions = map[string][]string{
+	RoleAnon:   {"/", "/signup", "/login"},
+	RolePlayer: {"/", "/logout", "/create", "/characters", "/characters/.*"},
+	RoleGM:     {"/", "/logout", "/create", "/characters", "/characters/.*"},
 }

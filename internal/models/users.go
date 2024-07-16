@@ -31,7 +31,7 @@ func (u *UserModel) Insert(name, password string) error {
 	}
 
 	stmt := "INSERT INTO users (name, hashed_password, role) VALUES (?,?,?);"
-	_, err = u.DB.Exec(stmt, name, hashedPassword, RolePlayer)
+	_, err = u.DB.Exec(stmt, name, hashedPassword, "player")
 	if err != nil {
 		return err
 	}

@@ -53,10 +53,10 @@ func (a *CharacterAttributes) AsMap() map[string]int {
 		"ma": a.MA,
 		"ko": a.KO,
 		"er": a.ER,
-		"BI": a.BI,
-		"GR": a.GR,
-		"IN": a.IN,
-		"BW": a.BW,
+		"bi": a.BI,
+		"gr": a.GR,
+		"in": a.IN,
+		"bw": a.BW,
 	}
 }
 
@@ -117,6 +117,7 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 	if err != nil {
 		return 0, err
 	}
+
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
