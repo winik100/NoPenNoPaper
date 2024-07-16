@@ -63,37 +63,38 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info := map[string]string{
-		"name":       form.Name,
-		"profession": form.Profession,
-		"age":        form.Age,
-		"gender":     form.Gender,
-		"residence":  form.Residence,
-		"birthplace": form.Birthplace}
-
-	form.CheckField(validators.NotBlank(info["name"]), "name", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(info["profession"]), "profession", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(info["age"]), "age", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.IsInteger(info["age"]), "age", "Dieses Feld muss eine Zahl enthalten.")
-	form.CheckField(validators.InBetween(info["age"], 18, 100), "age", "Alter muss zwischen 18 und 100 liegen.")
-	form.CheckField(validators.NotBlank(info["gender"]), "gender", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.PermittedValue(info["gender"], "männlich", "weiblich"), "gender", "Geschlecht muss männlich oder weiblich sein.")
-	form.CheckField(validators.NotBlank(info["residence"]), "residence", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(info["birthplace"]), "birthplace", "Dieses Feld kann nicht leer sein.")
-
-	attributes := map[string]int{
-		"st": form.ST,
-		"ge": form.GE,
-		"ma": form.MA,
-		"ko": form.KO,
-		"er": form.ER,
-		"bi": form.BI,
-		"gr": form.GR,
-		"in": form.IN,
-		"bw": form.BW,
+	info := models.CharacterInfo{
+		Name:       form.Name,
+		Profession: form.Profession,
+		Age:        form.Age,
+		Gender:     form.Gender,
+		Residence:  form.Residence,
+		Birthplace: form.Birthplace,
 	}
 
-	for key, attr := range attributes {
+	form.CheckField(validators.NotBlank(info.Name), "name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(info.Profession), "profession", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(info.Age), "age", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.IsInteger(info.Age), "age", "Dieses Feld muss eine Zahl enthalten.")
+	form.CheckField(validators.InBetween(info.Age, 18, 100), "age", "Alter muss zwischen 18 und 100 liegen.")
+	form.CheckField(validators.NotBlank(info.Gender), "gender", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.PermittedValue(info.Gender, "männlich", "weiblich"), "gender", "Geschlecht muss männlich oder weiblich sein.")
+	form.CheckField(validators.NotBlank(info.Residence), "residence", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(info.Birthplace), "birthplace", "Dieses Feld kann nicht leer sein.")
+
+	attributes := models.CharacterAttributes{
+		ST: form.ST,
+		GE: form.GE,
+		MA: form.MA,
+		KO: form.KO,
+		ER: form.ER,
+		BI: form.BI,
+		GR: form.GR,
+		IN: form.IN,
+		BW: form.BW,
+	}
+
+	for key, attr := range attributes.AsMap() {
 		if key != "bw" {
 			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
 		}
@@ -223,4 +224,18 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "role", models.RoleAnon)
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) viewPlayer(w http.ResponseWriter, r *http.Request) {
+	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+
+	characters, err := app.characters.GetAll(userId)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Characters = characters
+	app.render(w, r, http.StatusOK, "player.tmpl.html", data)
 }

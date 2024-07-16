@@ -8,6 +8,6 @@ const (
 
 var Permissions = map[string][]string{
 	RoleAnon:   {"/", "/signup", "/login"},
-	RolePlayer: {"/", "/logout", "/create"},
-	RoleGM:     {"/", "/logout", "/create"},
+	RolePlayer: {"/", "/logout", "/create", "/player"},
+	RoleGM:     {"/", "/logout", "/create", "/player"},
 }

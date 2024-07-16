@@ -1,0 +1,16 @@
+{{define "title"}}Player{{end}}
+
+{{define "main"}}
+    <table>
+        <tr>
+            <th>Charakter-ID</th>
+            <th>Charaktername</th>
+        </tr>
+        {{range .Characters}}
+        <tr>
+            <td>{{.ID}}</td>
+            <td>{{.Info.Name}}</td>
+        </tr>
+        {{end}}
+    </table>
+{{end}}

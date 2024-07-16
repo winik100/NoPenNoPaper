@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"slices"
+	"regexp"
 
 	"github.com/justinas/nosurf"
 	"github.com/winik100/NoPenNoPaper/internal/models"
@@ -98,7 +98,17 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 }
 
 func permissible(role string, url string) bool {
-	return slices.Contains(models.Permissions[role], url)
+	perms := models.Permissions[role]
+	for _, path := range perms {
+		ok, err := regexp.MatchString(path, url)
+		if err != nil {
+			return false
+		}
+		if ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (app *application) Restrict(next http.Handler) http.Handler {

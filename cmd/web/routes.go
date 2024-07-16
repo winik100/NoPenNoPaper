@@ -11,7 +11,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
-	dynamicChain := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate, app.Restrict)
+	dynamicChain := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
 
 	mux.Handle("GET /{$}", dynamicChain.ThenFunc(app.home))
 	mux.Handle("GET /signup", dynamicChain.ThenFunc(app.signup))
@@ -20,9 +20,10 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /login", dynamicChain.ThenFunc(app.loginPost))
 	mux.Handle("POST /logout", dynamicChain.ThenFunc(app.logoutPost))
 
-	protectedChain := dynamicChain.Append(app.requireAuthentication)
+	protectedChain := dynamicChain.Append(app.requireAuthentication, app.Restrict)
 	mux.Handle("GET /create", protectedChain.ThenFunc(app.create))
 	mux.Handle("POST /create", protectedChain.ThenFunc(app.createPost))
+	mux.Handle("GET /player", protectedChain.ThenFunc(app.viewPlayer))
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)
