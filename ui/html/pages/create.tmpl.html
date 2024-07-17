@@ -66,74 +66,77 @@
         </table>
     </div> 
     <div id="attributes">
-        <table>
-            <tr>
-                <td>
-                    <label>ST</label>
-                    <input type='text' name='st' {{if (eq .Form.ST 0)}} value='' {{else}} value='{{.Form.ST}}' {{end}}>
-                    {{with .Form.FieldErrors.st}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-                <td>
-                    <label>GE</label>
-                    <input type='text' name='ge' {{if (eq .Form.GE 0)}} value='' {{else}} value='{{.Form.GE}}' {{end}}>
-                    {{with .Form.FieldErrors.ge}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-                <td>
-                    <label>MA</label>
-                    <input type='text' name='ma' {{if (eq .Form.MA 0)}} value='' {{else}} value='{{.Form.MA}}' {{end}}>
-                    {{with .Form.FieldErrors.ma}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label>KO</label>
-                    <input type='text' name='ko' {{if (eq .Form.KO 0)}} value='' {{else}} value='{{.Form.KO}}' {{end}}>
-                    {{with .Form.FieldErrors.ko}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-                <td>
-                    <label>ER</label>
-                    <input type='text' name='er' {{if (eq .Form.ER 0)}} value='' {{else}} value='{{.Form.ER}}' {{end}}>
-                    {{with .Form.FieldErrors.er}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-                <td>
-                    <label>BI</label>
-                    <input type='text' name='bi' {{if (eq .Form.BI 0)}} value='' {{else}} value='{{.Form.BI}}' {{end}}>
-                    {{with .Form.FieldErrors.bi}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label>GR</label>
-                    <input type='text' name='gr' {{if (eq .Form.GR 0)}} value='' {{else}} value='{{.Form.GR}}' {{end}}>
-                    {{with .Form.FieldErrors.gr}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-                <td>
-                    <label>IN</label>
-                    <input type='text' name='in' {{if (eq .Form.IN 0)}} value='' {{else}} value='{{.Form.IN}}' {{end}}>
-                    {{with .Form.FieldErrors.in}}
-                        <label class='error'>{{.}}</label>
-                    {{end}}
-                </td>
-                <td>
-                    <label>BW</label>
-                    <input type='text' name='bw' value="8" disabled>
-                </td>
-            </tr>
-        </table>
+        <details>
+            <summary>Attribute</summary>
+            <p>Zu verteilen: 40, 50, 50, 50, 60, 60, 70, 80</p>
+            <table>
+                <tr>
+                    <td>
+                        <label>ST</label>
+                        <input type='number' name='st' min='40' max='80' step='10' {{if (eq .Form.ST 0)}} value='' {{else}} value='{{.Form.ST}}' {{end}}>
+                        {{with .Form.FieldErrors.st}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                    <td>
+                        <label>GE</label>
+                        <input type='number' name='ge' min='40' max='80' step='10' {{if (eq .Form.GE 0)}} value='' {{else}} value='{{.Form.GE}}' {{end}}>
+                        {{with .Form.FieldErrors.ge}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                    <td>
+                        <label>MA</label>
+                        <input type='number' name='ma' min='40' max='80' step='10' {{if (eq .Form.MA 0)}} value='' {{else}} value='{{.Form.MA}}' {{end}}>
+                        {{with .Form.FieldErrors.ma}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>KO</label>
+                        <input type='number' name='ko' min='40' max='80' step='10' {{if (eq .Form.KO 0)}} value='' {{else}} value='{{.Form.KO}}' {{end}}>
+                        {{with .Form.FieldErrors.ko}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                    <td>
+                        <label>ER</label>
+                        <input type='number' name='er' min='40' max='80' step='10' {{if (eq .Form.ER 0)}} value='' {{else}} value='{{.Form.ER}}' {{end}}>
+                        {{with .Form.FieldErrors.er}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                    <td>
+                        <label>BI</label>
+                        <input type='number' name='bi' min='40' max='80' step='10' {{if (eq .Form.BI 0)}} value='' {{else}} value='{{.Form.BI}}' {{end}}>
+                        {{with .Form.FieldErrors.bi}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>GR</label>
+                        <input type='number' name='gr' min='40' max='80' step='10' {{if (eq .Form.GR 0)}} value='' {{else}} value='{{.Form.GR}}' {{end}}>
+                        {{with .Form.FieldErrors.gr}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                    <td>
+                        <label>IN</label>
+                        <input type='number' name='in' min='40' max='80' step='10' {{if (eq .Form.IN 0)}} value='' {{else}} value='{{.Form.IN}}' {{end}}>
+                        {{with .Form.FieldErrors.in}}
+                            <label class='error'>{{.}}</label>
+                        {{end}}
+                    </td>
+                    <td>
+                        <input type='hidden' name='bw' value='8'>
+                    </td>
+                </tr>
+            </table>
+        </details>
     </div>
     <div>
         <input type="submit" value="Charakter erstellen">

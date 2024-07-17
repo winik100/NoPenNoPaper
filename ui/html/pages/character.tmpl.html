@@ -64,5 +64,15 @@
             </tr>
         </table>
     </div>
+    <div id="skills">
+        <table>
+            {{range $key, $value := .Skills.AsMap}}
+            <tr>
+                <th>{{$key}}</th>
+                <td>{{$value}}</td>
+            </tr>
+            {{end}}
+        </table>
+    </div>
     {{end}}
 {{end}}
