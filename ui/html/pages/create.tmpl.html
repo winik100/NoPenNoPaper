@@ -71,81 +71,33 @@
             <p>Zu verteilen: 40, 50, 50, 50, 60, 60, 70, 80</p>
             <table>
                 {{$fieldErrors := .Form.FieldErrors}}
-                {{range $key, $value := .Form.Attributes.AsMap}}
+                {{$map := .Form.Attributes.AsMap}}
+                {{range $attr := .Form.Attributes.OrderedKeys}}
                 <tr>
                     <td>
-                        <label>{{$key}}</label>
-                        <input type='number' name='{{printf "Attributes.%s" $key}}' min='40' max='80' step='10' {{if (eq $value 0)}} value='' {{else}} value='{{$value}}' {{end}}>
-                        {{with (index $fieldErrors $key)}}
-                            <label class='error'>{{.}}</label>
+                        <label>{{$attr}}</label>
+                        {{if (eq $attr "BW")}}
+                        <select name='Attributes.BW' value='8' disabled>
+                            <option selected='selected'>8</option>
+                        </select>
+                        <input type='hidden' name='Attributes.{{$attr}}' value='8'>
+                        {{else}}
+                            {{$value := index $map $attr}}
+                            <input type='hidden' name='Attributes.{{$attr}}' value='{{$value}}'>
+                            <select name='Attributes.{{$attr}}'>
+                                <option value='80' {{if (eq $value 80)}} selected='selected' {{end}}>80</option>
+                                <option value='70' {{if (eq $value 70)}} selected='selected' {{end}}>70</option>
+                                <option value='60' {{if (eq $value 60)}} selected='selected' {{end}}>60</option>
+                                <option value='50' {{if (eq $value 50)}} selected='selected' {{end}}>50</option>
+                                <option value='40' {{if (or (eq $value 40) (eq $value 0))}} selected='selected' {{end}}>40</option>
+                            </select>
+                            {{with (index $fieldErrors $attr)}}
+                                <label class='error'>{{.}}</label>
+                            {{end}}
                         {{end}}
                     </td>
                 </tr>
                 {{end}}
-                <!-- <tr>
-                    <td>
-                        <label>ST</label>
-                        <input type='number' name='Attributes.ST' min='40' max='80' step='10' {{if (eq .Form.Attributes.ST 0)}} value='' {{else}} value='{{.Form.Attributes.ST}}' {{end}}>
-                        {{with .Form.FieldErrors.st}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                    <td>
-                        <label>GE</label>
-                        <input type='number' name='Attributes.GE' min='40' max='80' step='10' {{if (eq .Form.Attributes.GE 0)}} value='' {{else}} value='{{.Form.Attributes.GE}}' {{end}}>
-                        {{with .Form.FieldErrors.ge}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                    <td>
-                        <label>MA</label>
-                        <input type='number' name='Attributes.MA' min='40' max='80' step='10' {{if (eq .Form.Attributes.MA 0)}} value='' {{else}} value='{{.Form.Attributes.MA}}' {{end}}>
-                        {{with .Form.FieldErrors.ma}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label>KO</label>
-                        <input type='number' name='Attributes.KO' min='40' max='80' step='10' {{if (eq .Form.Attributes.KO 0)}} value='' {{else}} value='{{.Form.Attributes.KO}}' {{end}}>
-                        {{with .Form.FieldErrors.ko}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                    <td>
-                        <label>ER</label>
-                        <input type='number' name='Attributes.ER' min='40' max='80' step='10' {{if (eq .Form.Attributes.ER 0)}} value='' {{else}} value='{{.Form.Attributes.ER}}' {{end}}>
-                        {{with .Form.FieldErrors.er}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                    <td>
-                        <label>BI</label>
-                        <input type='number' name='Attributes.BI' min='40' max='80' step='10' {{if (eq .Form.Attributes.BI 0)}} value='' {{else}} value='{{.Form.Attributes.BI}}' {{end}}>
-                        {{with .Form.FieldErrors.bi}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <label>GR</label>
-                        <input type='number' name='Attributes.GR' min='40' max='80' step='10' {{if (eq .Form.Attributes.GR 0)}} value='' {{else}} value='{{.Form.Attributes.GR}}' {{end}}>
-                        {{with .Form.FieldErrors.gr}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td>
-                    <td>
-                        <label>IN</label>
-                        <input type='number' name='Attributes.IN' min='40' max='80' step='10' {{if (eq .Form.Attributes.IN 0)}} value='' {{else}} value='{{.Form.Attributes.IN}}' {{end}}>
-                        {{with .Form.FieldErrors.in}}
-                            <label class='error'>{{.}}</label>
-                        {{end}}
-                    </td> -->
-                    <td>
-                        <input type='hidden' name='Attributes.BW' value='8'>
-                    </td>
                 </tr>
             </table>
         </details>
@@ -156,13 +108,25 @@
         <p>Zu verteilen: 40, 40, 40, 50, 50, 50, 60, 60, 70</p>
         <p>Einer der 9 Werte muss auf Finanzkraft verwendet werden!</p>
             <table>
+                {{$fieldErrors := .Form.FieldErrors}}
+                {{$default := defaultCharacterSkills.AsMap}}
                 {{range $key, $value := .Form.Skills.AsMap}}
-                {{$tkey := (translate $key)}}
+                {{$tkey := translate $key}}
                 <tr>
                     <td>
                         <label>{{$key}}</label>
-                        <input id='{{$tkey}}' type='number' name='{{printf "Skills.%s" $tkey}}' min='40' max='80' step='10' value='{{$value}}' readonly>
-                        <input id='{{printf "%sEdit" $tkey}}' type='checkbox'>
+                        <input id='skill' type='hidden' name='Skills.{{$tkey}}' value='{{index $default $key}}'>
+                        <select id='{{$tkey}}' name='Skills.{{$tkey}}' disabled>
+                            <option value='{{index $default $key}}' selected>{{index $default $key}}</option>
+                            <option value='70'>70</option>
+                            <option value='60'>60</option>
+                            <option value='50'>50</option>
+                            <option value='40'>40</option>
+                        </select>
+                        <input id='{{$tkey}}Edit' type='checkbox'>
+                        {{with (index $fieldErrors $key)}}
+                                <label class='error'>{{.}}</label>
+                        {{end}}
                     </td>
                 </tr>
                 {{end}}

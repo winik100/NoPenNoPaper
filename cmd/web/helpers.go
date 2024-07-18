@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/schema"
+	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/ui"
 )
 
@@ -63,9 +64,10 @@ func fifth(value int) int {
 }
 
 var funcs = template.FuncMap{
-	"half":      half,
-	"fifth":     fifth,
-	"translate": translateToFieldName,
+	"half":                   half,
+	"fifth":                  fifth,
+	"translate":              translateToFieldName,
+	"defaultCharacterSkills": models.DefaultCharacterSkills,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

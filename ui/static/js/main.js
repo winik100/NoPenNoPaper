@@ -9,7 +9,7 @@ for (const id of checkbox_ids){
         el.addEventListener('click', function() {
             newId = id.substring(0, id.length - 4);
             elem = document.getElementById(newId)
-            elem.readOnly = !this.checked;
+            elem.disabled = !this.checked;
         })
     }
 }

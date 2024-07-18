@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -61,16 +60,9 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	for key, info := range form.Info.AsMap() {
 		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
 	}
-
-	// form.CheckField(validators.NotBlank(form.Info.Name), "name", "Dieses Feld kann nicht leer sein.")
-	// form.CheckField(validators.NotBlank(form.Info.Profession), "profession", "Dieses Feld kann nicht leer sein.")
-	// form.CheckField(validators.NotBlank(form.Info.Age), "age", "Dieses Feld kann nicht leer sein.")
 	form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
 	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
-	// form.CheckField(validators.NotBlank(form.Info.Gender), "gender", "Dieses Feld kann nicht leer sein.")
 	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
-	// form.CheckField(validators.NotBlank(form.Info.Residence), "residence", "Dieses Feld kann nicht leer sein.")
-	// form.CheckField(validators.NotBlank(form.Info.Birthplace), "birthplace", "Dieses Feld kann nicht leer sein.")
 
 	for key, attr := range form.Attributes.AsMap() {
 		if key != "BW" {
@@ -80,6 +72,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 
 	defaultSkills := models.DefaultCharacterSkills().AsMap()
 	skillMap := form.Skills.AsMap()
+
 	count := 0
 	for skill, value := range skillMap {
 		if value != defaultSkills[skill] {
@@ -91,16 +84,13 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		if skill == "Finanzkraft" && value == 0 {
-			form.AddGenericError("Finanzkraft muss ein Wert zugewiesen werden.")
+			form.AddFieldError("Finanzkraft", "Finanzkraft muss ein Wert zugewiesen werden.")
 		}
 	}
 
 	if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
 		form.AddGenericError("Ungültige Attributsverteilung.")
 	}
-
-	fmt.Println(form.FieldErrors)
-	fmt.Println(form.GenericErrors)
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)

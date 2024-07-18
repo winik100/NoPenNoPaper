@@ -180,6 +180,11 @@ form input[type=text], form input[type="password"], form input[type="email"], te
     border-radius: 3px;
 }
 
+form input[type="number"] {
+    width: 5.5%;
+    text-align: right;
+}
+
 form label {
     display: inline-block;
     margin-bottom: 9px;
