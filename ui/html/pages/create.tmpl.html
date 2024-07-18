@@ -11,7 +11,7 @@
             <tr>
                 <td>
                     <label>Name:</label>
-                    <input type='text' name='name' value='{{.Form.Name}}'>
+                    <input type='text' name='Info.Name' value='{{.Form.Info.Name}}'>
                     {{with .Form.FieldErrors.name}}
                         <label class='error'>{{.}}</label>
                     {{end}}
@@ -20,7 +20,7 @@
             <tr>
                 <td>
                     <label>Beruf:</label>
-                    <input type='text' name='profession' value='{{.Form.Profession}}'>
+                    <input type='text' name='Info.Profession' value='{{.Form.Info.Profession}}'>
                     {{with .Form.FieldErrors.profession}}
                         <label class='error'>{{.}}</label>
                     {{end}}
@@ -29,7 +29,7 @@
             <tr>
                 <td>
                     <label>Alter:</label>
-                    <input type='text' name='age' value='{{.Form.Age}}'>
+                    <input type='text' name='Info.Age' value='{{.Form.Info.Age}}'>
                     {{with .Form.FieldErrors.age}}
                         <label class='error'>{{.}}</label>
                     {{end}}
@@ -38,8 +38,8 @@
             <tr>
                 <td>
                     <label>Geschlecht:</label>
-                    <input type='radio' name='gender' value='männlich' {{if (eq .Form.Gender "männlich")}} checked {{end}} checked> Männlich
-                    <input type='radio' name='gender' value='weiblich' {{if (eq .Form.Gender "weiblich")}} checked {{end}}> Weiblich
+                    <input type='radio' name='Info.Gender' value='männlich' {{if (eq .Form.Info.Gender "männlich")}} checked {{end}} checked> Männlich
+                    <input type='radio' name='Info.Gender' value='weiblich' {{if (eq .Form.Info.Gender "weiblich")}} checked {{end}}> Weiblich
                     {{with .Form.FieldErrors.gender}}
                         <label class='error'>{{.}}</label>
                     {{end}}
@@ -48,7 +48,7 @@
             <tr>
                 <td>
                     <label>Wohnort:</label>
-                    <input type='text' name='residence' value='{{.Form.Residence}}'>
+                    <input type='text' name='Info.Residence' value='{{.Form.Info.Residence}}'>
                     {{with .Form.FieldErrors.residence}}
                         <label class='error'>{{.}}</label>
                     {{end}}
@@ -57,7 +57,7 @@
             <tr>
                 <td>
                     <label>Geburtsort:</label>
-                    <input type='text' name='birthplace' value='{{.Form.Birthplace}}'>
+                    <input type='text' name='Info.Birthplace' value='{{.Form.Info.Birthplace}}'>
                     {{with .Form.FieldErrors.birthplace}}
                         <label class='error'>{{.}}</label>
                     {{end}}
@@ -73,21 +73,21 @@
                 <tr>
                     <td>
                         <label>ST</label>
-                        <input type='number' name='st' min='40' max='80' step='10' {{if (eq .Form.ST 0)}} value='' {{else}} value='{{.Form.ST}}' {{end}}>
+                        <input type='number' name='Attributes.ST' min='40' max='80' step='10' {{if (eq .Form.Attributes.ST 0)}} value='' {{else}} value='{{.Form.Attributes.ST}}' {{end}}>
                         {{with .Form.FieldErrors.st}}
                             <label class='error'>{{.}}</label>
                         {{end}}
                     </td>
                     <td>
                         <label>GE</label>
-                        <input type='number' name='ge' min='40' max='80' step='10' {{if (eq .Form.GE 0)}} value='' {{else}} value='{{.Form.GE}}' {{end}}>
+                        <input type='number' name='Attributes.GE' min='40' max='80' step='10' {{if (eq .Form.Attributes.GE 0)}} value='' {{else}} value='{{.Form.Attributes.GE}}' {{end}}>
                         {{with .Form.FieldErrors.ge}}
                             <label class='error'>{{.}}</label>
                         {{end}}
                     </td>
                     <td>
                         <label>MA</label>
-                        <input type='number' name='ma' min='40' max='80' step='10' {{if (eq .Form.MA 0)}} value='' {{else}} value='{{.Form.MA}}' {{end}}>
+                        <input type='number' name='Attributes.MA' min='40' max='80' step='10' {{if (eq .Form.Attributes.MA 0)}} value='' {{else}} value='{{.Form.Attributes.MA}}' {{end}}>
                         {{with .Form.FieldErrors.ma}}
                             <label class='error'>{{.}}</label>
                         {{end}}
@@ -96,21 +96,21 @@
                 <tr>
                     <td>
                         <label>KO</label>
-                        <input type='number' name='ko' min='40' max='80' step='10' {{if (eq .Form.KO 0)}} value='' {{else}} value='{{.Form.KO}}' {{end}}>
+                        <input type='number' name='Attributes.KO' min='40' max='80' step='10' {{if (eq .Form.Attributes.KO 0)}} value='' {{else}} value='{{.Form.Attributes.KO}}' {{end}}>
                         {{with .Form.FieldErrors.ko}}
                             <label class='error'>{{.}}</label>
                         {{end}}
                     </td>
                     <td>
                         <label>ER</label>
-                        <input type='number' name='er' min='40' max='80' step='10' {{if (eq .Form.ER 0)}} value='' {{else}} value='{{.Form.ER}}' {{end}}>
+                        <input type='number' name='Attributes.ER' min='40' max='80' step='10' {{if (eq .Form.Attributes.ER 0)}} value='' {{else}} value='{{.Form.Attributes.ER}}' {{end}}>
                         {{with .Form.FieldErrors.er}}
                             <label class='error'>{{.}}</label>
                         {{end}}
                     </td>
                     <td>
                         <label>BI</label>
-                        <input type='number' name='bi' min='40' max='80' step='10' {{if (eq .Form.BI 0)}} value='' {{else}} value='{{.Form.BI}}' {{end}}>
+                        <input type='number' name='Attributes.BI' min='40' max='80' step='10' {{if (eq .Form.Attributes.BI 0)}} value='' {{else}} value='{{.Form.Attributes.BI}}' {{end}}>
                         {{with .Form.FieldErrors.bi}}
                             <label class='error'>{{.}}</label>
                         {{end}}
@@ -119,22 +119,234 @@
                 <tr>
                     <td>
                         <label>GR</label>
-                        <input type='number' name='gr' min='40' max='80' step='10' {{if (eq .Form.GR 0)}} value='' {{else}} value='{{.Form.GR}}' {{end}}>
+                        <input type='number' name='Attributes.GR' min='40' max='80' step='10' {{if (eq .Form.Attributes.GR 0)}} value='' {{else}} value='{{.Form.Attributes.GR}}' {{end}}>
                         {{with .Form.FieldErrors.gr}}
                             <label class='error'>{{.}}</label>
                         {{end}}
                     </td>
                     <td>
                         <label>IN</label>
-                        <input type='number' name='in' min='40' max='80' step='10' {{if (eq .Form.IN 0)}} value='' {{else}} value='{{.Form.IN}}' {{end}}>
+                        <input type='number' name='Attributes.IN' min='40' max='80' step='10' {{if (eq .Form.Attributes.IN 0)}} value='' {{else}} value='{{.Form.Attributes.IN}}' {{end}}>
                         {{with .Form.FieldErrors.in}}
                             <label class='error'>{{.}}</label>
                         {{end}}
                     </td>
                     <td>
-                        <input type='hidden' name='bw' value='8'>
+                        <input type='hidden' name='Attributes.BW' value='8'>
                     </td>
                 </tr>
+            </table>
+        </details>
+    </div>
+    <div>
+        <details>
+        <summary>Fertigkeiten</summary>
+        <p>Zu verteilen: 40, 40, 50, 50, 50, 60, 60, 70</p>
+            <table>
+                <tr>
+                    <td>
+                        <label>Anthropologie</label>
+                        <input id='Anthropology' type='number' name='Skills.Anthropology' min='40' max='80' step='10' value='{{.Form.Skills.Anthropology}}' readonly>
+                        <input id='AnthropologyEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Archäologie</label>
+                        <input id='Archaeology' type='number' name='Skills.Archaeology' min='40' max='80' step='10' value='{{.Form.Skills.Archaeology}}' readonly>
+                        <input id='ArchaeologyEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Autofahren</label>
+                        <input id='Driving' type='number' name='Skills.Driving' min='40' max='80' step='10' value='{{.Form.Skills.Driving}}' readonly>
+                        <input id='DrivingEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Bibliotheksnutzung</label>
+                        <input id='LibraryResearch' type='number' name='Skills.LibraryResearch' min='40' max='80' step='10' value='{{.Form.Skills.LibraryResearch}}' readonly>
+                        <input id='LibraryResearchEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Buchführung</label>
+                        <input id='Accounting' type='number' name='Skills.Accounting' min='40' max='80' step='10' value='{{.Form.Skills.Accounting}}' readonly>
+                        <input id='AccountingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Charme</label>
+                        <input id='Charme' type='number' name='Skills.Charme' min='40' max='80' step='10' value='{{.Form.Skills.Charme}}' readonly>
+                        <input id='CharmeEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Cthulhu-Mythos</label>
+                        <input id='CthulhuMythos' type='number' name='Skills.CthulhuMythos' min='40' max='80' step='10' value='{{.Form.Skills.CthulhuMythos}}' readonly>
+                        <input id='CthulhuMythosEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Einschüchtern</label>
+                        <input id='Intimidate' type='number' name='Skills.Intimidate' min='40' max='80' step='10' value='{{.Form.Skills.Intimidate}}' readonly>
+                        <input id='IntimidateEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Elektrische Reparaturen</label>
+                        <input id='ElectricRepairs' type='number' name='Skills.ElectricRepairs' min='40' max='80' step='10' value='{{.Form.Skills.ElectricRepairs}}' readonly>
+                        <input id='ElectricRepairsEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Erste Hilfe</label>
+                        <input id='FirstAid' type='number' name='Skills.FirstAid' min='40' max='80' step='10' value='{{.Form.Skills.FirstAid}}' readonly>
+                        <input id='FirstAidEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Finanzkraft</label>
+                        <input id='Financials' type='number' name='Skills.Financials' min='40' max='80' step='10' value='{{.Form.Skills.Financials}}' readonly>
+                        <input id='FinancialsEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Geschichte</label>
+                        <input id='History' type='number' name='Skills.History' min='40' max='80' step='10' value='{{.Form.Skills.History}}' readonly>
+                        <input id='HistoryEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Horchen</label>
+                        <input id='Listening' type='number' name='Skills.Listening' min='40' max='80' step='10' value='{{.Form.Skills.Listening}}' readonly>
+                        <input id='ListeningEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Kaschieren</label>
+                        <input id='Concealing' type='number' name='Skills.Concealing' min='40' max='80' step='10' value='{{.Form.Skills.Concealing}}' readonly>
+                        <input id='ConcealingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Klettern</label>
+                        <input id='Climbing' type='number' name='Skills.Climbing' min='40' max='80' step='10' value='{{.Form.Skills.Climbing}}' readonly>
+                        <input id='ClimbingEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Mechanische Reparaturen</label>
+                        <input id='MechanicalRepairs' type='number' name='Skills.MechanicalRepairs' min='40' max='80' step='10' value='{{.Form.Skills.MechanicalRepairs}}' readonly>
+                        <input id='MechanicalRepairsEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Medizin</label>
+                        <input id='Medicine' type='number' name='Skills.Medicine' min='40' max='80' step='10' value='{{.Form.Skills.Medicine}}' readonly>
+                        <input id='MedicineEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Naturkunde</label>
+                        <input id='NaturalHistory' type='number' name='Skills.NaturalHistory' min='40' max='80' step='10' value='{{.Form.Skills.NaturalHistory}}' readonly>
+                        <input id='NaturalHistoryEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Okkultismus</label>
+                        <input id='Occultism' type='number' name='Skills.Occultism' min='40' max='80' step='10' value='{{.Form.Skills.Occultism}}' readonly>
+                        <input id='OccultismEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Orientierung</label>
+                        <input id='Orientation' type='number' name='Skills.Orientation' min='40' max='80' step='10' value='{{.Form.Skills.Orientation}}' readonly>
+                        <input id='OrientationEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Psychoanalyse</label>
+                        <input id='PsychoAnalysis' type='number' name='Skills.PsychoAnalysis' min='40' max='80' step='10' value='{{.Form.Skills.PsychoAnalysis}}' readonly>
+                        <input id='PsychoAnalysisEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Psychologie</label>
+                        <input id='Psychology' type='number' name='Skills.Psychology' min='40' max='80' step='10' value='{{.Form.Skills.Psychology}}' readonly>
+                        <input id='PsychologyEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Rechtswesen</label>
+                        <input id='Law' type='number' name='Skills.Law' min='40' max='80' step='10' value='{{.Form.Skills.Law}}' readonly>
+                        <input id='LawEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Reiten</label>
+                        <input id='Horseriding' type='number' name='Skills.Horseriding' min='40' max='80' step='10' value='{{.Form.Skills.Horseriding}}' readonly>
+                        <input id='HorseridingEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Schließtechnik</label>
+                        <input id='Locks' type='number' name='Skills.Locks' min='40' max='80' step='10' value='{{.Form.Skills.Locks}}' readonly>
+                        <input id='LocksEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Schweres Gerät</label>
+                        <input id='HeavyMachinery' type='number' name='Skills.HeavyMachinery' min='40' max='80' step='10' value='{{.Form.Skills.HeavyMachinery}}' readonly>
+                        <input id='HeavyMachineryEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Schwimmen</label>
+                        <input id='Swimming' type='number' name='Skills.Swimming' min='40' max='80' step='10' value='{{.Form.Skills.Swimming}}' readonly>
+                        <input id='SwimmingEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Springen</label>
+                        <input id='Jumping' type='number' name='Skills.Jumping' min='40' max='80' step='10' value='{{.Form.Skills.Jumping}}' readonly>
+                        <input id='JumpingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Spurensuche</label>
+                        <input id='Tracking' type='number' name='Skills.Tracking' min='40' max='80' step='10' value='{{.Form.Skills.Tracking}}' readonly>
+                        <input id='TrackingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Überreden</label>
+                        <input id='Persuasion' type='number' name='Skills.Persuasion' min='40' max='80' step='10' value='{{.Form.Skills.Persuasion}}' readonly>
+                        <input id='PersuasionEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Überzeugen</label>
+                        <input id='Convincing' type='number' name='Skills.Convincing' min='40' max='80' step='10' value='{{.Form.Skills.Convincing}}' readonly>
+                        <input id='ConvincingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Verborgen bleiben</label>
+                        <input id='Stealth' type='number' name='Skills.Stealth' min='40' max='80' step='10' value='{{.Form.Skills.Stealth}}' readonly>
+                        <input id='StealthEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Verborgenes erkennen</label>
+                        <input id='DetectingSecrets' type='number' name='Skills.DetectingSecrets' min='40' max='80' step='10' value='{{.Form.Skills.DetectingSecrets}}' readonly>
+                        <input id='DetectingSecretsEdit' type='checkbox'>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Verkleiden</label>
+                        <input id='Disguising' type='number' name='Skills.Disguising' min='40' max='80' step='10' value='{{.Form.Skills.Disguising}}' readonly>
+                        <input id='DisguisingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Werfen</label>
+                        <input id='Throwing' type='number' name='Skills.Throwing' min='40' max='80' step='10' value='{{.Form.Skills.Throwing}}' readonly>
+                        <input id='ThrowingEdit' type='checkbox'>
+                    </td>
+                    <td>
+                        <label>Werte schätzen</label>
+                        <input id='Valuation' type='number' name='Skills.Valuation' min='40' max='80' step='10' value='{{.Form.Skills.Valuation}}' readonly>
+                        <input id='ValuationEdit' type='checkbox'>
+                    </td>
+                </tr>     
             </table>
         </details>
     </div>

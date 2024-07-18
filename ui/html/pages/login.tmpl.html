@@ -11,14 +11,14 @@
         {{with .Form.FieldErrors.name}}
             <label class='error'>{{.}}</label>
         {{end}}
-        <input type='text' name='name' value='{{.Form.Name}}'>
+        <input type='text' name='Name' value='{{.Form.Name}}'>
     </div>
     <div>
         <label>Passwort:</label>
         {{with .Form.FieldErrors.password}}
             <label class='error'>{{.}}</label>
         {{end}}
-        <input type='password' name='password'>
+        <input type='password' name='Password'>
     </div>
     <div>
         <input type='submit' value='Login'>
