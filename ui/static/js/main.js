@@ -1,4 +1,4 @@
-const checkbox_ids = ['AnthropologyEdit', 'ArchaeologyEdit', 'DrivingEdit', 'LibraryResearchEdit', 'AccountingEdit', 'CharmeEdit', 'CthulhuMythosEdit', 'IntimidateEdit', 
+const checkbox_ids = ['AnthropologyEdit', 'ArchaeologyEdit', 'DrivingEdit', 'LibraryResearchEdit', 'AccountingEdit', 'CharmeEdit', 'IntimidateEdit', 
     'ElectricRepairsEdit', 'FirstAidEdit', 'FinancialsEdit', 'HistoryEdit', 'ListeningEdit', 'ConcealingEdit', 'ClimbingEdit', 'MechanicalRepairsEdit', 'MedicineEdit',
     'NaturalHistoryEdit', 'OccultismEdit', 'OrientationEdit', 'PsychoAnalysisEdit', 'PsychologyEdit', 'LawEdit', 'HorseridingEdit', 'LocksEdit', 'HeavyMachineryEdit', 
     'SwimmingEdit', 'JumpingEdit', 'TrackingEdit', 'PersuasionEdit', 'ConvincingEdit', 'StealthEdit', 'DetectingSecretsEdit', 'DisguisingEdit', 'ThrowingEdit', 'ValuationEdit'];

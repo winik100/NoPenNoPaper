@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -57,33 +58,49 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validators.NotBlank(form.Info.Name), "name", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(form.Info.Profession), "profession", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(form.Info.Age), "age", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.IsInteger(form.Info.Age), "age", "Dieses Feld muss eine Zahl enthalten.")
-	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "age", "Alter muss zwischen 18 und 100 liegen.")
-	form.CheckField(validators.NotBlank(form.Info.Gender), "gender", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "gender", "Geschlecht muss männlich oder weiblich sein.")
-	form.CheckField(validators.NotBlank(form.Info.Residence), "residence", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(form.Info.Birthplace), "birthplace", "Dieses Feld kann nicht leer sein.")
+	for key, info := range form.Info.AsMap() {
+		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
+	}
+
+	// form.CheckField(validators.NotBlank(form.Info.Name), "name", "Dieses Feld kann nicht leer sein.")
+	// form.CheckField(validators.NotBlank(form.Info.Profession), "profession", "Dieses Feld kann nicht leer sein.")
+	// form.CheckField(validators.NotBlank(form.Info.Age), "age", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
+	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
+	// form.CheckField(validators.NotBlank(form.Info.Gender), "gender", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
+	// form.CheckField(validators.NotBlank(form.Info.Residence), "residence", "Dieses Feld kann nicht leer sein.")
+	// form.CheckField(validators.NotBlank(form.Info.Birthplace), "birthplace", "Dieses Feld kann nicht leer sein.")
 
 	for key, attr := range form.Attributes.AsMap() {
-		if key != "bw" {
+		if key != "BW" {
 			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
 		}
 	}
 
 	defaultSkills := models.DefaultCharacterSkills().AsMap()
 	skillMap := form.Skills.AsMap()
+	count := 0
 	for skill, value := range skillMap {
 		if value != defaultSkills[skill] {
+			count++
 			form.CheckField(validators.PermittedValue(value, 40, 50, 60, 70), skill, "Ungültiger Wert.")
+		}
+		if count > 9 {
+			form.AddGenericError("Ungültige Fertigkeitsverteilung (mehr als 9 Fertigkeiten modifiziert).")
+			break
+		}
+		if skill == "Finanzkraft" && value == 0 {
+			form.AddGenericError("Finanzkraft muss ein Wert zugewiesen werden.")
 		}
 	}
 
-	if !validators.ValidDistribution(form.Attributes.AsMap()) {
+	if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
 		form.AddGenericError("Ungültige Attributsverteilung.")
 	}
+
+	fmt.Println(form.FieldErrors)
+	fmt.Println(form.GenericErrors)
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)

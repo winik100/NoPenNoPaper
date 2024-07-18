@@ -61,9 +61,7 @@ func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 	return slices.Contains(permittedValues, value)
 }
 
-func ValidDistribution(values map[string]int) bool {
-	spendable := []int{40, 50, 50, 50, 60, 60, 70, 80}
-
+func ValidDistribution(values map[string]int, spendable []int) bool {
 	for _, attrValue := range values {
 		spendable = removeIfPresent(spendable, attrValue)
 	}
