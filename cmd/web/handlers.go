@@ -11,36 +11,16 @@ import (
 )
 
 type characterCreateForm struct {
-	Name       string `form:"name"`
-	Profession string `form:"profession"`
-	Age        string `form:"age"`
-	Gender     string `form:"gender"`
-	Residence  string `form:"residence"`
-	Birthplace string `form:"birthplace"`
-
-	ST int `form:"st"`
-	GE int `form:"ge"`
-	MA int `form:"ma"`
-	KO int `form:"ko"`
-	ER int `form:"er"`
-	BI int `form:"bi"`
-	GR int `form:"gr"`
-	IN int `form:"in"`
-	BW int
-
-	validators.FormValidator `form:"-"`
-}
-
-func newCharacterCreateForm() characterCreateForm {
-	return characterCreateForm{
-		BW: 8,
-	}
+	Info                     models.CharacterInfo
+	Attributes               models.CharacterAttributes
+	Skills                   models.CharacterSkills
+	validators.FormValidator `schema:"-"`
 }
 
 type userForm struct {
-	Name                     string `form:"name"`
-	Password                 string `form:"password"`
-	validators.FormValidator `form:"-"`
+	Name                     string
+	Password                 string
+	validators.FormValidator `schema:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -63,13 +43,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) create(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = characterCreateForm{}
+	data.Form = characterCreateForm{Skills: models.DefaultCharacterSkills()}
 
 	app.render(w, r, http.StatusOK, "create.tmpl.html", data)
 }
 
 func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
-	form := newCharacterCreateForm()
+	var form characterCreateForm
 
 	err := app.decodePostForm(r, &form)
 	if err != nil {
@@ -77,44 +57,31 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info := models.CharacterInfo{
-		Name:       form.Name,
-		Profession: form.Profession,
-		Age:        form.Age,
-		Gender:     form.Gender,
-		Residence:  form.Residence,
-		Birthplace: form.Birthplace,
-	}
+	form.CheckField(validators.NotBlank(form.Info.Name), "name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Info.Profession), "profession", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Info.Age), "age", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.IsInteger(form.Info.Age), "age", "Dieses Feld muss eine Zahl enthalten.")
+	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "age", "Alter muss zwischen 18 und 100 liegen.")
+	form.CheckField(validators.NotBlank(form.Info.Gender), "gender", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "gender", "Geschlecht muss männlich oder weiblich sein.")
+	form.CheckField(validators.NotBlank(form.Info.Residence), "residence", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Info.Birthplace), "birthplace", "Dieses Feld kann nicht leer sein.")
 
-	form.CheckField(validators.NotBlank(info.Name), "name", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(info.Profession), "profession", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(info.Age), "age", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.IsInteger(info.Age), "age", "Dieses Feld muss eine Zahl enthalten.")
-	form.CheckField(validators.InBetween(info.Age, 18, 100), "age", "Alter muss zwischen 18 und 100 liegen.")
-	form.CheckField(validators.NotBlank(info.Gender), "gender", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.PermittedValue(info.Gender, "männlich", "weiblich"), "gender", "Geschlecht muss männlich oder weiblich sein.")
-	form.CheckField(validators.NotBlank(info.Residence), "residence", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(info.Birthplace), "birthplace", "Dieses Feld kann nicht leer sein.")
-
-	attributes := models.CharacterAttributes{
-		ST: form.ST,
-		GE: form.GE,
-		MA: form.MA,
-		KO: form.KO,
-		ER: form.ER,
-		BI: form.BI,
-		GR: form.GR,
-		IN: form.IN,
-		BW: form.BW,
-	}
-
-	for key, attr := range attributes.AsMap() {
+	for key, attr := range form.Attributes.AsMap() {
 		if key != "bw" {
 			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
 		}
 	}
 
-	if !validators.ValidAttributeDistribution(attributes) {
+	defaultSkills := models.DefaultCharacterSkills().AsMap()
+	skillMap := form.Skills.AsMap()
+	for skill, value := range skillMap {
+		if value != defaultSkills[skill] {
+			form.CheckField(validators.PermittedValue(value, 40, 50, 60, 70), skill, "Ungültiger Wert.")
+		}
+	}
+
+	if !validators.ValidDistribution(form.Attributes.AsMap()) {
 		form.AddGenericError("Ungültige Attributsverteilung.")
 	}
 
@@ -125,10 +92,8 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.characters.Insert(models.Character{
-		Info:       info,
-		Attributes: attributes,
-	}, app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+	_, err = app.characters.Insert(models.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills},
+		app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
 
 	if err != nil {
 		app.serverError(w, r, err)

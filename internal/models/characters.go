@@ -24,14 +24,14 @@ type CharacterInfo struct {
 	Birthplace string
 }
 
-func (ci *CharacterInfo) AsMap() map[string]string {
+func (ci CharacterInfo) AsMap() map[string]string {
 	return map[string]string{
-		"name":       ci.Name,
-		"profession": ci.Profession,
-		"age":        ci.Age,
-		"gender":     ci.Gender,
-		"residence":  ci.Residence,
-		"birthplace": ci.Birthplace,
+		"Name":       ci.Name,
+		"Beruf":      ci.Profession,
+		"Alter":      ci.Age,
+		"Geschlecht": ci.Gender,
+		"Wohnort":    ci.Residence,
+		"Geburtsort": ci.Birthplace,
 	}
 }
 
@@ -47,18 +47,22 @@ type CharacterAttributes struct {
 	BW int
 }
 
-func (a *CharacterAttributes) AsMap() map[string]int {
+func (a CharacterAttributes) AsMap() map[string]int {
 	return map[string]int{
-		"st": a.ST,
-		"ge": a.GE,
-		"ma": a.MA,
-		"ko": a.KO,
-		"er": a.ER,
-		"bi": a.BI,
-		"gr": a.GR,
-		"in": a.IN,
-		"bw": a.BW,
+		"ST": a.ST,
+		"GE": a.GE,
+		"MA": a.MA,
+		"KO": a.KO,
+		"ER": a.ER,
+		"BI": a.BI,
+		"GR": a.GR,
+		"IN": a.IN,
+		"BW": a.BW,
 	}
+}
+
+func (a CharacterAttributes) OrderedKeys() []string {
+	return []string{"ST", "GE", "MA", "KO", "ER", "BI", "GR", "IN", "BW"}
 }
 
 type CharacterStats struct {
@@ -68,59 +72,43 @@ type CharacterStats struct {
 	LUCK int
 }
 
-func (st *CharacterStats) AsMap() map[string]int {
-	return map[string]int{
-		"tp":   st.TP,
-		"sta":  st.STA,
-		"mp":   st.MP,
-		"luck": st.LUCK,
-	}
-}
-
 type CharacterSkills struct {
-	Anthropology    int
-	Archaeology     int
-	Driving         int
-	LibraryResearch int
-	Accounting      int
-	Charme          int
-	CthulhuMythos   int
-	Intimidate      int
-	ElectricRepairs int
-	FirstAid        int
-	Financials      int
-	//ForeignLanguages
-	History int
-	//ArtsAndCrafts
+	Anthropology      int
+	Archaeology       int
+	Driving           int
+	LibraryResearch   int
+	Accounting        int
+	Charme            int
+	CthulhuMythos     int
+	Intimidate        int
+	ElectricRepairs   int
+	FirstAid          int
+	Financials        int
+	History           int
 	Listening         int
 	Concealing        int
 	Climbing          int
 	MechanicalRepairs int
 	Medicine          int
-	//FirstLanguage
-	NaturalHistory int
-	//NaturalSciences
-	Occultism      int
-	Orientation    int
-	PsychoAnalysis int
-	Psychology     int
-	Law            int
-	Horseriding    int
-	Locks          int
-	HeavyMachinery int
-	Swimming       int
-	Jumping        int
-	Tracking       int
-	//Piloting
-	//Survival
-	Persuasion       int
-	Convincing       int
-	Stealth          int
-	DetectingSecrets int
-	Disguising       int
-	Throwing         int
-	Valuation        int
-	//custom
+	NaturalHistory    int
+	Occultism         int
+	Orientation       int
+	PsychoAnalysis    int
+	Psychology        int
+	Law               int
+	Horseriding       int
+	Locks             int
+	HeavyMachinery    int
+	Swimming          int
+	Jumping           int
+	Tracking          int
+	Persuasion        int
+	Convincing        int
+	Stealth           int
+	DetectingSecrets  int
+	Disguising        int
+	Throwing          int
+	Valuation         int
 }
 
 func DefaultCharacterSkills() CharacterSkills {
@@ -273,14 +261,18 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 		return 0, err
 	}
 
-	s := DefaultCharacterSkills()
 	stmt = `INSERT INTO character_skills (character_id, anthropology, archaeology, driving, libraryResearch, accounting, charme, cthulhuMythos, intimidate, electricRepairs,
 				firstAid, financials, history, listening, concealing, climbing, mechanicalRepairs, medicine, naturalHistory, occultism, orientation, psychoAnalysis, psychology, 
 				law, horseriding, locks, heavyMachinery, swimming, jumping, tracking, persuasion, convincing, stealth, detectingSecrets, disguising, throwing, valuation)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
-	_, err = tx.Exec(stmt, id, s.Anthropology, s.Archaeology, s.Driving, s.LibraryResearch, s.Accounting, s.Charme, s.CthulhuMythos, s.Intimidate, s.ElectricRepairs,
-		s.FirstAid, s.Financials, s.History, s.Listening, s.Concealing, s.Climbing, s.MechanicalRepairs, s.Medicine, s.NaturalHistory, s.Occultism, s.Orientation, s.PsychoAnalysis, s.Psychology,
-		s.Law, s.Horseriding, s.Locks, s.HeavyMachinery, s.Swimming, s.Jumping, s.Tracking, s.Persuasion, s.Convincing, s.Stealth, s.DetectingSecrets, s.Disguising, s.Throwing, s.Valuation)
+	_, err = tx.Exec(stmt, id, character.Skills.Anthropology, character.Skills.Archaeology, character.Skills.Driving, character.Skills.LibraryResearch, character.Skills.Accounting,
+		character.Skills.Charme, character.Skills.CthulhuMythos, character.Skills.Intimidate, character.Skills.ElectricRepairs, character.Skills.FirstAid, character.Skills.Financials,
+		character.Skills.History, character.Skills.Listening, character.Skills.Concealing, character.Skills.Climbing, character.Skills.MechanicalRepairs, character.Skills.Medicine,
+		character.Skills.NaturalHistory, character.Skills.Occultism, character.Skills.Orientation, character.Skills.PsychoAnalysis, character.Skills.Psychology, character.Skills.Law,
+		character.Skills.Horseriding, character.Skills.Locks, character.Skills.HeavyMachinery, character.Skills.Swimming, character.Skills.Jumping, character.Skills.Tracking,
+		character.Skills.Persuasion, character.Skills.Convincing, character.Skills.Stealth, character.Skills.DetectingSecrets, character.Skills.Disguising, character.Skills.Throwing,
+		character.Skills.Valuation)
+
 	if err != nil {
 		return 0, err
 	}
@@ -333,7 +325,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 				firstAid, financials, history, listening, concealing, climbing, mechanicalRepairs, medicine, naturalHistory, occultism, orientation, psychoAnalysis, psychology, 
 				law, horseriding, locks, heavyMachinery, swimming, jumping, tracking, persuasion, convincing, stealth, detectingSecrets, disguising, throwing, valuation
 			FROM character_skills
-			WHERE character_id=?`
+			WHERE character_id=?;`
 	result = c.DB.QueryRow(stmt, characterId)
 	err = result.Scan(&sk.Anthropology, &sk.Archaeology, &sk.Driving, &sk.LibraryResearch, &sk.Accounting, &sk.Charme, &sk.CthulhuMythos, &sk.Intimidate, &sk.ElectricRepairs, &sk.FirstAid,
 		&sk.Financials, &sk.History, &sk.Listening, &sk.Concealing, &sk.Climbing, &sk.MechanicalRepairs, &sk.Medicine, &sk.NaturalHistory, &sk.Occultism, &sk.Orientation, &sk.PsychoAnalysis,

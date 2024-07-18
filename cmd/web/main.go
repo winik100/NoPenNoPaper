@@ -12,7 +12,7 @@ import (
 
 	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/alexedwards/scs/v2"
-	"github.com/go-playground/form/v4"
+	"github.com/gorilla/schema"
 	"github.com/winik100/NoPenNoPaper/internal/models"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -24,7 +24,7 @@ type application struct {
 	users          models.UserModelInterface
 	templateCache  map[string]*template.Template
 	sessionManager *scs.SessionManager
-	formDecoder    *form.Decoder
+	formDecoder    *schema.Decoder
 }
 
 func main() {
@@ -52,7 +52,8 @@ func main() {
 	sessionManager.Lifetime = 12 * time.Hour
 	sessionManager.Cookie.Secure = true
 
-	formDecoder := form.NewDecoder()
+	formDecoder := schema.NewDecoder()
+	formDecoder.IgnoreUnknownKeys(true)
 
 	app := &application{
 		log:            log,

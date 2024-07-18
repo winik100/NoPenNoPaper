@@ -24,28 +24,14 @@
     </div>
     <div id="attributes">
         <table>
+            {{with $attr := .Attributes}}
+            {{range $key := $attr.OrderedKeys}}
             <tr>
-                <th>ST</th>
-                <th>GE</th>
-                <th>MA</th>
-                <th>KO</th>
-                <th>ER</th>
-                <th>BI</th>
-                <th>GR</th>
-                <th>IN</th>
-                <th>BW</th>
+                <th>{{$key}}</th>
+                <td>{{$v := index $attr.AsMap $key}} {{$v}} | {{half $v}} | {{fifth $v}}</td>
             </tr>
-            <tr>
-                <th>{{.Attributes.ST}}</th>
-                <th>{{.Attributes.GE}}</th>
-                <th>{{.Attributes.MA}}</th>
-                <th>{{.Attributes.KO}}</th>
-                <th>{{.Attributes.ER}}</th>
-                <th>{{.Attributes.BI}}</th>
-                <th>{{.Attributes.GR}}</th>
-                <th>{{.Attributes.IN}}</th>
-                <th>{{.Attributes.BW}}</th>
-            </tr>
+            {{end}}
+            {{end}}
         </table>
     </div>
     <div id="stats">
@@ -57,10 +43,10 @@
                 <th>Glück</th>
             </tr>
             <tr>
-                <th>{{.Stats.TP}}</th>
-                <th>{{.Stats.STA}}</th>
-                <th>{{.Stats.MP}}</th>
-                <th>{{.Stats.LUCK}}</th>
+                <td>{{.Stats.TP}}</td>
+                <td>{{.Stats.STA}}</td>
+                <td>{{.Stats.MP}}</td>
+                <td>{{.Stats.LUCK}}</td>
             </tr>
         </table>
     </div>
@@ -69,7 +55,7 @@
             {{range $key, $value := .Skills.AsMap}}
             <tr>
                 <th>{{$key}}</th>
-                <td>{{$value}}</td>
+                <td>{{$value}} | {{half $value}} | {{fifth $value}}</td>
             </tr>
             {{end}}
         </table>

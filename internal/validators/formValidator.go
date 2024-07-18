@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
-
-	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
 type FormValidator struct {
@@ -63,10 +61,10 @@ func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 	return slices.Contains(permittedValues, value)
 }
 
-func ValidAttributeDistribution(attributes models.CharacterAttributes) bool {
+func ValidDistribution(values map[string]int) bool {
 	spendable := []int{40, 50, 50, 50, 60, 60, 70, 80}
 
-	for _, attrValue := range attributes.AsMap() {
+	for _, attrValue := range values {
 		spendable = removeIfPresent(spendable, attrValue)
 	}
 	return len(spendable) == 0

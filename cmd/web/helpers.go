@@ -7,9 +7,22 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/go-playground/form/v4"
+	"github.com/gorilla/schema"
 	"github.com/winik100/NoPenNoPaper/ui"
 )
+
+func half(value int) int {
+	return value / 2
+}
+
+func fifth(value int) int {
+	return value / 5
+}
+
+var funcs = template.FuncMap{
+	"half":  half,
+	"fifth": fifth,
+}
 
 func newTemplateCache() (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}
@@ -26,7 +39,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 			"html/partials/*.tmpl.html",
 			page,
 		}
-		ts, err := template.New(name).ParseFS(ui.Files, patterns...)
+		ts, err := template.New(name).Funcs(funcs).ParseFS(ui.Files, patterns...)
 		if err != nil {
 			return nil, err
 		}
@@ -44,9 +57,9 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 
 	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {
-		var invalidDecoderError *form.InvalidDecoderError
+		var conversionError *schema.ConversionError
 
-		if errors.As(err, &invalidDecoderError) {
+		if errors.As(err, &conversionError) {
 			panic(err)
 		}
 

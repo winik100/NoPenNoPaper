@@ -10,8 +10,9 @@ import (
 )
 
 type templateData struct {
-	Characters      []models.Character
-	Character       models.Character
+	Characters []models.Character
+	Character  models.Character
+	//SelectedSkills  []string
 	User            models.User
 	Form            any
 	CSRFToken       string
