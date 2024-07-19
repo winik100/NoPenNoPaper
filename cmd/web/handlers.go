@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,6 +21,13 @@ type characterCreateForm struct {
 type userForm struct {
 	Name                     string
 	Password                 string
+	validators.FormValidator `schema:"-"`
+}
+
+type itemForm struct {
+	Name                     string
+	Description              string
+	Count                    int
 	validators.FormValidator `schema:"-"`
 }
 
@@ -233,4 +241,45 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Character = character
 	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
+}
+
+func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = itemForm{}
+	app.render(w, r, http.StatusOK, "item.tmpl.html", data)
+}
+
+func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	var form itemForm
+
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	form.CheckField(validators.NotBlank(form.Name), "Name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Description), "Description", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(form.Count > 0, "Count", "Die Anzahl muss positiv sein.")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "item.tmpl.html", data)
+		return
+	}
+
+	err = app.characters.AddItem(id, models.Item{Name: form.Name, Description: form.Description, Count: form.Count})
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	redirect := fmt.Sprintf("/characters/%d", id)
+	http.Redirect(w, r, redirect, http.StatusSeeOther)
 }

@@ -13,6 +13,7 @@ type Character struct {
 	Attributes CharacterAttributes
 	Stats      CharacterStats
 	Skills     CharacterSkills
+	Items      []Item
 }
 
 type CharacterInfo struct {
@@ -193,10 +194,18 @@ func (s CharacterSkills) AsMap() map[string]int {
 	}
 }
 
+type Item struct {
+	ItemID      int
+	Name        string
+	Description string
+	Count       int
+}
+
 type CharacterModelInterface interface {
 	Insert(character Character, created_by int) (int, error)
 	Get(characterId int) (Character, error)
 	GetAll(userId int) ([]Character, error)
+	AddItem(characterId int, item Item) error
 }
 
 type CharacterModel struct {
@@ -290,6 +299,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	var attr CharacterAttributes
 	var stats CharacterStats
 	var sk CharacterSkills
+	var items []Item
 
 	stmt := "SELECT name, profession, age, gender, residence, birthplace FROM character_info WHERE character_id=?;"
 	result := c.DB.QueryRow(stmt, characterId)
@@ -338,7 +348,24 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		return Character{}, err
 	}
 
-	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: sk}, nil
+	stmt = "SELECT name, description, cnt FROM items WHERE character_id=?;"
+	rows, err := c.DB.Query(stmt, characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Character{}, ErrNoRecord
+		}
+		return Character{}, err
+	}
+	for rows.Next() {
+		var item Item
+		err := rows.Scan(&item.Name, &item.Description, &item.Count)
+		if err != nil {
+			return Character{}, err
+		}
+		items = append(items, item)
+	}
+
+	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: sk, Items: items}, nil
 }
 
 func (c *CharacterModel) GetAll(userId int) ([]Character, error) {
@@ -372,4 +399,13 @@ func (c *CharacterModel) GetAll(userId int) ([]Character, error) {
 	}
 
 	return characters, nil
+}
+
+func (c *CharacterModel) AddItem(characterId int, item Item) error {
+	stmt := "INSERT INTO items (character_id, name, description, cnt) VALUES (?,?,?,?);"
+	_, err := c.DB.Exec(stmt, characterId, item.Name, item.Description, item.Count)
+	if err != nil {
+		return err
+	}
+	return nil
 }

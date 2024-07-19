@@ -22,43 +22,71 @@
             </tr>
         </table>
     </div>
-    <div id="attributes">
-        <table>
-            {{with $attr := .Attributes}}
-            {{range $key := $attr.OrderedKeys}}
-            <tr>
-                <th>{{$key}}</th>
-                <td>{{$v := index $attr.AsMap $key}} {{$v}} | {{half $v}} | {{fifth $v}}</td>
-            </tr>
-            {{end}}
-            {{end}}
-        </table>
-    </div>
-    <div id="stats">
-        <table>
-            <tr>
-                <th>Trefferpunkte</th>
-                <th>Stabilität</th>
-                <th>Magiepunkte</th>
-                <th>Glück</th>
-            </tr>
-            <tr>
-                <td>{{.Stats.TP}}</td>
-                <td>{{.Stats.STA}}</td>
-                <td>{{.Stats.MP}}</td>
-                <td>{{.Stats.LUCK}}</td>
-            </tr>
-        </table>
-    </div>
+    <details>
+        <summary>Attribute</summary>
+        <div id="attributes">
+            <table>
+                {{with $attr := .Attributes}}
+                {{range $key := $attr.OrderedKeys}}
+                <tr>
+                    <th>{{$key}}</th>
+                    <td>{{$v := index $attr.AsMap $key}} {{$v}} | {{half $v}} | {{fifth $v}}</td>
+                </tr>
+                {{end}}
+                {{end}}
+            </table>
+        </div>
+        <div id="stats">
+                <table>
+                    <tr>
+                        <th>Trefferpunkte</th>
+                        <th>Stabilität</th>
+                        <th>Magiepunkte</th>
+                        <th>Glück</th>
+                    </tr>
+                    <tr>
+                        <td>{{.Stats.TP}}</td>
+                        <td>{{.Stats.STA}}</td>
+                        <td>{{.Stats.MP}}</td>
+                        <td>{{.Stats.LUCK}}</td>
+                    </tr>
+                </table>
+        </div>
+    </details>
     <div id="skills">
-        <table>
-            {{range $key, $value := .Skills.AsMap}}
-            <tr>
-                <th>{{$key}}</th>
-                <td>{{$value}} | {{half $value}} | {{fifth $value}}</td>
-            </tr>
-            {{end}}
-        </table>
+        <details>
+            <summary>Fertigkeiten</summary>
+            <table>
+                {{range $key, $value := .Skills.AsMap}}
+                <tr>
+                    <th>{{$key}}</th>
+                    <td>{{$value}} | {{half $value}} | {{fifth $value}}</td>
+                </tr>
+                {{end}}
+            </table>
+        </details>
+    </div>
+    <div id="items">
+        <details>
+            <summary>Ausrüstung</summary>
+            <table>
+                <tr>
+                    <th>Gegenstand</th>
+                    <th>Beschreibung</th>
+                    <th>Anzahl</th>
+                </tr>
+                {{range .Items}}
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td>{{.Description}}</td>
+                    <td>{{.Count}}</td>
+                </tr>
+                {{end}}
+            </table>
+            <a href='/characters/{{.ID}}/addItem'>
+                <button>Gegenstand hinzufügen</button>
+            </a>
+        </details>
     </div>
     {{end}}
 {{end}}
