@@ -204,7 +204,8 @@ type Item struct {
 type CharacterModelInterface interface {
 	Insert(character Character, created_by int) (int, error)
 	Get(characterId int) (Character, error)
-	GetAll(userId int) ([]Character, error)
+	GetAllFrom(userId int) ([]Character, error)
+	GetAll() ([]Character, error)
 	AddItem(characterId int, item Item) error
 }
 
@@ -368,9 +369,42 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: sk, Items: items}, nil
 }
 
-func (c *CharacterModel) GetAll(userId int) ([]Character, error) {
+func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {
 	stmt := "SELECT id FROM characters WHERE created_by=?;"
 	rows, err := c.DB.Query(stmt, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var characterIds []int
+	for rows.Next() {
+		var id int
+		err := rows.Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		characterIds = append(characterIds, id)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	var characters []Character
+	for _, id := range characterIds {
+		character, err := c.Get(id)
+		if err != nil {
+			return nil, err
+		}
+		characters = append(characters, character)
+	}
+
+	return characters, nil
+}
+
+func (c *CharacterModel) GetAll() ([]Character, error) {
+	stmt := "SELECT id FROM characters;"
+	rows, err := c.DB.Query(stmt)
 	if err != nil {
 		return nil, err
 	}

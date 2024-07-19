@@ -39,13 +39,24 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	characters, err := app.characters.GetAll(userId)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	role := app.sessionManager.GetString(r.Context(), "role")
 	data := app.newTemplateData(r)
-	data.Characters = characters
+	if role == RoleGM {
+		characters, err := app.characters.GetAll()
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		data.Characters = characters
+	} else {
+		characters, err := app.characters.GetAllFrom(userId)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		data.Characters = characters
+	}
+
 	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
 
