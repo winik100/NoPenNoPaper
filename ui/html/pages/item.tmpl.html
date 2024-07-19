@@ -19,7 +19,7 @@
     </div>
     <div>
         <label>Anzahl:</label>
-        <input type='number' name='Count' {{if (eq .Form.Count 0)}} value='1' {{else}} value='.Form.Count' {{end}}>
+        <input type='number' name='Count' {{if .Form.Count}} value='{{.Form.Count}}' {{else}} value='1' {{end}}>
     </div>
     <div>
         <input type='submit' value='Gegenstand hinzufügen'>

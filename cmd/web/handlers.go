@@ -67,6 +67,9 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 
 	for key, info := range form.Info.AsMap() {
 		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
+		if key != "Geschlecht" && key != "Alter" {
+			form.CheckField(validators.MaxChars(info, 50), key, "Maximal 50 Zeichen erlaubt.")
+		}
 	}
 	form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
 	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
@@ -265,7 +268,9 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	form.CheckField(validators.NotBlank(form.Name), "Name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.MaxChars(form.Name, 50), "Name", "Maximal 50 Zeichen erlaubt.")
 	form.CheckField(validators.NotBlank(form.Description), "Description", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.MaxChars(form.Description, 255), "Description", "Maximal 255 Zeichen erlaubt.")
 	form.CheckField(form.Count > 0, "Count", "Die Anzahl muss positiv sein.")
 
 	if !form.Valid() {
