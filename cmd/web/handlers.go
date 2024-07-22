@@ -254,6 +254,63 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Character = character
+	app.sessionManager.Put(r.Context(), "characterId", id)
+	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
+}
+
+func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
+	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
+	if characterId == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	character, err := app.characters.Get(characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	stat := r.URL.Query().Get("inc")
+	updated, err := app.characters.IncrementStat(character, stat)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := app.newTemplateData(r)
+	data.Character = updated
+	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
+}
+
+func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
+	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
+	if characterId == 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	character, err := app.characters.Get(characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	stat := r.URL.Query().Get("dec")
+	updated, err := app.characters.DecrementStat(character, stat)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := app.newTemplateData(r)
+	data.Character = updated
 	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
 }
 

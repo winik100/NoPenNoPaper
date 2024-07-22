@@ -67,10 +67,27 @@ func (a CharacterAttributes) OrderedKeys() []string {
 }
 
 type CharacterStats struct {
-	TP   int
-	STA  int
-	MP   int
-	LUCK int
+	MaxTP   int
+	TP      int
+	MaxSTA  int
+	STA     int
+	MaxMP   int
+	MP      int
+	MaxLUCK int
+	LUCK    int
+}
+
+func (st CharacterStats) OrderedKeysCurrent() []string {
+	return []string{"TP", "STA", "MP", "LUCK"}
+}
+
+func (st CharacterStats) CurrentAsMap() map[string]int {
+	return map[string]int{
+		"TP":   st.TP,
+		"STA":  st.STA,
+		"MP":   st.MP,
+		"LUCK": st.LUCK,
+	}
 }
 
 type CharacterSkills struct {
@@ -207,6 +224,8 @@ type CharacterModelInterface interface {
 	GetAllFrom(userId int) ([]Character, error)
 	GetAll() ([]Character, error)
 	AddItem(characterId int, item Item) error
+	IncrementStat(character Character, stat string) (Character, error)
+	DecrementStat(character Character, stat string) (Character, error)
 }
 
 type CharacterModel struct {
@@ -225,10 +244,14 @@ func (c *Character) deriveStats() CharacterStats {
 	luck := res.Int() * 5
 
 	return CharacterStats{
-		TP:   tp,
-		STA:  sta,
-		MP:   mp,
-		LUCK: luck,
+		MaxTP:   tp,
+		TP:      tp,
+		MaxSTA:  sta,
+		STA:     sta,
+		MaxMP:   mp,
+		MP:      mp,
+		MaxLUCK: luck,
+		LUCK:    luck,
 	}
 }
 
@@ -265,8 +288,8 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 	}
 
 	stats := character.deriveStats()
-	stmt = "INSERT INTO character_stats (character_id, tp, sta, mp, luck) VALUES (?,?,?,?,?);"
-	_, err = tx.Exec(stmt, id, stats.TP, stats.STA, stats.MP, stats.LUCK)
+	stmt = "INSERT INTO character_stats (character_id, maxtp, tp, maxsta, sta, maxmp, mp, maxluck, luck) VALUES (?,?,?,?,?,?,?,?,?);"
+	_, err = tx.Exec(stmt, id, stats.TP, stats.TP, stats.STA, stats.STA, stats.MP, stats.MP, stats.LUCK, stats.LUCK)
 	if err != nil {
 		return 0, err
 	}
@@ -322,9 +345,9 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		return Character{}, err
 	}
 
-	stmt = "SELECT tp, sta, mp, luck FROM character_stats WHERE character_id=?;"
+	stmt = "SELECT maxtp, tp, maxsta, sta, maxmp, mp, maxluck, luck FROM character_stats WHERE character_id=?;"
 	result = c.DB.QueryRow(stmt, characterId)
-	err = result.Scan(&stats.TP, &stats.STA, &stats.MP, &stats.LUCK)
+	err = result.Scan(&stats.MaxTP, &stats.TP, &stats.MaxSTA, &stats.STA, &stats.MaxMP, &stats.MP, &stats.MaxLUCK, &stats.LUCK)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Character{}, ErrNoRecord
@@ -442,4 +465,74 @@ func (c *CharacterModel) AddItem(characterId int, item Item) error {
 		return err
 	}
 	return nil
+}
+
+func (c *CharacterModel) IncrementStat(character Character, stat string) (Character, error) {
+	var stmt string
+	switch stat {
+	case "TP":
+		stmt = "UPDATE character_stats SET tp=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.TP+1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.TP = character.Stats.TP + 1
+	case "STA":
+		stmt = "UPDATE character_stats SET sta=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.STA+1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.STA = character.Stats.STA + 1
+	case "MP":
+		stmt = "UPDATE character_stats SET mp=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.MP+1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.MP = character.Stats.MP + 1
+	case "LUCK":
+		stmt = "UPDATE character_stats SET luck=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.LUCK+1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.LUCK = character.Stats.LUCK + 1
+	}
+	return character, nil
+}
+
+func (c *CharacterModel) DecrementStat(character Character, stat string) (Character, error) {
+	var stmt string
+	switch stat {
+	case "TP":
+		stmt = "UPDATE character_stats SET tp=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.TP-1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.TP = character.Stats.TP - 1
+	case "STA":
+		stmt = "UPDATE character_stats SET sta=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.STA-1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.STA = character.Stats.STA - 1
+	case "MP":
+		stmt = "UPDATE character_stats SET mp=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.MP-1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.MP = character.Stats.MP - 1
+	case "LUCK":
+		stmt = "UPDATE character_stats SET luck=? WHERE character_id=?;"
+		_, err := c.DB.Exec(stmt, character.Stats.LUCK-1, character.ID)
+		if err != nil {
+			return character, err
+		}
+		character.Stats.LUCK = character.Stats.LUCK - 1
+	}
+	return character, nil
 }

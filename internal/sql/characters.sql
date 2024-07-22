@@ -29,9 +29,13 @@ CREATE TABLE IF NOT EXISTS character_attributes (
 );
 CREATE TABLE IF NOT EXISTS character_stats (
 	character_id INTEGER NOT NULL PRIMARY KEY,
+	maxtp INTEGER NOT NULL,
 	tp INTEGER NOT NULL,
+	maxsta INTEGER NOT NULL,
 	sta INTEGER NOT NULL,
+	maxmp INTEGER NOT NULL,
 	mp INTEGER NOT NULL,
+	maxluck INTEGER NOT NULL,
 	luck INTEGER NOT NULL,
 	FOREIGN KEY (character_id) REFERENCES characters(id)
 

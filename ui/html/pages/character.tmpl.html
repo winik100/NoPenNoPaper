@@ -1,6 +1,7 @@
 {{define "title"}}Investigator #{{.Character.ID}}{{end}}
 
 {{define "main"}}
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     {{with .Character}}
     <div id="info">
         <table>
@@ -22,37 +23,38 @@
             </tr>
         </table>
     </div>
-    <details>
-        <summary>Attribute</summary>
-        <div id="attributes">
+    <div id="attributes">
+        <table>
+            {{with $attr := .Attributes}}
+            {{range $key := $attr.OrderedKeys}}
+            <tr>
+                <th>{{$key}}</th>
+                <td>{{$v := index $attr.AsMap $key}} {{$v}} | {{half $v}} | {{fifth $v}}</td>
+            </tr>
+            {{end}}
+            {{end}}
+        </table>
+    </div>
+    <div id="stats">
             <table>
-                {{with $attr := .Attributes}}
-                {{range $key := $attr.OrderedKeys}}
                 <tr>
-                    <th>{{$key}}</th>
-                    <td>{{$v := index $attr.AsMap $key}} {{$v}} | {{half $v}} | {{fifth $v}}</td>
+                    <th>Trefferpunkte ({{.Stats.MaxTP}})</th>
+                    <th>Stabilität ({{.Stats.MaxSTA}})</th>
+                    <th>Magiepunkte ({{.Stats.MaxMP}})</th>
+                    <th>Glück ({{.Stats.MaxLUCK}})</th>
                 </tr>
-                {{end}}
-                {{end}}
+                <tr>
+                    {{$stats := .Stats}}
+                    {{range $stat := $stats.OrderedKeysCurrent}}
+                    <td>
+                        <button name="inc" value="{{$stat}}" hx-get="/inc" hx-target="#{{$stat}}" hx-select="#{{$stat}}" hx-swap="outerHTML">+</button>
+                        <div id="{{$stat}}">{{index $stats.CurrentAsMap $stat}}</div>
+                        <button name="dec" value="{{$stat}}" hx-get="/dec" hx-target="#{{$stat}}" hx-select="#{{$stat}}" hx-swap="outerHTML">-</button>
+                    </td>
+                    {{end}}  
+                </tr>
             </table>
-        </div>
-        <div id="stats">
-                <table>
-                    <tr>
-                        <th>Trefferpunkte</th>
-                        <th>Stabilität</th>
-                        <th>Magiepunkte</th>
-                        <th>Glück</th>
-                    </tr>
-                    <tr>
-                        <td>{{.Stats.TP}}</td>
-                        <td>{{.Stats.STA}}</td>
-                        <td>{{.Stats.MP}}</td>
-                        <td>{{.Stats.LUCK}}</td>
-                    </tr>
-                </table>
-        </div>
-    </details>
+    </div>
     <div id="skills">
         <details>
             <summary>Fertigkeiten</summary>
@@ -86,6 +88,15 @@
             <a href='/characters/{{.ID}}/addItem'>
                 <button>Gegenstand hinzufügen</button>
             </a>
+        </details>
+    </div>
+    <div id="notes">
+        <details>
+            <summary>Notizen</summary>
+            <ul>
+                {{range .Notes}}
+                <li>{{.}}</li>
+            </ul>
         </details>
     </div>
     {{end}}

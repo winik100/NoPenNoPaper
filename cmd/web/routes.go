@@ -27,7 +27,11 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /characters/{id}/addItem", protectedChain.ThenFunc(app.addItem))
 	mux.Handle("POST /characters/{id}/addItem", protectedChain.ThenFunc(app.addItemPost))
 
-	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
+	//some helpers
+	mux.Handle("GET /inc", protectedChain.ThenFunc(app.Inc))
+	mux.Handle("GET /dec", protectedChain.ThenFunc(app.Dec))
+
+	standardChain := alice.New(app.recoverPanic, app.logRequest) //, headers)
 	return standardChain.Then(mux)
 }
 
@@ -39,6 +43,6 @@ const (
 
 var Permissions = map[string][]string{
 	RoleAnon:   {"/", "/signup", "/login"},
-	RolePlayer: {"/", "/logout", "/create", "/characters/.*", "/characters/.*/addItem"},
-	RoleGM:     {"/", "/logout", "/create", "/characters/.*", "/characters/.*/addItem"},
+	RolePlayer: {"/", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/inc"},
+	RoleGM:     {"/", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/inc"},
 }
