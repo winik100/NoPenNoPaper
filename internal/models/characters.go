@@ -14,6 +14,7 @@ type Character struct {
 	Stats      CharacterStats
 	Skills     CharacterSkills
 	Items      []Item
+	Notes      []string
 }
 
 type CharacterInfo struct {
@@ -224,6 +225,7 @@ type CharacterModelInterface interface {
 	GetAllFrom(userId int) ([]Character, error)
 	GetAll() ([]Character, error)
 	AddItem(characterId int, item Item) error
+	AddNote(characterId int, text string) error
 	IncrementStat(character Character, stat string) (Character, error)
 	DecrementStat(character Character, stat string) (Character, error)
 }
@@ -324,6 +326,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	var stats CharacterStats
 	var sk CharacterSkills
 	var items []Item
+	var notes []string
 
 	stmt := "SELECT name, profession, age, gender, residence, birthplace FROM character_info WHERE character_id=?;"
 	result := c.DB.QueryRow(stmt, characterId)
@@ -389,7 +392,24 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		items = append(items, item)
 	}
 
-	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: sk, Items: items}, nil
+	stmt = "SELECT text FROM notes WHERE character_id=?;"
+	rows, err = c.DB.Query(stmt, characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Character{}, ErrNoRecord
+		}
+		return Character{}, err
+	}
+	for rows.Next() {
+		var note string
+		err := rows.Scan(&note)
+		if err != nil {
+			return Character{}, err
+		}
+		notes = append(notes, note)
+	}
+
+	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: sk, Items: items, Notes: notes}, nil
 }
 
 func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {
@@ -461,6 +481,15 @@ func (c *CharacterModel) GetAll() ([]Character, error) {
 func (c *CharacterModel) AddItem(characterId int, item Item) error {
 	stmt := "INSERT INTO items (character_id, name, description, cnt) VALUES (?,?,?,?);"
 	_, err := c.DB.Exec(stmt, characterId, item.Name, item.Description, item.Count)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) AddNote(characterId int, text string) error {
+	stmt := "INSERT INTO notes (character_id, text) VALUES (?,?);"
+	_, err := c.DB.Exec(stmt, characterId, text)
 	if err != nil {
 		return err
 	}

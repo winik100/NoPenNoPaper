@@ -87,4 +87,9 @@ CREATE TABLE IF NOT EXISTS items (
 	description VARCHAR(255) NOT NULL,
 	cnt INTEGER NOT NULL,
 	FOREIGN KEY (character_id) REFERENCES characters(id)
-)
+);
+CREATE TABLE IF NOT EXISTS notes (
+	character_id INTEGER NOT NULL,
+	text VARCHAR(255) NOT NULL,
+	FOREIGN KEY (character_id) REFERENCES characters(id)
+);

@@ -71,6 +71,9 @@
     <div id="items">
         <details>
             <summary>Ausrüstung</summary>
+            <a href='/characters/{{.ID}}/addItem'>
+                <button>Gegenstand hinzufügen</button>
+            </a>
             <table>
                 <tr>
                     <th>Gegenstand</th>
@@ -85,18 +88,19 @@
                 </tr>
                 {{end}}
             </table>
-            <a href='/characters/{{.ID}}/addItem'>
-                <button>Gegenstand hinzufügen</button>
-            </a>
         </details>
     </div>
     <div id="notes">
         <details>
             <summary>Notizen</summary>
-            <ul>
-                {{range .Notes}}
-                <li>{{.}}</li>
-            </ul>
+            <div id="note" hx-target="this" hx-swap="outerHTML">
+                <button hx-get="/characters/{{.ID}}/addNote">Notiz hinzufügen</button>
+                <ul>
+                    {{range .Notes}}
+                    <li>{{.}} <button>löschen</button></li>
+                    {{end}}
+                </ul>
+            </div>
         </details>
     </div>
     {{end}}

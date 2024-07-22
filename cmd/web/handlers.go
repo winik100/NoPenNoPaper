@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -28,6 +29,11 @@ type itemForm struct {
 	Name                     string
 	Description              string
 	Count                    int
+	validators.FormValidator `schema:"-"`
+}
+
+type noteForm struct {
+	Text                     string
 	validators.FormValidator `schema:"-"`
 }
 
@@ -355,4 +361,98 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 	}
 	redirect := fmt.Sprintf("/characters/%d", id)
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
+}
+
+func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	character, err := app.characters.Get(characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	tmplStr := `<form hx-post="/characters/{{.Character.ID}}/addNote" hx-target="this" hx-swap="outerHTML" hx-select="#note">
+					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+					<div>
+						<label>Notiz:</label>
+						<input type="text" name="Text" textarea>
+					</div>
+					<button type="submit">Hinzufügen</button>
+					<button hx-get="/characters/{{.Character.ID}}">Abbrechen</button>
+				<ul>
+                    {{range .Character.Notes}}
+                    <li>{{.}} <button>löschen</button></li>
+                    {{end}}
+                </ul>
+				</form>`
+
+	t, err := template.New("addnote").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := app.newTemplateData(r)
+	data.Character = character
+	data.Form = noteForm{}
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "addnote", data)
+}
+
+func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	var form noteForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+	err = app.characters.AddNote(characterId, form.Text)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	tmplStr := `<div id="note" hx-target="this" hx-swap="outerHTML">
+                	<button hx-get="/characters/{{.Character.ID}}/addNote">Notiz hinzufügen</button>
+					<ul>
+                    {{range .Character.Notes}}
+                    <li>{{.}} <button>löschen</button></li>
+                    {{end}}
+                </ul>
+            	</div>`
+
+	t, err := template.New("button").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	character, err := app.characters.Get(characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Character = character
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "button", data)
 }

@@ -20,18 +20,20 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /login", dynamicChain.ThenFunc(app.loginPost))
 	mux.Handle("POST /logout", dynamicChain.ThenFunc(app.logoutPost))
 
-	protectedChain := dynamicChain.Append(app.requireAuthentication, app.Restrict)
+	protectedChain := dynamicChain.Append(app.requireAuthentication, app.restrict)
 	mux.Handle("GET /create", protectedChain.ThenFunc(app.create))
 	mux.Handle("POST /create", protectedChain.ThenFunc(app.createPost))
 	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
 	mux.Handle("GET /characters/{id}/addItem", protectedChain.ThenFunc(app.addItem))
 	mux.Handle("POST /characters/{id}/addItem", protectedChain.ThenFunc(app.addItemPost))
+	mux.Handle("GET /characters/{id}/addNote", protectedChain.ThenFunc(app.addNote))
+	mux.Handle("POST /characters/{id}/addNote", protectedChain.ThenFunc(app.addNotePost))
 
 	//some helpers
 	mux.Handle("GET /inc", protectedChain.ThenFunc(app.Inc))
 	mux.Handle("GET /dec", protectedChain.ThenFunc(app.Dec))
 
-	standardChain := alice.New(app.recoverPanic, app.logRequest) //, headers)
+	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)
 }
 
