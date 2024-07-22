@@ -281,15 +281,27 @@ func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stat := r.URL.Query().Get("inc")
+	stat := r.FormValue("inc")
 	updated, err := app.characters.IncrementStat(character, stat)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	data := app.newTemplateData(r)
-	data.Character = updated
-	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
+
+	updatedStat := updated.Stats.CurrentAsMap()[stat]
+	tmplStr := `<div id="{{.Stat}}" value="{{.Value}}">{{.Value}}</div>`
+
+	t, err := template.New("inc").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := map[string]string{
+		"Stat":  stat,
+		"Value": strconv.Itoa(updatedStat),
+	}
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "inc", data)
 }
 
 func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
@@ -309,15 +321,28 @@ func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stat := r.URL.Query().Get("dec")
+	stat := r.FormValue("dec")
 	updated, err := app.characters.DecrementStat(character, stat)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	data := app.newTemplateData(r)
-	data.Character = updated
-	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
+
+	updatedStat := updated.Stats.CurrentAsMap()[stat]
+	fmt.Println(updatedStat)
+	tmplStr := `<div id="{{.Stat}}" name="Stat" value="{{.Value}}">{{.Value}}</div>`
+
+	t, err := template.New("dec").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data := map[string]string{
+		"Stat":  stat,
+		"Value": strconv.Itoa(updatedStat),
+	}
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "dec", data)
 }
 
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {

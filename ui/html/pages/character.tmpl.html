@@ -1,7 +1,7 @@
 {{define "title"}}Investigator #{{.Character.ID}}{{end}}
 
 {{define "main"}}
-    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    {{$csrf := .CSRFToken}}
     {{with .Character}}
     <div id="info">
         <table>
@@ -47,9 +47,12 @@
                     {{$stats := .Stats}}
                     {{range $stat := $stats.OrderedKeysCurrent}}
                     <td>
-                        <button name="inc" value="{{$stat}}" hx-get="/inc" hx-target="#{{$stat}}" hx-select="#{{$stat}}" hx-swap="outerHTML">+</button>
-                        <div id="{{$stat}}">{{index $stats.CurrentAsMap $stat}}</div>
-                        <button name="dec" value="{{$stat}}" hx-get="/dec" hx-target="#{{$stat}}" hx-select="#{{$stat}}" hx-swap="outerHTML">-</button>
+                        <form>
+                            <input type="hidden" name="csrf_token" value="{{$csrf}}">
+                            <button type="submit" name="inc" hx-post="/inc" hx-target="#{{$stat}}" hx-swap="outerHTML" value="{{$stat}}">+</button>
+                            <div id="{{$stat}}" value="{{$stat}}">{{index $stats.CurrentAsMap $stat}}</div>
+                            <button type="submit" name="dec" hx-post="/dec" hx-target="#{{$stat}}" hx-swap="outerHTML" value="{{$stat}}">-</button>
+                        </form>
                     </td>
                     {{end}}  
                 </tr>
