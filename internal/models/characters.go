@@ -7,12 +7,22 @@ import (
 	"github.com/justinian/dice"
 )
 
+// type Character struct {
+// 	ID         int
+// 	Info       CharacterInfo
+// 	Attributes CharacterAttributes
+// 	Stats      CharacterStats
+// 	Skills     CharacterSkills
+// 	Items      []Item
+// 	Notes      []string
+// }
+
 type Character struct {
 	ID         int
 	Info       CharacterInfo
 	Attributes CharacterAttributes
 	Stats      CharacterStats
-	Skills     CharacterSkills
+	Skills     Skills
 	Items      []Item
 	Notes      []string
 }
@@ -91,149 +101,6 @@ func (st CharacterStats) CurrentAsMap() map[string]int {
 	}
 }
 
-type CharacterSkills struct {
-	Anthropology      int
-	Archaeology       int
-	Driving           int
-	LibraryResearch   int
-	Accounting        int
-	Charme            int
-	CthulhuMythos     int
-	Intimidate        int
-	ElectricRepairs   int
-	FirstAid          int
-	Financials        int
-	History           int
-	Listening         int
-	Concealing        int
-	Climbing          int
-	MechanicalRepairs int
-	Medicine          int
-	NaturalHistory    int
-	Occultism         int
-	Orientation       int
-	PsychoAnalysis    int
-	Psychology        int
-	Law               int
-	Horseriding       int
-	Locks             int
-	HeavyMachinery    int
-	Swimming          int
-	Jumping           int
-	Tracking          int
-	Persuasion        int
-	Convincing        int
-	Stealth           int
-	DetectingSecrets  int
-	Disguising        int
-	Throwing          int
-	Valuation         int
-}
-
-func DefaultCharacterSkills() CharacterSkills {
-	var skills CharacterSkills
-	skills.Anthropology = 1
-	skills.Archaeology = 1
-	skills.Driving = 20
-	skills.LibraryResearch = 20
-	skills.Accounting = 5
-	skills.Charme = 15
-	skills.CthulhuMythos = 0
-	skills.Intimidate = 15
-	skills.ElectricRepairs = 10
-	skills.FirstAid = 30
-	skills.Financials = 0
-	skills.History = 5
-	skills.Listening = 20
-	skills.Concealing = 10
-	skills.Climbing = 20
-	skills.MechanicalRepairs = 10
-	skills.Medicine = 1
-	skills.NaturalHistory = 10
-	skills.Occultism = 5
-	skills.Orientation = 10
-	skills.PsychoAnalysis = 1
-	skills.Psychology = 10
-	skills.Law = 5
-	skills.Horseriding = 5
-	skills.Locks = 1
-	skills.HeavyMachinery = 1
-	skills.Swimming = 20
-	skills.Jumping = 20
-	skills.Tracking = 10
-	skills.Persuasion = 5
-	skills.Convincing = 10
-	skills.Stealth = 20
-	skills.DetectingSecrets = 25
-	skills.Disguising = 5
-	skills.Throwing = 20
-	skills.Valuation = 5
-	return skills
-}
-
-func (s CharacterSkills) AsMap() map[string]int {
-	return map[string]int{
-		"Anthropologie":           s.Anthropology,
-		"Archäologie":             s.Archaeology,
-		"Autofahren":              s.Driving,
-		"Bibliotheksnutzung":      s.LibraryResearch,
-		"Buchführung":             s.Accounting,
-		"Charme":                  s.Charme,
-		"Cthulhu-Mythos":          s.CthulhuMythos,
-		"Einschüchtern":           s.Intimidate,
-		"Elektrische Reparaturen": s.ElectricRepairs,
-		"Erste Hilfe":             s.FirstAid,
-		"Finanzkraft":             s.Financials,
-		"Geschichte":              s.History,
-		"Horchen":                 s.Listening,
-		"Kaschieren":              s.Concealing,
-		"Klettern":                s.Climbing,
-		"Mechanische Reparaturen": s.MechanicalRepairs,
-		"Medizin":                 s.Medicine,
-		"Naturkunde":              s.NaturalHistory,
-		"Okkultismus":             s.Occultism,
-		"Orientierung":            s.Orientation,
-		"Psychoanalyse":           s.PsychoAnalysis,
-		"Psychologie":             s.Psychology,
-		"Rechtswesen":             s.Law,
-		"Reiten":                  s.Horseriding,
-		"Schließtechnik":          s.Locks,
-		"Schweres Gerät":          s.HeavyMachinery,
-		"Schwimmen":               s.Swimming,
-		"Springen":                s.Jumping,
-		"Spurensuche":             s.Tracking,
-		"Überreden":               s.Persuasion,
-		"Überzeugen":              s.Convincing,
-		"Verborgen bleiben":       s.Stealth,
-		"Verborgenes erkennen":    s.DetectingSecrets,
-		"Verkleiden":              s.Disguising,
-		"Werfen":                  s.Throwing,
-		"Werte schätzen":          s.Valuation,
-	}
-}
-
-type Item struct {
-	ItemID      int
-	Name        string
-	Description string
-	Count       int
-}
-
-type CharacterModelInterface interface {
-	Insert(character Character, created_by int) (int, error)
-	Get(characterId int) (Character, error)
-	GetAllFrom(userId int) ([]Character, error)
-	GetAll() ([]Character, error)
-	AddItem(characterId int, item Item) error
-	AddNote(characterId int, text string) error
-	IncrementStat(character Character, stat string) (Character, error)
-	DecrementStat(character Character, stat string) (Character, error)
-}
-
-type CharacterModel struct {
-	DB *sql.DB
-}
-
 func (c *Character) deriveStats() CharacterStats {
 	tp := (c.Attributes.KO + c.Attributes.GR) / 10
 	sta := c.Attributes.MA
@@ -255,6 +122,61 @@ func (c *Character) deriveStats() CharacterStats {
 		MaxLUCK: luck,
 		LUCK:    luck,
 	}
+}
+
+// workaround due to gorillas.schema not being able to parse into slices of structs
+type Skills struct {
+	Name  []string
+	Value []int
+}
+
+func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
+	var skillsName []string
+	var skillsValue []int
+	stmt := "SELECT name, default_value FROM skills;"
+	rows, err := c.DB.Query(stmt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Skills{}, err
+		}
+		return Skills{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		var value int
+		err = rows.Scan(&name, &value)
+		if err != nil {
+			return Skills{}, err
+		}
+		skillsName = append(skillsName, name)
+		skillsValue = append(skillsValue, value)
+	}
+	return Skills{Name: skillsName, Value: skillsValue}, nil
+}
+
+type Item struct {
+	ItemID      int
+	Name        string
+	Description string
+	Count       int
+}
+
+type CharacterModelInterface interface {
+	Insert(character Character, created_by int) (int, error)
+	Get(characterId int) (Character, error)
+	GetAllFrom(userId int) ([]Character, error)
+	GetAll() ([]Character, error)
+	GetAvailableSkills() (Skills, error)
+	AddItem(characterId int, item Item) error
+	AddNote(characterId int, text string) error
+	IncrementStat(character Character, stat string) (Character, error)
+	DecrementStat(character Character, stat string) (Character, error)
+}
+
+type CharacterModel struct {
+	DB *sql.DB
 }
 
 func (c *CharacterModel) Insert(character Character, created_by int) (int, error) {
@@ -296,20 +218,12 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 		return 0, err
 	}
 
-	stmt = `INSERT INTO character_skills (character_id, anthropology, archaeology, driving, libraryResearch, accounting, charme, cthulhuMythos, intimidate, electricRepairs,
-				firstAid, financials, history, listening, concealing, climbing, mechanicalRepairs, medicine, naturalHistory, occultism, orientation, psychoAnalysis, psychology, 
-				law, horseriding, locks, heavyMachinery, swimming, jumping, tracking, persuasion, convincing, stealth, detectingSecrets, disguising, throwing, valuation)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
-	_, err = tx.Exec(stmt, id, character.Skills.Anthropology, character.Skills.Archaeology, character.Skills.Driving, character.Skills.LibraryResearch, character.Skills.Accounting,
-		character.Skills.Charme, character.Skills.CthulhuMythos, character.Skills.Intimidate, character.Skills.ElectricRepairs, character.Skills.FirstAid, character.Skills.Financials,
-		character.Skills.History, character.Skills.Listening, character.Skills.Concealing, character.Skills.Climbing, character.Skills.MechanicalRepairs, character.Skills.Medicine,
-		character.Skills.NaturalHistory, character.Skills.Occultism, character.Skills.Orientation, character.Skills.PsychoAnalysis, character.Skills.Psychology, character.Skills.Law,
-		character.Skills.Horseriding, character.Skills.Locks, character.Skills.HeavyMachinery, character.Skills.Swimming, character.Skills.Jumping, character.Skills.Tracking,
-		character.Skills.Persuasion, character.Skills.Convincing, character.Skills.Stealth, character.Skills.DetectingSecrets, character.Skills.Disguising, character.Skills.Throwing,
-		character.Skills.Valuation)
-
-	if err != nil {
-		return 0, err
+	for i, skill := range character.Skills.Name {
+		stmt = "INSERT INTO character_skills (character_id, skill_name, value) VALUES (?,?,?);"
+		_, err = tx.Exec(stmt, id, skill, character.Skills.Value[i])
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	err = tx.Commit()
@@ -324,7 +238,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	var info CharacterInfo
 	var attr CharacterAttributes
 	var stats CharacterStats
-	var sk CharacterSkills
+	var skills Skills
 	var items []Item
 	var notes []string
 
@@ -358,16 +272,8 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		return Character{}, err
 	}
 
-	stmt = `SELECT anthropology, archaeology, driving, libraryResearch, accounting, charme, cthulhuMythos, intimidate, electricRepairs,
-				firstAid, financials, history, listening, concealing, climbing, mechanicalRepairs, medicine, naturalHistory, occultism, orientation, psychoAnalysis, psychology, 
-				law, horseriding, locks, heavyMachinery, swimming, jumping, tracking, persuasion, convincing, stealth, detectingSecrets, disguising, throwing, valuation
-			FROM character_skills
-			WHERE character_id=?;`
-	result = c.DB.QueryRow(stmt, characterId)
-	err = result.Scan(&sk.Anthropology, &sk.Archaeology, &sk.Driving, &sk.LibraryResearch, &sk.Accounting, &sk.Charme, &sk.CthulhuMythos, &sk.Intimidate, &sk.ElectricRepairs, &sk.FirstAid,
-		&sk.Financials, &sk.History, &sk.Listening, &sk.Concealing, &sk.Climbing, &sk.MechanicalRepairs, &sk.Medicine, &sk.NaturalHistory, &sk.Occultism, &sk.Orientation, &sk.PsychoAnalysis,
-		&sk.Psychology, &sk.Law, &sk.Horseriding, &sk.Locks, &sk.HeavyMachinery, &sk.Swimming, &sk.Jumping, &sk.Tracking, &sk.Persuasion, &sk.Convincing, &sk.Stealth, &sk.DetectingSecrets,
-		&sk.Disguising, &sk.Throwing, &sk.Valuation)
+	stmt = "SELECT skill_name, value FROM character_skills WHERE character_id=?;"
+	rows, err := c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Character{}, ErrNoRecord
@@ -375,8 +281,24 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		return Character{}, err
 	}
 
+	var skillsName []string
+	var skillsValue []int
+	for rows.Next() {
+		var name string
+		var value int
+
+		err = rows.Scan(&name, &value)
+		if err != nil {
+			return Character{}, err
+		}
+		skillsName = append(skillsName, name)
+		skillsValue = append(skillsValue, value)
+	}
+	skills.Name = skillsName
+	skills.Value = skillsValue
+
 	stmt = "SELECT name, description, cnt FROM items WHERE character_id=?;"
-	rows, err := c.DB.Query(stmt, characterId)
+	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return Character{}, ErrNoRecord
@@ -385,7 +307,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	}
 	for rows.Next() {
 		var item Item
-		err := rows.Scan(&item.Name, &item.Description, &item.Count)
+		err = rows.Scan(&item.Name, &item.Description, &item.Count)
 		if err != nil {
 			return Character{}, err
 		}
@@ -402,14 +324,14 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	}
 	for rows.Next() {
 		var note string
-		err := rows.Scan(&note)
+		err = rows.Scan(&note)
 		if err != nil {
 			return Character{}, err
 		}
 		notes = append(notes, note)
 	}
 
-	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: sk, Items: items, Notes: notes}, nil
+	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, Items: items, Notes: notes}, nil
 }
 
 func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {

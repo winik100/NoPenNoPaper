@@ -15,7 +15,7 @@ import (
 type characterCreateForm struct {
 	Info                     models.CharacterInfo
 	Attributes               models.CharacterAttributes
-	Skills                   models.CharacterSkills
+	Skills                   models.Skills
 	validators.FormValidator `schema:"-"`
 }
 
@@ -68,7 +68,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) create(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = characterCreateForm{Skills: models.DefaultCharacterSkills()}
+	skills, err := app.characters.GetAvailableSkills()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data.Form = characterCreateForm{Skills: skills}
 
 	app.render(w, r, http.StatusOK, "create.tmpl.html", data)
 }
@@ -95,24 +100,6 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	for key, attr := range form.Attributes.AsMap() {
 		if key != "BW" {
 			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
-		}
-	}
-
-	defaultSkills := models.DefaultCharacterSkills().AsMap()
-	skillMap := form.Skills.AsMap()
-
-	count := 0
-	for skill, value := range skillMap {
-		if value != defaultSkills[skill] {
-			count++
-			form.CheckField(validators.PermittedValue(value, 40, 50, 60, 70), skill, "Ungültiger Wert.")
-		}
-		if count > 9 {
-			form.AddGenericError("Ungültige Fertigkeitsverteilung (mehr als 9 Fertigkeiten modifiziert).")
-			break
-		}
-		if skill == "Finanzkraft" && value == 0 {
-			form.AddFieldError("Finanzkraft", "Finanzkraft muss ein Wert zugewiesen werden.")
 		}
 	}
 

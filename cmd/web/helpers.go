@@ -8,52 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/schema"
-	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/ui"
 )
-
-var translationKey = map[string]string{
-	"Anthropologie":           "Anthropology",
-	"Archäologie":             "Archaeology",
-	"Autofahren":              "Driving",
-	"Bibliotheksnutzung":      "LibraryResearch",
-	"Buchführung":             "Accounting",
-	"Charme":                  "Charme",
-	"Cthulhu-Mythos":          "CthulhuMythos",
-	"Einschüchtern":           "Intimidate",
-	"Elektrische Reparaturen": "ElectricRepairs",
-	"Erste Hilfe":             "FirstAid",
-	"Finanzkraft":             "Financials",
-	"Geschichte":              "History",
-	"Horchen":                 "Listening",
-	"Kaschieren":              "Concealing",
-	"Klettern":                "Climbing",
-	"Mechanische Reparaturen": "MechanicalRepairs",
-	"Medizin":                 "Medicine",
-	"Naturkunde":              "NaturalHistory",
-	"Okkultismus":             "Occultism",
-	"Orientierung":            "Orientation",
-	"Psychoanalyse":           "PsychoAnalysis",
-	"Psychologie":             "Psychology",
-	"Rechtswesen":             "Law",
-	"Reiten":                  "Horseriding",
-	"Schließtechnik":          "Locks",
-	"Schweres Gerät":          "HeavyMachinery",
-	"Schwimmen":               "Swimming",
-	"Springen":                "Jumping",
-	"Spurensuche":             "Tracking",
-	"Überreden":               "Persuasion",
-	"Überzeugen":              "Convincing",
-	"Verborgen bleiben":       "Stealth",
-	"Verborgenes erkennen":    "DetectingSecrets",
-	"Verkleiden":              "Disguising",
-	"Werfen":                  "Throwing",
-	"Werte schätzen":          "Valuation",
-}
-
-func translateToFieldName(skill string) string {
-	return translationKey[skill]
-}
 
 func half(value int) int {
 	return value / 2
@@ -64,10 +20,8 @@ func fifth(value int) int {
 }
 
 var funcs = template.FuncMap{
-	"half":                   half,
-	"fifth":                  fifth,
-	"translate":              translateToFieldName,
-	"defaultCharacterSkills": models.DefaultCharacterSkills,
+	"half":  half,
+	"fifth": fifth,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

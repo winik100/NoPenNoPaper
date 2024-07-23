@@ -109,21 +109,21 @@
         <p>Einer der 9 Werte muss auf Finanzkraft verwendet werden!</p>
             <table>
                 {{$fieldErrors := .Form.FieldErrors}}
-                {{$default := defaultCharacterSkills.AsMap}}
-                {{range $key, $value := .Form.Skills.AsMap}}
-                {{$tkey := translate $key}}
+                {{$keys := .Form.Skills.Name}}
+                {{$values := .Form.Skills.Value}}
+                {{range $ind, $key := $keys}}
                 <tr>
                     <td>
                         <label>{{$key}}</label>
-                        <input id='skill' type='hidden' name='Skills.{{$tkey}}' value='{{index $default $key}}'>
-                        <select id='{{$tkey}}' name='Skills.{{$tkey}}' disabled>
-                            <option value='{{index $default $key}}' selected>{{index $default $key}}</option>
+                        <input id='{{$key}}' type='hidden' name='Skills.Name' value='{{$key}}' disabled>
+                        <select id='{{$key}}Val' name='Skills.Value' disabled>
+                            <option value='{{index $values $ind}}' selected>{{index $values $ind}}</option>
                             <option value='70'>70</option>
                             <option value='60'>60</option>
                             <option value='50'>50</option>
                             <option value='40'>40</option>
                         </select>
-                        <input id='{{$tkey}}Edit' type='checkbox'>
+                        <input id='{{$key}}Edit' type='checkbox'>
                         {{with (index $fieldErrors $key)}}
                                 <label class='error'>{{.}}</label>
                         {{end}}
