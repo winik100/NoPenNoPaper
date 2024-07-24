@@ -161,7 +161,8 @@ a.button:hover, input[type="submit"]:hover {
 }
 
 form div {
-    margin-bottom: 18px;
+    margin-top: 9px;
+    margin-bottom: 9px;
 }
 
 form input[type="radio"] {

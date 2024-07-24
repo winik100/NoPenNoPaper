@@ -62,12 +62,14 @@
         <details>
             <summary>Fertigkeiten</summary>
             <table>
-                {{$keys := .Skills.Name}}
-                {{$values := .Skills.Value}}
+                {{$skills := .AllSkills}}
+                {{$keys := $skills.Name}}
+                {{$values := $skills.Value}}
                 {{range $ind, $key := $keys}}
                 <tr>
+                    {{$val := (index $values $ind)}}
                     <th>{{$key}}</th>
-                    <td>{{index $values $ind}} | {{half (index $values $ind)}} | {{fifth (index $values $ind)}}</td>
+                    <td>{{$val}} | {{half $val}} | {{fifth $val}}</td>
                 </tr>
                 {{end}}
             </table>

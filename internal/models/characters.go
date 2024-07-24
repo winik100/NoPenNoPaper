@@ -3,6 +3,7 @@ package models
 import (
 	"database/sql"
 	"errors"
+	"slices"
 
 	"github.com/justinian/dice"
 )
@@ -127,30 +128,13 @@ type CustomSkills struct {
 	Value    []int
 }
 
-func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
-	var skillsName []string
-	var skillsValue []int
-	stmt := "SELECT name, default_value FROM skills;"
-	rows, err := c.DB.Query(stmt)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return Skills{}, err
-		}
-		return Skills{}, err
-	}
-	defer rows.Close()
+func (character Character) AllSkills() Skills {
+	allNames := append(character.Skills.Name, character.CustomSkills.Name...)
+	allValues := append(character.Skills.Value, character.CustomSkills.Value...)
 
-	for rows.Next() {
-		var name string
-		var value int
-		err = rows.Scan(&name, &value)
-		if err != nil {
-			return Skills{}, err
-		}
-		skillsName = append(skillsName, name)
-		skillsValue = append(skillsValue, value)
-	}
-	return Skills{Name: skillsName, Value: skillsValue}, nil
+	slices.Sort(allNames)
+	slices.Sort(allValues)
+	return Skills{Name: allNames, Value: allValues}
 }
 
 type Item struct {
@@ -442,6 +426,32 @@ func (c *CharacterModel) GetAll() ([]Character, error) {
 	}
 
 	return characters, nil
+}
+
+func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
+	var skillsName []string
+	var skillsValue []int
+	stmt := "SELECT name, default_value FROM skills;"
+	rows, err := c.DB.Query(stmt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Skills{}, err
+		}
+		return Skills{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		var value int
+		err = rows.Scan(&name, &value)
+		if err != nil {
+			return Skills{}, err
+		}
+		skillsName = append(skillsName, name)
+		skillsValue = append(skillsValue, value)
+	}
+	return Skills{Name: skillsName, Value: skillsValue}, nil
 }
 
 func (c *CharacterModel) AddItem(characterId int, item Item) error {

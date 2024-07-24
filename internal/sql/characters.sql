@@ -55,52 +55,14 @@ CREATE TABLE IF NOT EXISTS character_skills (
 	value INTEGER NOT NULL,
 	CONSTRAINT fk_character_cs FOREIGN KEY (character_id) REFERENCES characters(id),
 	CONSTRAINT fk_skill_cs FOREIGN KEY (skill_name) REFERENCES skills(name),
-	CONSTRAINT character_skills_unique UNIQUE (character_id, skill_name)
+	CONSTRAINT pk_character_skills PRIMARY KEY (character_id, skill_name)
 );
-
-
-INSERT INTO skills (name, default_value) VALUES ('Anthropologie', 1),
-			('Archäologie', 1),
-			('Autofahren', 20),
-			('Bibliotheksnutzung', 20),
-			('Buchführung', 5),
-			('Charme', 15),
-			('Cthulhu-Mythos', 0),
-			('Einschüchtern', 15),
-			('Elektrische Reparaturen', 10),
-			('Erste Hilfe', 30),
-			('Finanzkraft', 0),
-			('Geschichte', 5),
-			('Horchen', 20),
-			('Kaschieren', 10),
-			('Klettern', 20),
-			('Mechanische Reparaturen', 10),
-			('Medizin', 1),
-			('Naturkunde', 10),
-			('Okkultismus', 5),
-			('Orientierung', 10),
-			('Psychoanalyse', 1),
-			('Psychologie', 10),
-			('Rechtswesen', 5),
-			('Reiten', 5),
-			('Schließtechnik', 1),
-			('Schweres Gerät', 1),
-			('Schwimmen', 20),
-			('Springen', 20),
-			('Spurensuche', 10),
-			('Überreden', 5),
-			('Überzeugen', 10),
-			('Verborgen bleiben', 20),
-			('Verborgenes erkennen', 25),
-			('Verkleiden', 5),
-			('Werfen', 20),
-			('Werte schätzen', 5);
 
 CREATE TABLE IF NOT EXISTS custom_skills (
 	name VARCHAR(50) NOT NULL,
 	category VARCHAR(50) NOT NULL,
 	default_value INTEGER NOT NULL,
-	CONSTRAINT name_category_unique UNIQUE (name, category)
+	CONSTRAINT pk_custom_skills PRIMARY KEY (name, category)
 );
 
 CREATE TABLE IF NOT EXISTS character_custom_skills (
@@ -109,7 +71,7 @@ CREATE TABLE IF NOT EXISTS character_custom_skills (
 	value INTEGER NOT NULL,
 	CONSTRAINT fk_character_ccs FOREIGN KEY (character_id) REFERENCES characters(id),
 	CONSTRAINT fk_custom_skill_ccs FOREIGN KEY (custom_skill_name) REFERENCES custom_skills(name),
-	CONSTRAINT character_custom_skills_unique UNIQUE (character_id, custom_skill_name)
+	CONSTRAINT pk_character_custom_skills PRIMARY KEY (character_id, custom_skill_name)
 );
 
 
