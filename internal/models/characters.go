@@ -216,13 +216,25 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 	}
 
 	for i, customSkill := range character.CustomSkills.Name {
-		stmt = "INSERT INTO skills (name, default_value) VALUES (?,?);"
-		_, err = tx.Exec(stmt, customSkill, DefaultForCategory(character.CustomSkills.Category[i]))
+		var exists bool
+		stmt = "SELECT EXISTS(SELECT true FROM custom_skills WHERE name=? AND category=?);"
+		err = tx.QueryRow(stmt, customSkill, character.CustomSkills.Category[i]).Scan(&exists)
 		if err != nil {
 			return 0, err
 		}
-		character.Skills.Name = append(character.Skills.Name, customSkill)
-		character.Skills.Value = append(character.Skills.Value, character.CustomSkills.Value[i])
+		if !exists {
+			stmt = "INSERT INTO custom_skills (name, category, default_value) VALUES (?,?,?);"
+			_, err = tx.Exec(stmt, customSkill, character.CustomSkills.Category[i], DefaultForCategory(character.CustomSkills.Category[i]))
+			if err != nil {
+				return 0, err
+			}
+		}
+
+		stmt = "INSERT INTO character_custom_skills (character_id, custom_skill_name, value) VALUES (?,?,?);"
+		_, err = tx.Exec(stmt, id, customSkill, character.CustomSkills.Value[i])
+		if err != nil {
+			return 0, err
+		}
 	}
 
 	for i, skill := range character.Skills.Name {
@@ -246,6 +258,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	var attr CharacterAttributes
 	var stats CharacterStats
 	var skills Skills
+	var customSkills CustomSkills
 	var items []Item
 	var notes []string
 
@@ -304,6 +317,30 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	skills.Name = skillsName
 	skills.Value = skillsValue
 
+	stmt = "SELECT custom_skill_name, value FROM character_custom_skills WHERE character_id=?;"
+	rows, err = c.DB.Query(stmt, characterId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Character{}, ErrNoRecord
+		}
+		return Character{}, err
+	}
+	var customSkillsName []string
+	var customSkillsValue []int
+	for rows.Next() {
+		var name string
+		var value int
+
+		err = rows.Scan(&name, &value)
+		if err != nil {
+			return Character{}, err
+		}
+		customSkillsName = append(customSkillsName, name)
+		customSkillsValue = append(customSkillsValue, value)
+	}
+	customSkills.Name = customSkillsName
+	customSkills.Value = customSkillsValue
+
 	stmt = "SELECT name, description, cnt FROM items WHERE character_id=?;"
 	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
@@ -338,7 +375,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		notes = append(notes, note)
 	}
 
-	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, Items: items, Notes: notes}, nil
+	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, CustomSkills: customSkills, Items: items, Notes: notes}, nil
 }
 
 func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {

@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS character_skills (
 	character_id INTEGER NOT NULL,
 	skill_name VARCHAR(50) NOT NULL,
 	value INTEGER NOT NULL,
-	CONSTRAINT fk_character FOREIGN KEY (character_id) REFERENCES characters(id),
-	CONSTRAINT fk_skill FOREIGN KEY (skill_name) REFERENCES skills(name),
+	CONSTRAINT fk_character_cs FOREIGN KEY (character_id) REFERENCES characters(id),
+	CONSTRAINT fk_skill_cs FOREIGN KEY (skill_name) REFERENCES skills(name),
 	CONSTRAINT character_skills_unique UNIQUE (character_id, skill_name)
 );
 
@@ -95,6 +95,23 @@ INSERT INTO skills (name, default_value) VALUES ('Anthropologie', 1),
 			('Verkleiden', 5),
 			('Werfen', 20),
 			('Werte schätzen', 5);
+
+CREATE TABLE IF NOT EXISTS custom_skills (
+	name VARCHAR(50) NOT NULL,
+	category VARCHAR(50) NOT NULL,
+	default_value INTEGER NOT NULL,
+	CONSTRAINT name_category_unique UNIQUE (name, category)
+);
+
+CREATE TABLE IF NOT EXISTS character_custom_skills (
+	character_id INTEGER NOT NULL,
+	custom_skill_name VARCHAR(50) NOT NULL,
+	value INTEGER NOT NULL,
+	CONSTRAINT fk_character_ccs FOREIGN KEY (character_id) REFERENCES characters(id),
+	CONSTRAINT fk_custom_skill_ccs FOREIGN KEY (custom_skill_name) REFERENCES custom_skills(name),
+	CONSTRAINT character_custom_skills_unique UNIQUE (character_id, custom_skill_name)
+);
+
 
 CREATE TABLE IF NOT EXISTS items (
 	item_id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,

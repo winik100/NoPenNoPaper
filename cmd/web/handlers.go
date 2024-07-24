@@ -473,6 +473,7 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request) {
 	tmplStr := `<tr id="{{.Category}}">
 					<td>
+						<input type='hidden' name='CustomSkills.Category' value='{{.Category}}'>
 						<label>{{.Category}}</label>
 						<input type="text" name="CustomSkills.Name">
 						<select name="CustomSkills.Value">
@@ -492,7 +493,7 @@ func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	category := r.URL.Query().Get("CustomSkills.Category")
+	category := r.URL.Query().Get("category")
 	defaultValue := models.DefaultForCategory(category)
 
 	data := map[string]string{
