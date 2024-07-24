@@ -16,6 +16,7 @@ type characterCreateForm struct {
 	Info                     models.CharacterInfo
 	Attributes               models.CharacterAttributes
 	Skills                   models.Skills
+	CustomSkills             models.CustomSkills
 	validators.FormValidator `schema:"-"`
 }
 
@@ -87,34 +88,34 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for key, info := range form.Info.AsMap() {
-		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
-		if key != "Geschlecht" && key != "Alter" {
-			form.CheckField(validators.MaxChars(info, 50), key, "Maximal 50 Zeichen erlaubt.")
-		}
-	}
-	form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
-	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
-	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
+	// for key, info := range form.Info.AsMap() {
+	// 	form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
+	// 	if key != "Geschlecht" && key != "Alter" {
+	// 		form.CheckField(validators.MaxChars(info, 50), key, "Maximal 50 Zeichen erlaubt.")
+	// 	}
+	// }
+	// form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
+	// form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
+	// form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
 
-	for key, attr := range form.Attributes.AsMap() {
-		if key != "BW" {
-			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
-		}
-	}
+	// for key, attr := range form.Attributes.AsMap() {
+	// 	if key != "BW" {
+	// 		form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
+	// 	}
+	// }
 
-	if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
-		form.AddGenericError("Ungültige Attributsverteilung.")
-	}
+	// if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
+	// 	form.AddGenericError("Ungültige Attributsverteilung.")
+	// }
 
-	if !form.Valid() {
-		data := app.newTemplateData(r)
-		data.Form = form
-		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
-		return
-	}
+	// if !form.Valid() {
+	// 	data := app.newTemplateData(r)
+	// 	data.Form = form
+	// 	app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
+	// 	return
+	// }
 
-	_, err = app.characters.Insert(models.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills},
+	_, err = app.characters.Insert(models.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills, CustomSkills: form.CustomSkills},
 		app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
 
 	if err != nil {
@@ -467,4 +468,48 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 	data.Character = character
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "button", data)
+}
+
+func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request) {
+	tmplStr := `<tr id="{{.Category}}">
+					<td>
+						<label>{{.Category}}</label>
+						<input type="text" name="CustomSkills.Name">
+						<select name="CustomSkills.Value">
+							<option value="{{.Default}}" selected>{{.Default}}</option>
+							<option value="70">70</option>
+							<option value="60">60</option>
+							<option value="50">50</option>
+							<option value="40">40</option>
+						</select>
+						<button id="cancel" hx-get="/cancel" hx-target="#{{.Category}}" hx-swap="outerHTML">Abbrechen</button>
+					</td>
+				</tr>`
+
+	t, err := template.New("customSkillInput").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	category := r.URL.Query().Get("CustomSkills.Category")
+	defaultValue := models.DefaultForCategory(category)
+
+	data := map[string]string{
+		"Category": category,
+		"Default":  strconv.Itoa(defaultValue),
+	}
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "customSkillInput", data)
+}
+
+func (app *application) cancel(w http.ResponseWriter, r *http.Request) {
+	t, err := template.New("cancel").Parse("")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "cancel", nil)
 }

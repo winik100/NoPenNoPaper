@@ -32,6 +32,8 @@ func (app *application) routes() http.Handler {
 	//some helpers
 	mux.Handle("POST /inc", protectedChain.ThenFunc(app.Inc))
 	mux.Handle("POST /dec", protectedChain.ThenFunc(app.Dec))
+	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))
+	mux.Handle("GET /cancel", protectedChain.ThenFunc(app.cancel))
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)

@@ -7,24 +7,15 @@ import (
 	"github.com/justinian/dice"
 )
 
-// type Character struct {
-// 	ID         int
-// 	Info       CharacterInfo
-// 	Attributes CharacterAttributes
-// 	Stats      CharacterStats
-// 	Skills     CharacterSkills
-// 	Items      []Item
-// 	Notes      []string
-// }
-
 type Character struct {
-	ID         int
-	Info       CharacterInfo
-	Attributes CharacterAttributes
-	Stats      CharacterStats
-	Skills     Skills
-	Items      []Item
-	Notes      []string
+	ID           int
+	Info         CharacterInfo
+	Attributes   CharacterAttributes
+	Stats        CharacterStats
+	Skills       Skills
+	CustomSkills CustomSkills
+	Items        []Item
+	Notes        []string
 }
 
 type CharacterInfo struct {
@@ -130,6 +121,12 @@ type Skills struct {
 	Value []int
 }
 
+type CustomSkills struct {
+	Category []string
+	Name     []string
+	Value    []int
+}
+
 func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
 	var skillsName []string
 	var skillsValue []int
@@ -216,6 +213,16 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 	_, err = tx.Exec(stmt, id, stats.TP, stats.TP, stats.STA, stats.STA, stats.MP, stats.MP, stats.LUCK, stats.LUCK)
 	if err != nil {
 		return 0, err
+	}
+
+	for i, customSkill := range character.CustomSkills.Name {
+		stmt = "INSERT INTO skills (name, default_value) VALUES (?,?);"
+		_, err = tx.Exec(stmt, customSkill, DefaultForCategory(character.CustomSkills.Category[i]))
+		if err != nil {
+			return 0, err
+		}
+		character.Skills.Name = append(character.Skills.Name, customSkill)
+		character.Skills.Value = append(character.Skills.Value, character.CustomSkills.Value[i])
 	}
 
 	for i, skill := range character.Skills.Name {
@@ -486,4 +493,22 @@ func (c *CharacterModel) DecrementStat(character Character, stat string) (Charac
 		character.Stats.LUCK = character.Stats.LUCK - 1
 	}
 	return character, nil
+}
+
+func DefaultForCategory(category string) int {
+	switch category {
+	case "Muttersprache":
+		return 50
+	case "Fremdsprache":
+		return 1
+	case "Handwerk":
+		return 5
+	case "Naturwissenschaft":
+		return 1
+	case "Steuern":
+		return 1
+	case "Überlebenskunst":
+		return 10
+	}
+	return -1
 }
