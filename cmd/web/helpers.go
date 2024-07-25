@@ -1,52 +1,30 @@
 package main
 
 import (
+	"bytes"
 	"errors"
-	"html/template"
-	"io/fs"
+	"fmt"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gorilla/schema"
-	"github.com/winik100/NoPenNoPaper/ui"
+	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
-func half(value int) int {
-	return value / 2
-}
+func (app *application) render(w http.ResponseWriter, r *http.Request, statusCode int, page string, data templateData) {
+	ts, ok := app.templateCache[page]
+	if !ok {
+		err := fmt.Errorf("the template %s does not exist", page)
+		app.serverError(w, r, err)
+		return
+	}
 
-func fifth(value int) int {
-	return value / 5
-}
-
-var funcs = template.FuncMap{
-	"half":  half,
-	"fifth": fifth,
-}
-
-func newTemplateCache() (map[string]*template.Template, error) {
-	cache := map[string]*template.Template{}
-	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl.html")
+	buf := new(bytes.Buffer)
+	err := ts.ExecuteTemplate(w, "base", data)
 	if err != nil {
-		return nil, err
+		app.serverError(w, r, err)
+		return
 	}
-
-	for _, page := range pages {
-		name := filepath.Base(page)
-
-		patterns := []string{
-			"html/base.tmpl.html",
-			"html/partials/*.tmpl.html",
-			page,
-		}
-		ts, err := template.New(name).Funcs(funcs).ParseFS(ui.Files, patterns...)
-		if err != nil {
-			return nil, err
-		}
-
-		cache[name] = ts
-	}
-	return cache, nil
+	buf.WriteTo(w)
 }
 
 func (app *application) decodePostForm(r *http.Request, dst any) error {
@@ -87,4 +65,29 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 		return false
 	}
 	return isAuthenticated
+}
+
+func (form *characterCreateForm) InfoChecks() {
+	for key, info := range form.Info.AsMap() {
+		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
+		if key != "Geschlecht" && key != "Alter" {
+			form.CheckField(validators.MaxChars(info, 50), key, "Maximal 50 Zeichen erlaubt.")
+		}
+	}
+
+	form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
+	form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
+	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
+}
+
+func (form *characterCreateForm) AttributeChecks() {
+	for key, attr := range form.Attributes.AsMap() {
+		if key != "BW" {
+			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
+		}
+	}
+
+	if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
+		form.AddGenericError("Ungültige Attributsverteilung.")
+	}
 }

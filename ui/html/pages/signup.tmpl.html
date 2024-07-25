@@ -5,17 +5,17 @@
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <div>
         <label>Name:</label>
-        {{with .Form.FieldErrors.name}}
+        {{with .Form.FieldErrors.Name}}
             <label class='error'>{{.}}</label>
         {{end}}
-        <input type='text' name='name' value='{{.Form.Name}}'>
+        <input type='text' name='Name' value='{{.Form.Name}}'>
     </div>
     <div>
         <label>Passwort:</label>
-        {{with .Form.FieldErrors.password}}
+        {{with .Form.FieldErrors.Password}}
             <label class='error'>{{.}}</label>
         {{end}}
-        <input type='password' name='password'>
+        <input type='Password' name='password'>
     </div>
     <div>
         <input type='submit' value='Registrieren'>

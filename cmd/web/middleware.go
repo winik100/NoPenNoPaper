@@ -59,10 +59,11 @@ func noSurf(next http.Handler) http.Handler {
 type contextKey string
 
 const isAuthenticatedContextKey = contextKey("isAuthenticated")
+const authenticatedUserIdContextKey = contextKey("authenticatedUserID")
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		id := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
 		if id == 0 {
 			next.ServeHTTP(w, r)
 			return
@@ -112,7 +113,7 @@ func permissible(role string, url string) bool {
 
 func (app *application) restrict(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		id := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
 		if id == 0 {
 			app.sessionManager.Put(r.Context(), "role", RoleAnon)
 			if permissible(RoleAnon, r.URL.Path) {

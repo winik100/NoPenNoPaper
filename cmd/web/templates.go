@@ -1,12 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
+	"html/template"
+	"io/fs"
 	"net/http"
+	"path/filepath"
 
 	"github.com/justinas/nosurf"
 	"github.com/winik100/NoPenNoPaper/internal/models"
+	"github.com/winik100/NoPenNoPaper/ui"
 )
 
 type templateData struct {
@@ -27,20 +29,40 @@ func (app *application) newTemplateData(r *http.Request) templateData {
 	}
 }
 
-func (app *application) render(w http.ResponseWriter, r *http.Request, statusCode int, page string, data templateData) {
-	ts, ok := app.templateCache[page]
-	if !ok {
-		err := fmt.Errorf("the template %s does not exist", page)
-		app.serverError(w, r, err)
-		return
+func half(value int) int {
+	return value / 2
+}
+
+func fifth(value int) int {
+	return value / 5
+}
+
+var funcs = template.FuncMap{
+	"half":  half,
+	"fifth": fifth,
+}
+
+func newTemplateCache() (map[string]*template.Template, error) {
+	cache := map[string]*template.Template{}
+	pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl.html")
+	if err != nil {
+		return nil, err
 	}
 
-	buf := new(bytes.Buffer)
-	err := ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
+	for _, page := range pages {
+		name := filepath.Base(page)
+
+		patterns := []string{
+			"html/base.tmpl.html",
+			"html/partials/*.tmpl.html",
+			page,
+		}
+		ts, err := template.New(name).Funcs(funcs).ParseFS(ui.Files, patterns...)
+		if err != nil {
+			return nil, err
+		}
+
+		cache[name] = ts
 	}
-	w.WriteHeader(statusCode)
-	buf.WriteTo(w)
+	return cache, nil
 }

@@ -12,7 +12,7 @@
                 <td>
                     <label>Name:</label>
                     <input type='text' name='Info.Name' value='{{.Form.Info.Name}}'>
-                    {{with .Form.FieldErrors.name}}
+                    {{with .Form.FieldErrors.Name}}
                         <label class='error'>{{.}}</label>
                     {{end}}
                 </td>
@@ -21,7 +21,7 @@
                 <td>
                     <label>Beruf:</label>
                     <input type='text' name='Info.Profession' value='{{.Form.Info.Profession}}'>
-                    {{with .Form.FieldErrors.profession}}
+                    {{with .Form.FieldErrors.Beruf}}
                         <label class='error'>{{.}}</label>
                     {{end}}
                 </td>
@@ -30,7 +30,7 @@
                 <td>
                     <label>Alter:</label>
                     <input type='text' name='Info.Age' value='{{.Form.Info.Age}}'>
-                    {{with .Form.FieldErrors.age}}
+                    {{with .Form.FieldErrors.Alter}}
                         <label class='error'>{{.}}</label>
                     {{end}}
                 </td>
@@ -40,7 +40,7 @@
                     <label>Geschlecht:</label>
                     <input type='radio' name='Info.Gender' value='männlich' {{if (eq .Form.Info.Gender "männlich")}} checked {{end}} checked> Männlich
                     <input type='radio' name='Info.Gender' value='weiblich' {{if (eq .Form.Info.Gender "weiblich")}} checked {{end}}> Weiblich
-                    {{with .Form.FieldErrors.gender}}
+                    {{with .Form.FieldErrors.Geschlecht}}
                         <label class='error'>{{.}}</label>
                     {{end}}
                 </td>
@@ -49,7 +49,7 @@
                 <td>
                     <label>Wohnort:</label>
                     <input type='text' name='Info.Residence' value='{{.Form.Info.Residence}}'>
-                    {{with .Form.FieldErrors.residence}}
+                    {{with .Form.FieldErrors.Wohnort}}
                         <label class='error'>{{.}}</label>
                     {{end}}
                 </td>
@@ -58,7 +58,7 @@
                 <td>
                     <label>Geburtsort:</label>
                     <input type='text' name='Info.Birthplace' value='{{.Form.Info.Birthplace}}'>
-                    {{with .Form.FieldErrors.birthplace}}
+                    {{with .Form.FieldErrors.Geburtsort}}
                         <label class='error'>{{.}}</label>
                     {{end}}
                 </td>

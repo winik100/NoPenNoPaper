@@ -39,7 +39,7 @@ type noteForm struct {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+	userId := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
 	if userId == 0 {
 		data := app.newTemplateData(r)
 		app.render(w, r, http.StatusOK, "home.tmpl.html", data)
@@ -88,35 +88,19 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// for key, info := range form.Info.AsMap() {
-	// 	form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
-	// 	if key != "Geschlecht" && key != "Alter" {
-	// 		form.CheckField(validators.MaxChars(info, 50), key, "Maximal 50 Zeichen erlaubt.")
-	// 	}
-	// }
-	// form.CheckField(validators.IsInteger(form.Info.Age), "Alter", "Dieses Feld muss eine Zahl enthalten.")
-	// form.CheckField(validators.InBetween(form.Info.Age, 18, 100), "Alter", "Alter muss zwischen 18 und 100 liegen.")
-	// form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
+	form.InfoChecks()
+	form.AttributeChecks()
 
-	// for key, attr := range form.Attributes.AsMap() {
-	// 	if key != "BW" {
-	// 		form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")
-	// 	}
-	// }
-
-	// if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
-	// 	form.AddGenericError("Ungültige Attributsverteilung.")
-	// }
-
-	// if !form.Valid() {
-	// 	data := app.newTemplateData(r)
-	// 	data.Form = form
-	// 	app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
-	// 	return
-	// }
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
+		return
+	}
 
 	_, err = app.characters.Insert(models.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills, CustomSkills: form.CustomSkills},
-		app.sessionManager.GetInt(r.Context(), "authenticatedUserID"))
+		app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey)))
 
 	if err != nil {
 		app.serverError(w, r, err)
@@ -140,13 +124,14 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validators.NotBlank(form.Name), "name", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(form.Password), "password", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.MinChars(form.Password, 8), "password", "Passwort muss mindestens 8 Zeichen lang sein.")
+	form.CheckField(validators.NotBlank(form.Name), "Name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Password), "Password", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.MinChars(form.Password, 8), "Password", "Passwort muss mindestens 8 Zeichen lang sein.")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
 		return
 	}
@@ -182,6 +167,7 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
 		return
 	}
@@ -193,6 +179,7 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 
 			data := app.newTemplateData(r)
 			data.Form = form
+			w.WriteHeader(http.StatusUnprocessableEntity)
 			app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl.html", data)
 		} else {
 			app.serverError(w, r, err)
@@ -205,7 +192,7 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+	app.sessionManager.Put(r.Context(), string(authenticatedUserIdContextKey), id)
 
 	role, err := app.users.GetRole(id)
 	if err != nil {
@@ -223,7 +210,7 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Remove(r.Context(), string(authenticatedUserIdContextKey))
 	app.sessionManager.Put(r.Context(), "role", RoleAnon)
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -317,7 +304,6 @@ func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
 	}
 
 	updatedStat := updated.Stats.CurrentAsMap()[stat]
-	fmt.Println(updatedStat)
 	tmplStr := `<div id="{{.Stat}}" name="Stat" value="{{.Value}}">{{.Value}}</div>`
 
 	t, err := template.New("dec").Parse(tmplStr)
@@ -363,6 +349,7 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		app.render(w, r, http.StatusUnprocessableEntity, "item.tmpl.html", data)
 		return
 	}
