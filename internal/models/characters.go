@@ -366,6 +366,9 @@ func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {
 	stmt := "SELECT id FROM characters WHERE created_by=?;"
 	rows, err := c.DB.Query(stmt, userId)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -399,6 +402,9 @@ func (c *CharacterModel) GetAll() ([]Character, error) {
 	stmt := "SELECT id FROM characters;"
 	rows, err := c.DB.Query(stmt)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -435,7 +441,7 @@ func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
 	rows, err := c.DB.Query(stmt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Skills{}, err
+			return Skills{}, ErrNoRecord
 		}
 		return Skills{}, err
 	}
