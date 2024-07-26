@@ -45,6 +45,15 @@ func newTestApplication(t *testing.T) *application {
 	}
 }
 
+func (app *application) mockAuthentication(next http.Handler, id int, authenticated bool, role string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.sessionManager.Put(r.Context(), string(authenticatedUserIdContextKey), id)
+		app.sessionManager.Put(r.Context(), string(isAuthenticatedContextKey), authenticated)
+		app.sessionManager.Put(r.Context(), "role", role)
+		next.ServeHTTP(w, r)
+	})
+}
+
 func newTestServer(t *testing.T, h http.Handler) *testServer {
 	ts := httptest.NewTLSServer(h)
 

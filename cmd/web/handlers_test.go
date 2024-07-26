@@ -8,6 +8,32 @@ import (
 	"github.com/winik100/NoPenNoPaper/internal/testHelpers"
 )
 
+func TestHomeLoggedIn(t *testing.T) {
+	app := newTestApplication(t)
+
+	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockAuthentication(app.authenticate(app.routesNoMW()), 1, true, "player")))
+	defer ts.Close()
+	wantTag := "<td><a href='/characters/1'>Otto Hightower</a></td>"
+
+	code, _, body := ts.get(t, "/")
+	testHelpers.Equal(t, code, http.StatusOK)
+	testHelpers.StringContains(t, body, wantTag)
+
+}
+
+func TestHomeNotLoggedIn(t *testing.T) {
+	app := newTestApplication(t)
+
+	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockAuthentication(app.authenticate(app.routesNoMW()), 0, false, "anonymous")))
+	defer ts.Close()
+	wantTag := "<p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>"
+
+	code, _, body := ts.get(t, "/")
+	testHelpers.Equal(t, code, http.StatusOK)
+	testHelpers.StringContains(t, body, wantTag)
+
+}
+
 func TestSignup(t *testing.T) {
 	app := newTestApplication(t)
 
@@ -20,7 +46,7 @@ func TestSignup(t *testing.T) {
 	const (
 		validName     string = "Testnutzer"
 		validPassword string = "Klartext"
-		formTag       string = `<form action="/signup" method="POST" novalidate>`
+		formTag       string = "<form action='/signup' method='POST' novalidate>"
 	)
 	tests := []struct {
 		name         string
@@ -77,9 +103,13 @@ func TestSignup(t *testing.T) {
 			form.Add("Password", testCase.userPassword)
 			form.Add("csrf_token", testCase.csrfToken)
 
-			code, _, _ := ts.postForm(t, "/signup", form)
+			code, _, body := ts.postForm(t, "/signup", form)
 
 			testHelpers.Equal(t, code, testCase.wantCode)
+
+			if testCase.wantFormTag != "" {
+				testHelpers.StringContains(t, body, testCase.wantFormTag)
+			}
 		})
 	}
 }
@@ -96,6 +126,7 @@ func TestLogin(t *testing.T) {
 	const (
 		validName     string = "Testnutzer"
 		validPassword string = "Klartext ole"
+		formTag       string = "<form action='/login' method='POST' novalidate>"
 	)
 	tests := []struct {
 		name         string
@@ -103,6 +134,7 @@ func TestLogin(t *testing.T) {
 		userPassword string
 		csrfToken    string
 		wantCode     int
+		wantFormTag  string
 	}{
 		{
 			name:         "Valid login",
@@ -117,6 +149,7 @@ func TestLogin(t *testing.T) {
 			userPassword: validPassword,
 			csrfToken:    validCSRF,
 			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
 		},
 		{
 			name:         "Wrong Password",
@@ -124,6 +157,7 @@ func TestLogin(t *testing.T) {
 			userPassword: "wrongpassword",
 			csrfToken:    validCSRF,
 			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
 		},
 		{
 			name:         "Invalid CSRF",
@@ -138,6 +172,7 @@ func TestLogin(t *testing.T) {
 			userPassword: validPassword,
 			csrfToken:    validCSRF,
 			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
 		},
 		{
 			name:         "Empty Password",
@@ -145,6 +180,7 @@ func TestLogin(t *testing.T) {
 			userPassword: "",
 			csrfToken:    validCSRF,
 			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  formTag,
 		},
 	}
 	for _, testCase := range tests {
@@ -157,6 +193,10 @@ func TestLogin(t *testing.T) {
 			code, _, _ := ts.postForm(t, "/login", form)
 
 			testHelpers.Equal(t, code, testCase.wantCode)
+
+			if testCase.wantFormTag != "" {
+				testHelpers.StringContains(t, body, testCase.wantFormTag)
+			}
 		})
 	}
 }

@@ -50,3 +50,33 @@ var Permissions = map[string][]string{
 	RolePlayer: {"/", "/signup", "/login", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/characters/.*/addNote", "/inc", "/dec", "/customSkillInput"},
 	RoleGM:     {"/", "/signup", "/login", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/characters/.*/addNote", "/inc", "/dec", "/customSkillInput"},
 }
+
+func (app *application) routesNoMW() http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
+
+
+	mux.HandleFunc("GET /{$}", app.home)
+	mux.HandleFunc("GET /signup", app.signup)
+	mux.HandleFunc("POST /signup", app.signupPost)
+	mux.HandleFunc("GET /login", app.login)
+	mux.HandleFunc("POST /login", app.loginPost)
+	mux.HandleFunc("POST /logout", app.logoutPost)
+
+	mux.HandleFunc("GET /create", app.create)
+	mux.HandleFunc("POST /create", app.createPost)
+	mux.HandleFunc("GET /characters/{id}", app.viewCharacter)
+	mux.HandleFunc("GET /characters/{id}/addItem", app.addItem)
+	mux.HandleFunc("POST /characters/{id}/addItem",app.addItemPost)
+	mux.HandleFunc("GET /characters/{id}/addNote", app.addNote)
+	mux.HandleFunc("POST /characters/{id}/addNote", app.addNotePost)
+
+	//some helpers
+	mux.HandleFunc("POST /inc", app.Inc)
+	mux.HandleFunc("POST /dec", app.Dec)
+	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)
+	mux.HandleFunc("GET /cancel", app.cancel)
+
+	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
+	return standardChain.Then(mux)
+}
