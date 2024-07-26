@@ -10,7 +10,7 @@ import (
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
-func (app *application) render(w http.ResponseWriter, r *http.Request, statusCode int, page string, data templateData) {
+func (app *application) render(w http.ResponseWriter, r *http.Request, page string, data templateData) {
 	ts, ok := app.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)

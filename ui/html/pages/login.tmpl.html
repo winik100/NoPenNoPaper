@@ -8,14 +8,14 @@
     {{end}}
     <div>
         <label>Name:</label>
-        {{with .Form.FieldErrors.name}}
+        {{with .Form.FieldErrors.Name}}
             <label class='error'>{{.}}</label>
         {{end}}
         <input type='text' name='Name' value='{{.Form.Name}}'>
     </div>
     <div>
         <label>Passwort:</label>
-        {{with .Form.FieldErrors.password}}
+        {{with .Form.FieldErrors.Password}}
             <label class='error'>{{.}}</label>
         {{end}}
         <input type='password' name='Password'>

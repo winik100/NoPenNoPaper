@@ -11,7 +11,7 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
-	dynamicChain := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
+	dynamicChain := alice.New(app.sessionManager.LoadAndSave, app.authenticate, noSurf)
 
 	mux.Handle("GET /{$}", dynamicChain.ThenFunc(app.home))
 	mux.Handle("GET /signup", dynamicChain.ThenFunc(app.signup))
@@ -47,6 +47,6 @@ const (
 
 var Permissions = map[string][]string{
 	RoleAnon:   {"/", "/signup", "/login"},
-	RolePlayer: {"/", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/inc"},
-	RoleGM:     {"/", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/inc"},
+	RolePlayer: {"/", "/signup", "/login", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/characters/.*/addNote", "/inc", "/dec", "/customSkillInput"},
+	RoleGM:     {"/", "/signup", "/login", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/characters/.*/addNote", "/inc", "/dec", "/customSkillInput"},
 }

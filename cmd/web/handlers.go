@@ -42,7 +42,8 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
 	if userId == 0 {
 		data := app.newTemplateData(r)
-		app.render(w, r, http.StatusOK, "home.tmpl.html", data)
+		w.WriteHeader(http.StatusOK)
+		app.render(w, r, "home.tmpl.html", data)
 		return
 	}
 
@@ -64,7 +65,8 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		data.Characters = characters
 	}
 
-	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "home.tmpl.html", data)
 }
 
 func (app *application) create(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +78,8 @@ func (app *application) create(w http.ResponseWriter, r *http.Request) {
 	}
 	data.Form = characterCreateForm{Skills: skills}
 
-	app.render(w, r, http.StatusOK, "create.tmpl.html", data)
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "create.tmpl.html", data)
 }
 
 func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +98,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		data := app.newTemplateData(r)
 		data.Form = form
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
+		app.render(w, r, "create.tmpl.html", data)
 		return
 	}
 
@@ -113,7 +116,8 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userForm{}
-	app.render(w, r, http.StatusOK, "signup.tmpl.html", data)
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "signup.tmpl.html", data)
 }
 
 func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +136,7 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 		data := app.newTemplateData(r)
 		data.Form = form
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+		app.render(w, r, "signup.tmpl.html", data)
 		return
 	}
 
@@ -150,7 +154,8 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userForm{}
-	app.render(w, r, http.StatusOK, "login.tmpl.html", data)
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "login.tmpl.html", data)
 }
 
 func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
@@ -161,14 +166,14 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	form.CheckField(validators.NotBlank(form.Name), "name", "Dieses Feld kann nicht leer sein.")
-	form.CheckField(validators.NotBlank(form.Password), "password", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Name), "Name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(validators.NotBlank(form.Password), "Password", "Dieses Feld kann nicht leer sein.")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+		app.render(w, r, "login.tmpl.html", data)
 		return
 	}
 
@@ -180,7 +185,7 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 			data := app.newTemplateData(r)
 			data.Form = form
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl.html", data)
+			app.render(w, r, "login.tmpl.html", data)
 		} else {
 			app.serverError(w, r, err)
 		}
@@ -236,7 +241,8 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Character = character
 	app.sessionManager.Put(r.Context(), "characterId", id)
-	app.render(w, r, http.StatusOK, "character.tmpl.html", data)
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "character.tmpl.html", data)
 }
 
 func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
@@ -322,7 +328,8 @@ func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = itemForm{}
-	app.render(w, r, http.StatusOK, "item.tmpl.html", data)
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "item.tmpl.html", data)
 }
 
 func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
@@ -350,7 +357,7 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 		data := app.newTemplateData(r)
 		data.Form = form
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		app.render(w, r, http.StatusUnprocessableEntity, "item.tmpl.html", data)
+		app.render(w, r, "item.tmpl.html", data)
 		return
 	}
 
