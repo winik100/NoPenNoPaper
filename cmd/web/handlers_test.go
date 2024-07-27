@@ -52,7 +52,7 @@ func TestHome(t *testing.T) {
 func TestSignup(t *testing.T) {
 	app := newTestApplication(t)
 
-	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.routesNoMW()), map[string]any{
+	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(noSurf(app.routesNoMW())), map[string]any{
 		string(authenticatedUserIdContextKey): 0,
 	})))
 	defer ts.Close()
