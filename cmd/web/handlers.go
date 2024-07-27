@@ -402,11 +402,6 @@ func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
 					</div>
 					<button type="submit">Hinzufügen</button>
 					<button hx-get="/characters/{{.Character.ID}}">Abbrechen</button>
-				<ul>
-                    {{range .Character.Notes}}
-                    <li>{{.}} <button>löschen</button></li>
-                    {{end}}
-                </ul>
 				</form>`
 
 	t, err := template.New("addnote").Parse(tmplStr)
@@ -442,11 +437,6 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 
 	tmplStr := `<div id="note" hx-target="this" hx-swap="outerHTML">
                 	<button hx-get="/characters/{{.Character.ID}}/addNote">Notiz hinzufügen</button>
-					<ul>
-                    {{range .Character.Notes}}
-                    <li>{{.}} <button>löschen</button></li>
-                    {{end}}
-                </ul>
             	</div>`
 
 	t, err := template.New("button").Parse(tmplStr)

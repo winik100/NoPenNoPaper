@@ -533,3 +533,49 @@ func TestAddItem(t *testing.T) {
 		})
 	}
 }
+
+func TestAddNoteGet(t *testing.T) {
+	app := newTestApplication(t)
+
+	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
+		map[string]any{
+			string(authenticatedUserIdContextKey): 1,
+			"characterId":                         1,
+		})))
+	defer ts.Close()
+
+	wantFormTag := `<form hx-post="/characters/1/addNote" hx-target="this" hx-swap="outerHTML" hx-select="#note">`
+	wantFormContent := []string{
+		`<input type="text" name="Text" textarea>`,
+		`<button type="submit">Hinzufügen</button>`,
+		`<button hx-get="/characters/1">Abbrechen</button>`,
+	}
+
+	tests := []struct {
+		name        string
+		wantCode    int
+		wantContent []string
+	}{
+		{
+			name:        "Form displayed",
+			wantCode:    http.StatusOK,
+			wantContent: []string{wantFormTag},
+		},
+		{
+			name:        "Proper Form Elements",
+			wantCode:    http.StatusOK,
+			wantContent: wantFormContent,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			code, _, body := ts.get(t, "/characters/1/addNote")
+
+			testHelpers.Equal(t, code, testCase.wantCode)
+			for _, tag := range testCase.wantContent {
+				testHelpers.StringContains(t, body, tag)
+			}
+		})
+	}
+}

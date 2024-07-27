@@ -102,12 +102,12 @@
             <summary>Notizen</summary>
             <div id="note" hx-target="this" hx-swap="outerHTML">
                 <button hx-get="/characters/{{.ID}}/addNote">Notiz hinzufügen</button>
-                <ul>
-                    {{range .Notes}}
-                    <li>{{.}} <button>löschen</button></li>
-                    {{end}}
-                </ul>
             </div>
+            <ul>
+                {{range .Notes}}
+                <li>{{.}}   <button>löschen</button></li>
+                {{end}}
+            </ul>
         </details>
     </div>
     {{end}}
