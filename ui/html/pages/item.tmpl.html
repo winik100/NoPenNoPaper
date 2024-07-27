@@ -1,7 +1,7 @@
 {{define "title"}}Gegenstand hinzufügen{{end}}
 
 {{define "main"}}
-<form action='' method='POST'>
+<form action='/characters/{{.Form.CharacterId}}/addItem' method='POST'>
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <div>
         <label>Name:</label>

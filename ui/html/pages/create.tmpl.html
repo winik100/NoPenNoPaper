@@ -6,7 +6,7 @@
     {{range .Form.GenericErrors}}
         <div class='error'>{{.}}</div>
     {{end}}
-    <div id="info">
+    <div id='info'>
         <table>
             <tr>
                 <td>
@@ -65,7 +65,7 @@
             </tr>
         </table>
     </div> 
-    <div id="attributes">
+    <div id='attributes'>
         <details>
             <summary>Attribute</summary>
             <p>Zu verteilen: 40, 50, 50, 50, 60, 60, 70, 80</p>
@@ -113,12 +113,12 @@
             </table>
         </details>
     </div>
-    <div>
+    <div id='skills'>
         <details>
         <summary>Fertigkeiten</summary>
         <p>Zu verteilen: 40, 40, 40, 50, 50, 50, 60, 60, 70</p>
         <p>Einer der 9 Werte muss auf Finanzkraft verwendet werden!</p>
-            <table id="Skills">
+            <table id='Skills'>
                 {{$fieldErrors := .Form.FieldErrors}}
                 {{$keys := .Form.Skills.Name}}
                 {{$values := .Form.Skills.Value}}
@@ -160,7 +160,7 @@
         </details>
     </div>
     <div>
-        <input type="submit" value="Charakter erstellen">
+        <input type='submit' value='Charakter erstellen'>
     </div>
 </form>
 {{end}}

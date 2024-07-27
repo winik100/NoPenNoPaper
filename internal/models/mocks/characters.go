@@ -2,7 +2,7 @@ package mocks
 
 import "github.com/winik100/NoPenNoPaper/internal/models"
 
-var mockCharacter = models.Character{
+var MockCharacter = models.Character{
 	ID:           1,
 	Info:         mockInfo,
 	Attributes:   mockAttributes,
@@ -58,20 +58,20 @@ func (m *CharacterModel) Insert(character models.Character, created_by int) (int
 
 func (m *CharacterModel) Get(characterId int) (models.Character, error) {
 	if characterId == 1 {
-		return mockCharacter, nil
+		return MockCharacter, nil
 	}
 	return models.Character{}, models.ErrNoRecord
 }
 
 func (m *CharacterModel) GetAllFrom(userId int) ([]models.Character, error) {
 	if userId == 1 {
-		return []models.Character{mockCharacter}, nil
+		return []models.Character{MockCharacter}, nil
 	}
 	return nil, models.ErrNoRecord
 }
 
 func (m *CharacterModel) GetAll() ([]models.Character, error) {
-	return []models.Character{mockCharacter}, nil
+	return []models.Character{MockCharacter}, nil
 }
 
 func (m *CharacterModel) GetAvailableSkills() (models.Skills, error) {

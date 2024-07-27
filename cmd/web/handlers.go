@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
@@ -27,6 +26,7 @@ type userForm struct {
 }
 
 type itemForm struct {
+	CharacterId              int
 	Name                     string
 	Description              string
 	Count                    int
@@ -205,6 +205,11 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.sessionManager.Put(r.Context(), "role", role)
+	err = app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -222,15 +227,15 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
+	characterId, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
 		http.NotFound(w, r)
 		return
 	}
 
-	character, err := app.characters.Get(id)
+	character, err := app.characters.Get(characterId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
 		} else {
 			app.serverError(w, r, err)
@@ -240,7 +245,7 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Character = character
-	app.sessionManager.Put(r.Context(), "characterId", id)
+	app.sessionManager.Put(r.Context(), "characterId", characterId)
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "character.tmpl.html", data)
 }
@@ -254,7 +259,7 @@ func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
 
 	character, err := app.characters.Get(characterId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
 		} else {
 			app.serverError(w, r, err)
@@ -294,7 +299,7 @@ func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
 
 	character, err := app.characters.Get(characterId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
 		} else {
 			app.serverError(w, r, err)
@@ -327,21 +332,23 @@ func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
-	data.Form = itemForm{}
+	data.Form = itemForm{
+		CharacterId: app.sessionManager.GetInt(r.Context(), "characterId"),
+	}
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "item.tmpl.html", data)
 }
 
 func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
+	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
+	if characterId == 0 {
 		http.NotFound(w, r)
 		return
 	}
 
 	var form itemForm
 
-	err = app.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
@@ -361,12 +368,12 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.characters.AddItem(id, models.Item{Name: form.Name, Description: form.Description, Count: form.Count})
+	err = app.characters.AddItem(characterId, models.Item{Name: form.Name, Description: form.Description, Count: form.Count})
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
-	redirect := fmt.Sprintf("/characters/%d", id)
+	redirect := fmt.Sprintf("/characters/%d", characterId)
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
 }
 
@@ -379,7 +386,7 @@ func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
 
 	character, err := app.characters.Get(characterId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
 		} else {
 			app.serverError(w, r, err)
@@ -450,7 +457,7 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 
 	character, err := app.characters.Get(characterId)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
 		} else {
 			app.serverError(w, r, err)

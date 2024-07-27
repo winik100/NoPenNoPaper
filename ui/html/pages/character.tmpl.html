@@ -3,7 +3,7 @@
 {{define "main"}}
     {{$csrf := .CSRFToken}}
     {{with .Character}}
-    <div id="info">
+    <div id='info'>
         <table>
             <tr>
                 <th>Name</th>
@@ -23,7 +23,7 @@
             </tr>
         </table>
     </div>
-    <div id="attributes">
+    <div id='attributes'>
         <table>
             {{with $attr := .Attributes}}
             {{range $key := $attr.OrderedKeys}}
@@ -35,7 +35,7 @@
             {{end}}
         </table>
     </div>
-    <div id="stats">
+    <div id='stats'>
             <table>
                 <tr>
                     <th>Trefferpunkte ({{.Stats.MaxTP}})</th>
@@ -58,7 +58,7 @@
                 </tr>
             </table>
     </div>
-    <div id="skills">
+    <div id='skills'>
         <details>
             <summary>Fertigkeiten</summary>
             <table>
@@ -75,7 +75,7 @@
             </table>
         </details>
     </div>
-    <div id="items">
+    <div id='items'>
         <details>
             <summary>Ausrüstung</summary>
             <a href='/characters/{{.ID}}/addItem'>
@@ -97,7 +97,7 @@
             </table>
         </details>
     </div>
-    <div id="notes">
+    <div id='notes'>
         <details>
             <summary>Notizen</summary>
             <div id="note" hx-target="this" hx-swap="outerHTML">

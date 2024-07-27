@@ -2,11 +2,9 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/schema"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
@@ -35,12 +33,6 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 
 	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {
-		var conversionError *schema.ConversionError
-
-		if errors.As(err, &conversionError) {
-			panic(err)
-		}
-
 		return err
 	}
 

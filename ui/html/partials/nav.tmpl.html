@@ -8,13 +8,13 @@
     </div>
     <div>
         {{if .IsAuthenticated}}
-        <form action="/logout" method="POST">
+        <form action='/logout' method='POST'>
             <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <button>Ausloggen</button>
         </form>
         {{else}}
-        <a href="/signup">Registrieren</a>
-        <a href="/login">Einloggen</a>
+        <a href='/signup'>Registrieren</a>
+        <a href='/login'>Einloggen</a>
         {{end}}
     </div>
 </nav>
