@@ -45,11 +45,12 @@ func newTestApplication(t *testing.T) *application {
 	}
 }
 
-func (app *application) mockAuthentication(next http.Handler, id int, authenticated bool, role string) http.Handler {
+func (app *application) mockSession(next http.Handler, keyValuePairs map[string]any) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		app.sessionManager.Put(r.Context(), string(authenticatedUserIdContextKey), id)
-		app.sessionManager.Put(r.Context(), string(isAuthenticatedContextKey), authenticated)
-		app.sessionManager.Put(r.Context(), "role", role)
+		for key, value := range keyValuePairs {
+			app.sessionManager.Put(r.Context(), key, value)
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
