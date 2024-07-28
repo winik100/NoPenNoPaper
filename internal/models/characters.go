@@ -15,8 +15,8 @@ type Character struct {
 	Stats        CharacterStats
 	Skills       Skills
 	CustomSkills CustomSkills
-	Items        []Item
-	Notes        []string
+	Items        Items
+	Notes        Notes
 }
 
 type CharacterInfo struct {
@@ -137,11 +137,16 @@ func (character Character) AllSkills() Skills {
 	return Skills{Name: allNames, Value: allValues}
 }
 
-type Item struct {
-	ItemID      int
-	Name        string
-	Description string
-	Count       int
+type Items struct {
+	ItemId      []int
+	Name        []string
+	Description []string
+	Count       []int
+}
+
+type Notes struct {
+	ID   []int
+	Text []string
 }
 
 type CharacterModelInterface interface {
@@ -150,8 +155,10 @@ type CharacterModelInterface interface {
 	GetAllFrom(userId int) ([]Character, error)
 	GetAll() ([]Character, error)
 	GetAvailableSkills() (Skills, error)
-	AddItem(characterId int, item Item) error
+	AddItem(characterId int, name, description string, count int) error
+	DeleteItem(itemId int) error
 	AddNote(characterId int, text string) error
+	DeleteNote(noteId int) error
 	IncrementStat(character Character, stat string) (Character, error)
 	DecrementStat(character Character, stat string) (Character, error)
 }
@@ -243,8 +250,8 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	var stats CharacterStats
 	var skills Skills
 	var customSkills CustomSkills
-	var items []Item
-	var notes []string
+	var items Items
+	var notes Notes
 
 	stmt := "SELECT name, profession, age, gender, residence, birthplace FROM character_info WHERE character_id=?;"
 	result := c.DB.QueryRow(stmt, characterId)
@@ -325,7 +332,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	customSkills.Name = customSkillsName
 	customSkills.Value = customSkillsValue
 
-	stmt = "SELECT name, description, cnt FROM items WHERE character_id=?;"
+	stmt = "SELECT item_id, name, description, cnt FROM items WHERE character_id=?;"
 	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -334,15 +341,19 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		return Character{}, err
 	}
 	for rows.Next() {
-		var item Item
-		err = rows.Scan(&item.Name, &item.Description, &item.Count)
+		var id, count int
+		var name, description string
+		err = rows.Scan(&id, &name, &description, &count)
 		if err != nil {
 			return Character{}, err
 		}
-		items = append(items, item)
+		items.ItemId = append(items.ItemId, id)
+		items.Name = append(items.Name, name)
+		items.Description = append(items.Description, description)
+		items.Count = append(items.Count, count)
 	}
 
-	stmt = "SELECT text FROM notes WHERE character_id=?;"
+	stmt = "SELECT note_id, text FROM notes WHERE character_id=?;"
 	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -351,12 +362,14 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 		return Character{}, err
 	}
 	for rows.Next() {
-		var note string
-		err = rows.Scan(&note)
+		var id int
+		var text string
+		err = rows.Scan(&id, &text)
 		if err != nil {
 			return Character{}, err
 		}
-		notes = append(notes, note)
+		notes.ID = append(notes.ID, id)
+		notes.Text = append(notes.Text, text)
 	}
 
 	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, CustomSkills: customSkills, Items: items, Notes: notes}, nil
@@ -460,9 +473,18 @@ func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
 	return Skills{Name: skillsName, Value: skillsValue}, nil
 }
 
-func (c *CharacterModel) AddItem(characterId int, item Item) error {
+func (c *CharacterModel) AddItem(characterId int, name, description string, count int) error {
 	stmt := "INSERT INTO items (character_id, name, description, cnt) VALUES (?,?,?,?);"
-	_, err := c.DB.Exec(stmt, characterId, item.Name, item.Description, item.Count)
+	_, err := c.DB.Exec(stmt, characterId, name, description, count)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) DeleteItem(itemId int) error {
+	stmt := "DELETE FROM items WHERE item_id=?;"
+	_, err := c.DB.Exec(stmt, itemId)
 	if err != nil {
 		return err
 	}
@@ -472,6 +494,15 @@ func (c *CharacterModel) AddItem(characterId int, item Item) error {
 func (c *CharacterModel) AddNote(characterId int, text string) error {
 	stmt := "INSERT INTO notes (character_id, text) VALUES (?,?);"
 	_, err := c.DB.Exec(stmt, characterId, text)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) DeleteNote(noteId int) error {
+	stmt := "DELETE FROM notes WHERE note_id=?;"
+	_, err := c.DB.Exec(stmt, noteId)
 	if err != nil {
 		return err
 	}

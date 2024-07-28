@@ -472,17 +472,17 @@ func TestAddItem(t *testing.T) {
 	}{
 		{
 			name:      "Valid Item, Status",
-			itemName:  mocks.MockCharacter.Items[0].Name,
-			itemDesc:  mocks.MockCharacter.Items[0].Description,
-			itemCount: strconv.Itoa(mocks.MockCharacter.Items[0].Count),
+			itemName:  mocks.MockCharacter.Items.Name[0],
+			itemDesc:  mocks.MockCharacter.Items.Description[0],
+			itemCount: strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
 			redirect:  false,
 			wantCode:  http.StatusSeeOther,
 		},
 		{
 			name:        "Valid Item, Content",
-			itemName:    mocks.MockCharacter.Items[0].Name,
-			itemDesc:    mocks.MockCharacter.Items[0].Description,
-			itemCount:   strconv.Itoa(mocks.MockCharacter.Items[0].Count),
+			itemName:    mocks.MockCharacter.Items.Name[0],
+			itemDesc:    mocks.MockCharacter.Items.Description[0],
+			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
 			redirect:    true,
 			wantContent: wantContent,
 		},

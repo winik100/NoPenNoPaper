@@ -81,32 +81,49 @@
             <a href='/characters/{{.ID}}/addItem'>
                 <button>Gegenstand hinzufügen</button>
             </a>
+            {{if .Items}}
             <table>
                 <tr>
                     <th>Gegenstand</th>
                     <th>Beschreibung</th>
                     <th>Anzahl</th>
                 </tr>
-                {{range .Items}}
-                <tr>
-                    <td>{{.Name}}</td>
-                    <td>{{.Description}}</td>
-                    <td>{{.Count}}</td>
-                </tr>
+                {{$charId := .ID}}
+                {{$items := .Items}}
+                {{range $ind, $id := .Items.ItemId}}
+                    <tr id='item{{$id}}'>
+                        <td>
+                            <form id="deleteItem" hx-post="/characters/{{$charId}}/deleteItem" hx-target="#item{{$id}}" hx-swap="outerHTML">
+                                <input type="hidden" name="csrf_token" value="{{$csrf}}">
+                                <input type="hidden" name="ItemId" Value="{{$id}}">
+                                {{index $items.Name $ind}}   <button type="submit">entfernen</button>
+                            </form>
+                        </td>
+                        <td>{{index $items.Description $ind}}</td>
+                        <td>{{index $items.Count $ind}}</td>
+                    </tr>
+                </form>
                 {{end}}
             </table>
+            {{end}}
         </details>
     </div>
     <div id='notes'>
         <details>
             <summary>Notizen</summary>
+            <ul>
             <div id="note" hx-target="this" hx-swap="outerHTML">
                 <button hx-get="/characters/{{.ID}}/addNote">Notiz hinzufügen</button>
             </div>
-            <ul>
-                {{range .Notes}}
-                <li>{{.}}   <button>löschen</button></li>
-                {{end}}
+            {{$notes := .Notes.Text}}
+            {{$charId := .ID}}
+            {{range $ind, $id := .Notes.ID}}
+            <form id="deleteNote" hx-post="/characters/{{$charId}}/deleteNote" hx-target="this" hx-swap="outerHTML">
+                <input type="hidden" name="csrf_token" value="{{$csrf}}">
+                <input type="hidden" name="NoteId" Value="{{$id}}">
+                <li>{{index $notes $ind}}    <button type="submit">löschen</button></li>
+            </form>
+            {{end}}
             </ul>
         </details>
     </div>

@@ -26,14 +26,17 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
 	mux.Handle("GET /characters/{id}/addItem", protectedChain.ThenFunc(app.addItem))
 	mux.Handle("POST /characters/{id}/addItem", protectedChain.ThenFunc(app.addItemPost))
+	mux.Handle("POST /characters/{id}/deleteItem", protectedChain.ThenFunc(app.deleteItemPost))
 	mux.Handle("GET /characters/{id}/addNote", protectedChain.ThenFunc(app.addNote))
 	mux.Handle("POST /characters/{id}/addNote", protectedChain.ThenFunc(app.addNotePost))
+	mux.Handle("POST /characters/{id}/deleteNote", protectedChain.ThenFunc(app.deleteNotePost))
 
 	//some helpers
 	mux.Handle("POST /inc", protectedChain.ThenFunc(app.Inc))
 	mux.Handle("POST /dec", protectedChain.ThenFunc(app.Dec))
 	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))
 	mux.Handle("GET /cancel", protectedChain.ThenFunc(app.cancel))
+	mux.Handle("POST /cancel", protectedChain.ThenFunc(app.cancel))
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)
@@ -55,7 +58,6 @@ func (app *application) routesNoMW() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
-
 	mux.HandleFunc("GET /{$}", app.home)
 	mux.HandleFunc("GET /signup", app.signup)
 	mux.HandleFunc("POST /signup", app.signupPost)
@@ -67,7 +69,7 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("POST /create", app.createPost)
 	mux.HandleFunc("GET /characters/{id}", app.viewCharacter)
 	mux.HandleFunc("GET /characters/{id}/addItem", app.addItem)
-	mux.HandleFunc("POST /characters/{id}/addItem",app.addItemPost)
+	mux.HandleFunc("POST /characters/{id}/addItem", app.addItemPost)
 	mux.HandleFunc("GET /characters/{id}/addNote", app.addNote)
 	mux.HandleFunc("POST /characters/{id}/addNote", app.addNotePost)
 

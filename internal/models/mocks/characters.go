@@ -44,11 +44,11 @@ var mockCustomSkills = models.CustomSkills{
 	Category: []string{"Muttersprache"},
 }
 
-var mockItems = []models.Item{
-	{ItemID: 1, Name: "Hand-Brosche", Description: "Brosche der Hand des Königs", Count: 1},
-}
+var mockItems = models.Items{ItemId: []int{1}, Name: []string{"Hand-Brosche"}, Description: []string{"Brosche der Hand des Königs"}, Count: []int{1}}
 
-var mockNotes = []string{"Aegon ist blöde.", "Viserys war viel besser."}
+var mockNotes = models.Notes{
+	ID:   []int{1, 2},
+	Text: []string{"Aegon ist blöde.", "Viserys war viel besser."}}
 
 type CharacterModel struct{}
 
@@ -80,11 +80,19 @@ func (m *CharacterModel) GetAvailableSkills() (models.Skills, error) {
 	return skills, nil
 }
 
-func (m *CharacterModel) AddItem(characterId int, item models.Item) error {
+func (m *CharacterModel) AddItem(characterId int, name, description string, count int) error {
+	return nil
+}
+
+func (m *CharacterModel) DeleteItem(itemId int) error {
 	return nil
 }
 
 func (m *CharacterModel) AddNote(characterId int, text string) error {
+	return nil
+}
+
+func (m *CharacterModel) DeleteNote(noteId int) error {
 	return nil
 }
 

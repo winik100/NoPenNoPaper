@@ -368,13 +368,41 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.characters.AddItem(characterId, models.Item{Name: form.Name, Description: form.Description, Count: form.Count})
+	err = app.characters.AddItem(characterId, form.Name, form.Description, form.Count)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	redirect := fmt.Sprintf("/characters/%d", characterId)
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
+}
+
+func (app *application) deleteItemPost(w http.ResponseWriter, r *http.Request) {
+	type deleteForm struct {
+		ItemId int
+	}
+
+	var form deleteForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = app.characters.DeleteItem(form.ItemId)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	t, err := template.New("empty").Parse("")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "empty", form)
 }
 
 func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
@@ -394,7 +422,7 @@ func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplStr := `<form hx-post="/characters/{{.Character.ID}}/addNote" hx-target="this" hx-swap="outerHTML" hx-select="#note">
+	tmplStr := `<form hx-post="/characters/{{.Character.ID}}/addNote" hx-target="this" hx-swap="outerHTML">
 					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 					<div>
 						<label>Notiz:</label>
@@ -435,9 +463,10 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplStr := `<div id="note" hx-target="this" hx-swap="outerHTML">
+	tmplStr := fmt.Sprintf(`<div id="note" hx-target="this" hx-swap="outerHTML">
                 	<button hx-get="/characters/{{.Character.ID}}/addNote">Notiz hinzufügen</button>
-            	</div>`
+            	</div>
+				<li>%s    <button type="submit">löschen</button></li>`, form.Text)
 
 	t, err := template.New("button").Parse(tmplStr)
 	if err != nil {
@@ -459,6 +488,34 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 	data.Character = character
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "button", data)
+}
+
+func (app *application) deleteNotePost(w http.ResponseWriter, r *http.Request) {
+	type deleteForm struct {
+		NoteId int
+	}
+
+	var form deleteForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = app.characters.DeleteNote(form.NoteId)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	t, err := template.New("empty").Parse("")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "empty", nil)
 }
 
 func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request) {
