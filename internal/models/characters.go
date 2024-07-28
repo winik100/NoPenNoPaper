@@ -157,7 +157,7 @@ type CharacterModelInterface interface {
 	GetAvailableSkills() (Skills, error)
 	AddItem(characterId int, name, description string, count int) error
 	DeleteItem(itemId int) error
-	AddNote(characterId int, text string) error
+	AddNote(characterId int, text string) (int, error)
 	DeleteNote(noteId int) error
 	IncrementStat(character Character, stat string) (Character, error)
 	DecrementStat(character Character, stat string) (Character, error)
@@ -491,13 +491,17 @@ func (c *CharacterModel) DeleteItem(itemId int) error {
 	return nil
 }
 
-func (c *CharacterModel) AddNote(characterId int, text string) error {
+func (c *CharacterModel) AddNote(characterId int, text string) (int, error) {
 	stmt := "INSERT INTO notes (character_id, text) VALUES (?,?);"
-	_, err := c.DB.Exec(stmt, characterId, text)
+	res, err := c.DB.Exec(stmt, characterId, text)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(id), nil
 }
 
 func (c *CharacterModel) DeleteNote(noteId int) error {

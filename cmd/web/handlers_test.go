@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/winik100/NoPenNoPaper/internal/models"
@@ -457,7 +458,9 @@ func TestAddItem(t *testing.T) {
 
 	wantFormTag := "<form action='/characters/1/addItem' method='POST'>"
 	wantContent := []string{
-		"<td>Hand-Brosche</td>",
+		`<form id="deleteItem" hx-post="/characters/1/deleteItem" hx-target="#item1" hx-swap="outerHTML">`,
+		`<input type="hidden" name="ItemId" Value="1">`,
+		`Hand-Brosche   <button type="submit">entfernen</button>`,
 		"<td>Brosche der Hand des Königs</td>",
 		"<td>1</td>"}
 
@@ -487,10 +490,46 @@ func TestAddItem(t *testing.T) {
 			wantContent: wantContent,
 		},
 		{
-			name:        "Invalid Item",
+			name:        "Empty Name",
 			itemName:    "",
+			itemDesc:    mocks.MockCharacter.Items.Description[0],
+			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			redirect:    false,
+			wantCode:    http.StatusUnprocessableEntity,
+			wantContent: []string{wantFormTag},
+		},
+		{
+			name:        "Empty Description",
+			itemName:    mocks.MockCharacter.Items.Name[0],
 			itemDesc:    "",
-			itemCount:   "",
+			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			redirect:    false,
+			wantCode:    http.StatusUnprocessableEntity,
+			wantContent: []string{wantFormTag},
+		},
+		{
+			name:        "Name length > 50",
+			itemName:    strings.Repeat(".", 51),
+			itemDesc:    mocks.MockCharacter.Items.Description[0],
+			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			redirect:    false,
+			wantCode:    http.StatusUnprocessableEntity,
+			wantContent: []string{wantFormTag},
+		},
+		{
+			name:        "Description length > 255",
+			itemName:    mocks.MockCharacter.Items.Name[0],
+			itemDesc:    strings.Repeat(".", 256),
+			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			redirect:    false,
+			wantCode:    http.StatusUnprocessableEntity,
+			wantContent: []string{wantFormTag},
+		},
+		{
+			name:        "Item count < 1",
+			itemName:    mocks.MockCharacter.Items.Name[0],
+			itemDesc:    strings.Repeat(".", 256),
+			itemCount:   "0",
 			redirect:    false,
 			wantCode:    http.StatusUnprocessableEntity,
 			wantContent: []string{wantFormTag},
@@ -534,7 +573,7 @@ func TestAddItem(t *testing.T) {
 	}
 }
 
-func TestAddNoteGet(t *testing.T) {
+func TestAddNote(t *testing.T) {
 	app := newTestApplication(t)
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
@@ -544,33 +583,38 @@ func TestAddNoteGet(t *testing.T) {
 		})))
 	defer ts.Close()
 
-	wantFormTag := `<form hx-post="/characters/1/addNote" hx-target="this" hx-swap="outerHTML" hx-select="#note">`
-	wantFormContent := []string{
-		`<input type="text" name="Text" textarea>`,
-		`<button type="submit">Hinzufügen</button>`,
-		`<button hx-get="/characters/1">Abbrechen</button>`,
+	_, _, body := ts.get(t, "/characters/1/addNote")
+
+	validCSRF := extractCSRFToken(t, body)
+
+	wantContent := []string{
+		`<button hx-get="/characters/1/addNote">Notiz hinzufügen</button>`,
+		`<form id="deleteNote" hx-post="/characters/1/deleteNote" hx-target="this" hx-swap="outerHTML">`,
+		`<input type="hidden" name="NoteId" Value="2">`,
+		`<li>Dies ist eine gültige Notiz.    <button type="submit">löschen</button></li>`,
 	}
 
 	tests := []struct {
 		name        string
+		text        string
 		wantCode    int
 		wantContent []string
 	}{
 		{
-			name:        "Form displayed",
+			name:        "Valid Note",
+			text:        "Dies ist eine gültige Notiz.",
 			wantCode:    http.StatusOK,
-			wantContent: []string{wantFormTag},
-		},
-		{
-			name:        "Proper Form Elements",
-			wantCode:    http.StatusOK,
-			wantContent: wantFormContent,
+			wantContent: wantContent,
 		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			code, _, body := ts.get(t, "/characters/1/addNote")
+			form := url.Values{}
+			form.Add("Text", testCase.text)
+			form.Add("csrf_token", validCSRF)
+
+			code, _, body := ts.postForm(t, "/characters/1/addNote", form)
 
 			testHelpers.Equal(t, code, testCase.wantCode)
 			for _, tag := range testCase.wantContent {

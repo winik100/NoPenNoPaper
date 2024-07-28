@@ -88,8 +88,11 @@ func (m *CharacterModel) DeleteItem(itemId int) error {
 	return nil
 }
 
-func (m *CharacterModel) AddNote(characterId int, text string) error {
-	return nil
+func (m *CharacterModel) AddNote(characterId int, text string) (int, error) {
+	if characterId == 1 {
+		return 2, nil
+	}
+	return 0, nil
 }
 
 func (m *CharacterModel) DeleteNote(noteId int) error {

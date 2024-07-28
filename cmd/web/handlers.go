@@ -457,7 +457,7 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
 	}
-	err = app.characters.AddNote(characterId, form.Text)
+	noteId, err := app.characters.AddNote(characterId, form.Text)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -466,7 +466,11 @@ func (app *application) addNotePost(w http.ResponseWriter, r *http.Request) {
 	tmplStr := fmt.Sprintf(`<div id="note" hx-target="this" hx-swap="outerHTML">
                 	<button hx-get="/characters/{{.Character.ID}}/addNote">Notiz hinzufügen</button>
             	</div>
-				<li>%s    <button type="submit">löschen</button></li>`, form.Text)
+				<form id="deleteNote" hx-post="/characters/{{.Character.ID}}/deleteNote" hx-target="this" hx-swap="outerHTML">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="NoteId" Value="%d">
+                <li>%s    <button type="submit">löschen</button></li>
+            </form>`, noteId, form.Text)
 
 	t, err := template.New("button").Parse(tmplStr)
 	if err != nil {
