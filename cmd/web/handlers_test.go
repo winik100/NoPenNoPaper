@@ -573,6 +573,48 @@ func TestAddItem(t *testing.T) {
 	}
 }
 
+func TestDeleteItem(t *testing.T) {
+	app := newTestApplication(t)
+
+	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
+		map[string]any{
+			string(authenticatedUserIdContextKey): 1,
+			"characterId":                         1,
+		})))
+	defer ts.Close()
+	_, _, body := ts.get(t, "/characters/1")
+	testHelpers.StringContains(t, body, "Hand-Brosche")
+	validCSRF := extractCSRFToken(t, body)
+
+	tests := []struct {
+		name     string
+		itemId   int
+		wantCode int
+	}{
+		{
+			name:     "Successful Deletion",
+			itemId:   1,
+			wantCode: http.StatusOK,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("ItemId", strconv.Itoa(testCase.itemId))
+			form.Add("csrf_token", validCSRF)
+
+			code, _, _ := ts.postForm(t, "/characters/1/deleteItem", form)
+			testHelpers.Equal(t, code, testCase.wantCode)
+
+			_, _, body := ts.get(t, "/characters/1")
+			if strings.Contains(body, "Hand-Brosche") {
+				t.Errorf("item was not removed")
+			}
+		})
+	}
+}
+
 func TestAddNote(t *testing.T) {
 	app := newTestApplication(t)
 
@@ -620,6 +662,49 @@ func TestAddNote(t *testing.T) {
 			for _, tag := range testCase.wantContent {
 				testHelpers.StringContains(t, body, tag)
 			}
+		})
+	}
+}
+
+func TestDeleteNote(t *testing.T) {
+	app := newTestApplication(t)
+
+	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
+		map[string]any{
+			string(authenticatedUserIdContextKey): 1,
+			"characterId":                         1,
+		})))
+	defer ts.Close()
+	_, _, body := ts.get(t, "/characters/1")
+	testHelpers.StringContains(t, body, "Aegon ist blöde.")
+	validCSRF := extractCSRFToken(t, body)
+
+	tests := []struct {
+		name     string
+		noteId   int
+		wantCode int
+	}{
+		{
+			name:     "Successful Deletion",
+			noteId:   1,
+			wantCode: http.StatusOK,
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			form := url.Values{}
+			form.Add("NoteId", strconv.Itoa(testCase.noteId))
+			form.Add("csrf_token", validCSRF)
+
+			code, _, _ := ts.postForm(t, "/characters/1/deleteNote", form)
+			testHelpers.Equal(t, code, testCase.wantCode)
+
+			_, _, body := ts.get(t, "/characters/1")
+			if strings.Contains(body, "Aegon ist blöde.") {
+				t.Errorf("note was not removed")
+			}
+			testHelpers.StringContains(t, body, "Viserys war viel besser.")
 		})
 	}
 }

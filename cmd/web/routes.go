@@ -70,14 +70,17 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("GET /characters/{id}", app.viewCharacter)
 	mux.HandleFunc("GET /characters/{id}/addItem", app.addItem)
 	mux.HandleFunc("POST /characters/{id}/addItem", app.addItemPost)
+	mux.HandleFunc("POST /characters/{id}/deleteItem", app.deleteItemPost)
 	mux.HandleFunc("GET /characters/{id}/addNote", app.addNote)
 	mux.HandleFunc("POST /characters/{id}/addNote", app.addNotePost)
+	mux.HandleFunc("POST /characters/{id}/deleteNote", app.deleteNotePost)
 
 	//some helpers
 	mux.HandleFunc("POST /inc", app.Inc)
 	mux.HandleFunc("POST /dec", app.Dec)
 	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)
 	mux.HandleFunc("GET /cancel", app.cancel)
+	mux.HandleFunc("POST /cancel", app.cancel)
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)

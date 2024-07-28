@@ -1,6 +1,8 @@
 package mocks
 
-import "github.com/winik100/NoPenNoPaper/internal/models"
+import (
+	"github.com/winik100/NoPenNoPaper/internal/models"
+)
 
 var MockCharacter = models.Character{
 	ID:           1,
@@ -85,6 +87,9 @@ func (m *CharacterModel) AddItem(characterId int, name, description string, coun
 }
 
 func (m *CharacterModel) DeleteItem(itemId int) error {
+	if itemId == 1 {
+		MockCharacter.Items = models.Items{}
+	}
 	return nil
 }
 
@@ -96,6 +101,12 @@ func (m *CharacterModel) AddNote(characterId int, text string) (int, error) {
 }
 
 func (m *CharacterModel) DeleteNote(noteId int) error {
+	if noteId == 1 {
+		MockCharacter.Notes = models.Notes{ID: []int{2}, Text: []string{"Viserys war viel besser."}}
+	}
+	if noteId == 2 {
+		MockCharacter.Notes = models.Notes{ID: []int{1}, Text: []string{"Aegon ist blöde."}}
+	}
 	return nil
 }
 
