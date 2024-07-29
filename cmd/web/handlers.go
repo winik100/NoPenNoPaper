@@ -69,6 +69,59 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "home.tmpl.html", data)
 }
 
+func (app *application) delete(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	tmplStr := `<form id="deleteCharacter" action="/characters/{{.Character.ID}}/delete" method="POST">
+					<p>Sicher? Kann nicht rückgängig gemacht werden!</p>
+					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+					<input type="hidden" name="CharacterId" Value="{{.Character.ID}}">
+					<button type="submit">löschen</button>
+					<button hx-get="/characters/{{.Character.ID}}" hx-target="#deleteCharacter" hx-select="#deleteCharacter">abbrechen</button>
+            	</form>`
+
+	t, err := template.New("delete").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	character, err := app.characters.Get(characterId)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Character = character
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "delete", data)
+}
+
+func (app *application) deletePost(w http.ResponseWriter, r *http.Request) {
+	type deleteForm struct {
+		CharacterId int
+	}
+
+	var form deleteForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = app.characters.Delete(form.CharacterId)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func (app *application) create(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	skills, err := app.characters.GetAvailableSkills()

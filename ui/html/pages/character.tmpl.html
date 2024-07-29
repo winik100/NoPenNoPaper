@@ -127,5 +127,8 @@
             </ul>
         </details>
     </div>
+    <div id="deleteCharacter">
+            <button hx-get="/characters/{{.ID}}/delete" hx-target="#deleteCharacter" hx-swap="outerHTML">löschen</button>
+    </div>
     {{end}}
 {{end}}

@@ -3,7 +3,7 @@ USE NoPenNoPaper;
 CREATE TABLE IF NOT EXISTS characters (
 	id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	created_by INTEGER NOT NULL,
-	FOREIGN KEY (created_by) REFERENCES users(id)
+	FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS character_info (
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS character_info (
 	gender VARCHAR(10) NOT NULL,
 	residence VARCHAR(50) NOT NULL,
 	birthplace VARCHAR(50) NOT NULL,
-	FOREIGN KEY (character_id) REFERENCES characters(id)
+	FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS character_attributes (
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS character_attributes (
 	gr INTEGER NOT NULL,
 	i INTEGER NOT NULL,
 	bw INTEGER NOT NULL,
-	FOREIGN KEY (character_id) REFERENCES characters(id)
+	FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS character_stats (
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS character_stats (
 	mp INTEGER NOT NULL,
 	maxluck INTEGER NOT NULL,
 	luck INTEGER NOT NULL,
-	FOREIGN KEY (character_id) REFERENCES characters(id)
+	FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 ); 
 
 CREATE TABLE IF NOT EXISTS skills (
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS character_skills (
 	character_id INTEGER NOT NULL,
 	skill_name VARCHAR(50) NOT NULL,
 	value INTEGER NOT NULL,
-	CONSTRAINT fk_character_cs FOREIGN KEY (character_id) REFERENCES characters(id),
+	CONSTRAINT fk_character_cs FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
 	CONSTRAINT fk_skill_cs FOREIGN KEY (skill_name) REFERENCES skills(name),
 	CONSTRAINT pk_character_skills PRIMARY KEY (character_id, skill_name)
 );
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS character_custom_skills (
 	character_id INTEGER NOT NULL,
 	custom_skill_name VARCHAR(50) NOT NULL,
 	value INTEGER NOT NULL,
-	CONSTRAINT fk_character_ccs FOREIGN KEY (character_id) REFERENCES characters(id),
+	CONSTRAINT fk_character_ccs FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
 	CONSTRAINT fk_custom_skill_ccs FOREIGN KEY (custom_skill_name) REFERENCES custom_skills(name),
 	CONSTRAINT pk_character_custom_skills PRIMARY KEY (character_id, custom_skill_name)
 );
@@ -81,12 +81,12 @@ CREATE TABLE IF NOT EXISTS items (
 	name VARCHAR(50) NOT NULL,
 	description VARCHAR(255) NOT NULL,
 	cnt INTEGER NOT NULL,
-	FOREIGN KEY (character_id) REFERENCES characters(id)
+	FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS notes (
 	note_id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	character_id INTEGER NOT NULL,
 	text VARCHAR(255) NOT NULL,
-	FOREIGN KEY (character_id) REFERENCES characters(id)
+	FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );

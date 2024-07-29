@@ -154,6 +154,7 @@ type CharacterModelInterface interface {
 	Get(characterId int) (Character, error)
 	GetAllFrom(userId int) ([]Character, error)
 	GetAll() ([]Character, error)
+	Delete(characterId int) error
 	GetAvailableSkills() (Skills, error)
 	AddItem(characterId int, name, description string, count int) error
 	DeleteItem(itemId int) error
@@ -373,6 +374,15 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	}
 
 	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, CustomSkills: customSkills, Items: items, Notes: notes}, nil
+}
+
+func (c *CharacterModel) Delete(characterId int) error {
+	stmt := "DELETE FROM characters WHERE id=?;"
+	_, err := c.DB.Exec(stmt, characterId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {

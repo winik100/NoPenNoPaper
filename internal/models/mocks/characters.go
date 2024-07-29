@@ -65,6 +65,13 @@ func (m *CharacterModel) Get(characterId int) (models.Character, error) {
 	return models.Character{}, models.ErrNoRecord
 }
 
+func (m *CharacterModel) Delete(characterId int) error {
+	if characterId == 1 {
+		MockCharacter = models.Character{}
+	}
+	return nil
+}
+
 func (m *CharacterModel) GetAllFrom(userId int) ([]models.Character, error) {
 	if userId == 1 {
 		return []models.Character{MockCharacter}, nil
