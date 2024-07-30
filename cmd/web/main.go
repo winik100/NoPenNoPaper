@@ -30,7 +30,7 @@ type application struct {
 func main() {
 
 	port := flag.String("port", ":8080", "HTTP Port")
-	dsn := flag.String("dsn", "web:mellon@/NoPenNoPaper?parseTime=true", "MySQL Data Source Name")
+	dsn := flag.String("dsn", "web:testpwweb@tcp(localhost:3307)/NoPenNoPaper", "MySQL Data Source Name")
 	flag.Parse()
 
 	log := slog.New(slog.NewTextHandler(os.Stdout, nil))
