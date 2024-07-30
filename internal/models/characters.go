@@ -8,6 +8,28 @@ import (
 	"github.com/justinian/dice"
 )
 
+type CharacterModelInterface interface {
+	Insert(character Character, created_by int) (int, error)
+	Get(characterId int) (Character, error)
+	GetAllFrom(userId int) ([]Character, error)
+	GetAll() ([]Character, error)
+	Delete(characterId int) error
+	GetAvailableSkills() (Skills, error)
+	AddSkill(characterId int, skill string, value int) error
+	EditSkill(characterId int, skill string, newValue int) error
+	EditCustomSkill(characterId int, skill string, newValue int) error
+	AddItem(characterId int, name, description string, count int) error
+	DeleteItem(itemId int) error
+	AddNote(characterId int, text string) (int, error)
+	DeleteNote(noteId int) error
+	IncrementStat(character Character, stat string) (Character, error)
+	DecrementStat(character Character, stat string) (Character, error)
+}
+
+type CharacterModel struct {
+	DB *sql.DB
+}
+
 type Character struct {
 	ID           int
 	Info         CharacterInfo
@@ -147,25 +169,6 @@ type Items struct {
 type Notes struct {
 	ID   []int
 	Text []string
-}
-
-type CharacterModelInterface interface {
-	Insert(character Character, created_by int) (int, error)
-	Get(characterId int) (Character, error)
-	GetAllFrom(userId int) ([]Character, error)
-	GetAll() ([]Character, error)
-	Delete(characterId int) error
-	GetAvailableSkills() (Skills, error)
-	AddItem(characterId int, name, description string, count int) error
-	DeleteItem(itemId int) error
-	AddNote(characterId int, text string) (int, error)
-	DeleteNote(noteId int) error
-	IncrementStat(character Character, stat string) (Character, error)
-	DecrementStat(character Character, stat string) (Character, error)
-}
-
-type CharacterModel struct {
-	DB *sql.DB
 }
 
 func (c *CharacterModel) Insert(character Character, created_by int) (int, error) {
@@ -481,6 +484,33 @@ func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
 		skillsValue = append(skillsValue, value)
 	}
 	return Skills{Name: skillsName, Value: skillsValue}, nil
+}
+
+func (c *CharacterModel) AddSkill(characterId int, skill string, value int) error {
+	stmt := "INSERT INTO character_skills (character_id, skill_name, value) VALUES (?,?,?);"
+	_, err := c.DB.Exec(stmt, characterId, skill, value)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) EditSkill(characterId int, skill string, newValue int) error {
+	stmt := "UPDATE character_skills SET value=? WHERE character_id=? AND skill_name=?;"
+	_, err := c.DB.Exec(stmt, newValue, characterId, skill)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) EditCustomSkill(characterId int, skill string, newValue int) error {
+	stmt := "UPDATE character_custom_skills SET value=? WHERE character_id=? AND custom_skill_name=?;"
+	_, err := c.DB.Exec(stmt, newValue, characterId, skill)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *CharacterModel) AddItem(characterId int, name, description string, count int) error {

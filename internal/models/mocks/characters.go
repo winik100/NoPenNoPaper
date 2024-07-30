@@ -89,6 +89,18 @@ func (m *CharacterModel) GetAvailableSkills() (models.Skills, error) {
 	return skills, nil
 }
 
+func (m *CharacterModel) AddSkill(characterId int, skill string, value int) error {
+	return nil
+}
+
+func (m *CharacterModel) EditSkill(characterId int, skill string, newValue int) error {
+	return nil
+}
+
+func (m *CharacterModel) EditCustomSkill(characterId int, skill string, newValue int) error {
+	return nil
+}
+
 func (m *CharacterModel) AddItem(characterId int, name, description string, count int) error {
 	return nil
 }

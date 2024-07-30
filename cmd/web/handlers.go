@@ -38,6 +38,12 @@ type noteForm struct {
 	validators.FormValidator `schema:"-"`
 }
 
+type skillEditForm struct {
+	Skill                    string
+	NewValue                 int
+	validators.FormValidator `schema:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
 	if userId == 0 {
@@ -79,8 +85,8 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 					<p>Sicher? Kann nicht rückgängig gemacht werden!</p>
 					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 					<input type="hidden" name="CharacterId" Value="{{.Character.ID}}">
-					<button type="submit">löschen</button>
-					<button hx-get="/characters/{{.Character.ID}}" hx-target="#deleteCharacter" hx-select="#deleteCharacter">abbrechen</button>
+					<button type="submit">OK</button>
+					<button hx-get="/characters/{{.Character.ID}}" hx-target="#deleteCharacter" hx-select="#deleteCharacter">Abbrechen</button>
             	</form>`
 
 	t, err := template.New("delete").Parse(tmplStr)
@@ -303,6 +309,146 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "character.tmpl.html", data)
 }
 
+func (app *application) editSkill(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	id := r.PathValue("id")
+	skill := params.Get("skill")
+	value, err := strconv.Atoi(params.Get("value"))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/%s/editSkill" hx-target="this" hx-swap="outerHTML">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+				<input type="hidden" name="Skill" value="%s">
+                <input type="number" name="NewValue" value="%d">
+				<button type="submit">OK</button>
+				<button hx-get="/characters/%s" hx-target="#editForm" hx-swap="outerHTML" hx-select="#edit%s">Abbrechen</button>
+            </form>`, id, skill, value, id, skill)
+
+	t, err := template.New("editForm").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "editForm", data)
+}
+
+func (app *application) editSkillPost(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	var form skillEditForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	err = app.characters.EditSkill(characterId, form.Skill, form.NewValue)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	half := form.NewValue / 2
+	fifth := form.NewValue / 5
+	tmplStr := fmt.Sprintf(`<div value="%d" hx-swap-oob="outerHTML:#Values%s">%d | %d | %d</div>
+							<form hx-get="/characters/%d/editSkill" hx-target="this" hx-swap="outerHTML">	
+                            	<input type="hidden" name="skill" value="%s">
+                            	<input type="hidden" name="value" value="%d">
+                            	<button type="submit">Bearbeiten</button>
+                        	</form>`, form.NewValue, form.Skill, form.NewValue, half, fifth, characterId, form.Skill, form.NewValue)
+
+	t, err := template.New("editskilldone").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Form = form
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "editskilldone", data)
+}
+
+func (app *application) editCustomSkill(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	id := r.PathValue("id")
+	skill := params.Get("skill")
+	value, err := strconv.Atoi(params.Get("value"))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/%s/editCustomSkill" hx-target="this" hx-swap="outerHTML">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+				<input type="hidden" name="Skill" value="%s">
+                <input type="number" name="NewValue" value="%d">
+				<button type="submit">OK</button>
+				<button hx-get="/characters/%s" hx-target="#editForm" hx-swap="outerHTML" hx-select="#edit%s">Abbrechen</button>
+            </form>`, id, skill, value, id, skill)
+
+	t, err := template.New("editForm").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "editForm", data)
+}
+
+func (app *application) editCustomSkillPost(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	var form skillEditForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	err = app.characters.EditCustomSkill(characterId, form.Skill, form.NewValue)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	half := form.NewValue / 2
+	fifth := form.NewValue / 5
+	tmplStr := fmt.Sprintf(`<div value="%d" hx-swap-oob="outerHTML:#Values%s">%d | %d | %d</div>
+							<form hx-get="/characters/%d/editCustomSkill" hx-target="this" hx-swap="outerHTML">	
+                            	<input type="hidden" name="skill" value="%s">
+                            	<input type="hidden" name="value" value="%d">
+                            	<button type="submit">Bearbeiten</button>
+                        	</form>`, form.NewValue, form.Skill, form.NewValue, half, fifth, characterId, form.Skill, form.NewValue)
+
+	t, err := template.New("editskilldone").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Form = form
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "editskilldone", data)
+}
+
 func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
 	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
 	if characterId == 0 {
@@ -482,7 +628,7 @@ func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
 						<input type="text" name="Text" textarea>
 					</div>
 					<button type="submit">Hinzufügen</button>
-					<button hx-get="/characters/{{.Character.ID}}">Abbrechen</button>
+					<button hx-get="/cancel/note">Abbrechen</button>
 				</form>`
 
 	t, err := template.New("addnote").Parse(tmplStr)
@@ -610,7 +756,8 @@ func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) cancel(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("cancel").Parse("")
+	replaceWith := app.replacement(r)
+	t, err := template.New("cancel").Parse(replaceWith)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -618,4 +765,20 @@ func (app *application) cancel(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "cancel", nil)
+}
+
+func (app *application) replacement(r *http.Request) string {
+	kind := r.PathValue("kind")
+	id := app.sessionManager.GetInt(r.Context(), "characterId")
+	if id == 0 {
+		return ""
+	}
+	var tmplStr string
+	switch kind {
+	case "note":
+		tmplStr = fmt.Sprintf(`<div id="note" hx-target="this" hx-swap="outerHTML">
+                		<button hx-get="/characters/%d/addNote">Notiz hinzufügen</button>
+            		</div>`, id)
+	}
+	return tmplStr
 }
