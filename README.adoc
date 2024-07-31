@@ -1,11 +1,11 @@
 = NoPenNoPaper (WIP)
 
-A humble web-application to create and manage characters for the Pen&Paper system [Cthulhu](https://pegasus.de/cthulhu).
+A humble web-application to create and manage characters for the Pen&Paper system https://pegasus.de/cthulhu[Cthulhu].
 
 == How to run
 . Start the MySQL Docker container via ``docker compose up`` (requires Docker Compose to be installed)
 . Run the application via the ``NoPenNoPaper`` executable
-    ..2.1 Alternatively, run via ``go run ./cmd/web`` (requires Go to be installed)
+.. 2.1 Alternatively, run via ``go run ./cmd/web`` (requires Go to be installed)
 . Go to ``https://localhost:8080`` (or replace 'localhost' with the server's IP to connect from within the same network)
 
 == TODO
