@@ -6,6 +6,10 @@
     font-family: "Ubuntu Mono", monospace;
 }
 
+#deleteCharacter {
+    color: darkred;
+}
+
 html, body {
     height: 100%;
 }
@@ -269,3 +273,4 @@ footer {
     color: #6A6C6F;
     text-align: center;
 }
+

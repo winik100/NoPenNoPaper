@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
+	"slices"
 
 	"github.com/justinas/nosurf"
 	"github.com/winik100/NoPenNoPaper/internal/models"
@@ -37,9 +38,14 @@ func fifth(value int) int {
 	return value / 5
 }
 
+func contains(skills []string, skill string) bool {
+	return slices.Contains(skills, skill)
+}
+
 var funcs = template.FuncMap{
-	"half":  half,
-	"fifth": fifth,
+	"half":     half,
+	"fifth":    fifth,
+	"contains": contains,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

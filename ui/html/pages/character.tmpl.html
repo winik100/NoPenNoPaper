@@ -113,7 +113,7 @@
             <a href='/characters/{{.ID}}/addItem'>
                 <button>Gegenstand hinzufügen</button>
             </a>
-            {{if .Items}}
+            {{if .Items.Name}}
             <table>
                 <tr>
                     <th>Gegenstand</th>
@@ -159,8 +159,8 @@
             </ul>
         </details>
     </div>
-    <div id="deleteCharacter">
-            <button hx-get="/characters/{{.ID}}/delete" hx-target="#deleteCharacter" hx-swap="outerHTML">Charakter löschen</button>
-    </div>
+        <div>
+            <button id="deleteCharacter" hx-get="/characters/{{.ID}}/delete" hx-target="#deleteCharacter" hx-swap="outerHTML">Charakter löschen</button>
+        </div>
     {{end}}
 {{end}}

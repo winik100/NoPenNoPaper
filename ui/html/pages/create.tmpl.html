@@ -120,21 +120,22 @@
         <p>Einer der 9 Werte muss auf Finanzkraft verwendet werden!</p>
             <table id='Skills'>
                 {{$fieldErrors := .Form.FieldErrors}}
+                {{$selected := .Form.SelectedSkills}}
                 {{$keys := .Form.Skills.Name}}
                 {{$values := .Form.Skills.Value}}
                 {{range $ind, $key := $keys}}
                 <tr>
                     <td>
                         <label>{{$key}}</label>
-                        <input id='{{$key}}' type='hidden' name='Skills.Name' value='{{$key}}' disabled>
-                        <select id='{{$key}}Val' name='Skills.Value' disabled>
+                        <input id='{{$key}}' type='hidden' name='Skills.Name' value='{{$key}}' {{if not (contains $selected $key)}} disabled {{end}}>
+                        <select id='{{$key}}Val' name='Skills.Value' {{if not (contains $selected $key)}} disabled {{end}}>
                             <option value='{{index $values $ind}}' selected>{{index $values $ind}}</option>
                             <option value='70'>70</option>
                             <option value='60'>60</option>
                             <option value='50'>50</option>
                             <option value='40'>40</option>
                         </select>
-                        <input id='{{$key}}Edit' type='checkbox'>
+                        <input id='{{$key}}Edit' name='SelectedSkills' type='checkbox' value='{{$key}}' {{if (contains $selected $key)}} checked {{end}}>
                         {{with (index $fieldErrors $key)}}
                                 <label class='error'>{{.}}</label>
                         {{end}}
@@ -145,6 +146,7 @@
                     <td>
                         <label>Neuen Skill hinzufügen</label>
                         <select name='category' hx-get='/customSkillInput' hx-target='#Skills' hx-swap='beforeend'>
+                            <option value='' disabled selected>Wähle Kategorie</option>
                             <option value='Muttersprache'>Muttersprache</option>
                             <option value='Fremdsprache'>Fremdsprache</option>
                             <option value='Handwerk'>Handwerk und Kunst</option>
@@ -155,7 +157,28 @@
                         </select>                       
                     </td>
                 </tr>
-                
+                {{with .Form.CustomSkills}}
+                    {{$keys := .Name}}
+                    {{$values := .Value}}
+                    {{$categories := .Category}}
+                    {{range $ind, $key := $keys}}
+                    <tr id="{{$key}}">
+                        <td>
+                            <input type='hidden' name='CustomSkills.Category' value='{{index $categories $ind}}'>
+                            <label>{{index $categories $ind}}</label>
+                            <input type="text" name="CustomSkills.Name" value='{{index $keys $ind}}'>
+                            <select name="CustomSkills.Value">
+                                <option value="{{index $values $ind}}" selected>{{index $values $ind}}</option>
+                                <option value="70">70</option>
+                                <option value="60">60</option>
+                                <option value="50">50</option>
+                                <option value="40">40</option>
+                            </select>
+                            <button id="cancel" hx-get="/cancel/customSkill" hx-target="#{{$key}}" hx-swap="outerHTML">Abbrechen</button>
+                        </td>
+                    </tr>
+                    {{end}}
+                {{end}}
             </table>
         </details>
     </div>

@@ -15,6 +15,7 @@ type characterCreateForm struct {
 	Info                     models.CharacterInfo
 	Attributes               models.CharacterAttributes
 	Skills                   models.Skills
+	SelectedSkills           []string
 	CustomSkills             models.CustomSkills
 	validators.FormValidator `schema:"-"`
 }
@@ -155,6 +156,12 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
+		availableSkills, err := app.characters.GetAvailableSkills()
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		form.Skills = mergeSkills(availableSkills, form.Skills)
 		data.Form = form
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		app.render(w, r, "create.tmpl.html", data)
@@ -170,6 +177,17 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func mergeSkills(allSkills models.Skills, selectedSkills models.Skills) models.Skills {
+	for i, skill := range selectedSkills.Name {
+		for j, sk := range allSkills.Name {
+			if sk == skill {
+				allSkills.Value[j] = selectedSkills.Value[i]
+			}
+		}
+	}
+	return allSkills
 }
 
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
@@ -734,7 +752,7 @@ func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request)
 							<option value="50">50</option>
 							<option value="40">40</option>
 						</select>
-						<button id="cancel" hx-get="/cancel" hx-target="#{{.Category}}" hx-swap="outerHTML">Abbrechen</button>
+						<button id="cancel" hx-get="/cancel/customSkill" hx-target="#{{.Category}}" hx-swap="outerHTML">Abbrechen</button>
 					</td>
 				</tr>`
 
@@ -779,6 +797,8 @@ func (app *application) replacement(r *http.Request) string {
 		tmplStr = fmt.Sprintf(`<div id="note" hx-target="this" hx-swap="outerHTML">
                 		<button hx-get="/characters/%d/addNote">Notiz hinzufügen</button>
             		</div>`, id)
+	case "customSkill":
+		tmplStr = ""
 	}
 	return tmplStr
 }
