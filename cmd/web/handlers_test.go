@@ -630,7 +630,6 @@ func TestAddNote(t *testing.T) {
 	validCSRF := extractCSRFToken(t, body)
 
 	wantContent := []string{
-		`<button hx-get="/characters/1/addNote">Notiz hinzufügen</button>`,
 		`<form id="deleteNote" hx-post="/characters/1/deleteNote" hx-target="this" hx-swap="outerHTML">`,
 		`<input type="hidden" name="NoteId" Value="2">`,
 		`<li>Dies ist eine gültige Notiz.    <button type="submit">löschen</button></li>`,

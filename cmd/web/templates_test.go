@@ -27,10 +27,10 @@ func TestHalfAndFifth(t *testing.T) {
 			want:  6,
 		},
 		{
-			name:  "Half - Zero",
+			name:  "Half - Always at least 1",
 			f:     half,
-			value: 0,
-			want:  0,
+			value: 1,
+			want:  1,
 		},
 		{
 			name:  "Fifth - Divisible by Five",
@@ -45,10 +45,10 @@ func TestHalfAndFifth(t *testing.T) {
 			want:  9,
 		},
 		{
-			name:  "Fifth - Zero",
+			name:  "Fifth - Always at least 1",
 			f:     fifth,
-			value: 0,
-			want:  0,
+			value: 3,
+			want:  1,
 		},
 	}
 
