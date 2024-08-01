@@ -61,7 +61,7 @@
     <div id='skills'>
         <details>
             <summary>Fertigkeiten</summary>
-            <label>Allgemeine Fertigkeiten</label>
+            <h3>Allgemeine Fertigkeiten</h3>
             <div id="addskill" hx-target="this" hx-swap="outerHTML">
                 <button hx-get="/characters/{{.ID}}/addSkill">Fertigkeit hinzufügen</button>
             </div>
@@ -87,8 +87,8 @@
                     {{end}}
                 </tbody>
             </table>
-            <label>Eigene Fertigkeiten</label>
-            <div id="addskill" hx-target="this" hx-swap="outerHTML">
+            <h3>Eigene Fertigkeiten</h3>
+            <div id="addcustomskill" hx-target="this" hx-swap="outerHTML">
                 <button hx-get="/characters/{{.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
             </div>
             <table>
@@ -151,10 +151,10 @@
     <div id='notes'>
         <details>
             <summary>Notizen</summary>
-            <ul>
-            <div id="note" hx-target="this" hx-swap="outerHTML">
+            <div id="addNote" hx-target="#noteList" hx-swap="afterbegin">
                 <button hx-get="/characters/{{.ID}}/addNote">Notiz hinzufügen</button>
             </div>
+            <ul id="noteList">
             {{$notes := .Notes.Text}}
             {{$charId := .ID}}
             {{range $ind, $id := .Notes.ID}}

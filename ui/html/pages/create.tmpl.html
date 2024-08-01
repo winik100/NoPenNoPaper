@@ -116,6 +116,7 @@
     <div id='skills'>
         <details>
         <summary>Fertigkeiten</summary>
+        <h3>Allgemeine Fertigkeiten</h3>
         <p>Zu verteilen: 40, 40, 40, 50, 50, 50, 60, 60, 70</p>
         <p>Einer der 9 Werte muss auf Finanzkraft verwendet werden!</p>
             <table id='Skills'>
@@ -142,10 +143,13 @@
                     </td>
                 </tr>
                 {{end}}
+            </table>
+            <h3>Eigene Fertigkeiten</h3>
+            <table id="CustomSkills">
                 <tr>
                     <td>
-                        <label>Neuen Skill hinzufügen</label>
-                        <select name='category' hx-get='/customSkillInput' hx-target='#Skills' hx-swap='beforeend'>
+                        <label>Neue Fertigkeit hinzufügen</label>
+                        <select name='category' hx-get='/customSkillInput' hx-target='#CustomSkills' hx-swap='beforeend'>
                             <option value='' disabled selected>Wähle Kategorie</option>
                             <option value='Muttersprache'>Muttersprache</option>
                             <option value='Fremdsprache'>Fremdsprache</option>
