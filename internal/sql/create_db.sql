@@ -2,6 +2,9 @@ CREATE DATABASE IF NOT EXISTS NoPenNoPaper CHARACTER SET utf8mb4 COLLATE utf8mb4
 
 USE NoPenNoPaper;
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 CREATE TABLE IF NOT EXISTS sessions (
     token CHAR(43) PRIMARY KEY,
     data BLOB NOT NULL,
@@ -17,6 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password VARCHAR(60) NOT NULL,
     role VARCHAR(10) NOT NULL
 );
+
+INSERT INTO users (name, hashed_password, role) VALUES ('testgm', '$2a$12$EeAcZSu5HYgydNKQVKaAW.qdBMSNVEeGugDA1yoyrMQF12BZTxf76', 'gm');
 
 -- characters.sql
 CREATE TABLE IF NOT EXISTS characters (

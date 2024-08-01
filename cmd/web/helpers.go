@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
@@ -82,4 +83,15 @@ func (form *characterCreateForm) AttributeChecks() {
 	if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
 		form.AddGenericError("Ungültige Attributsverteilung.")
 	}
+}
+
+func mergeSkills(allSkills models.Skills, selectedSkills models.Skills) models.Skills {
+	for i, skill := range selectedSkills.Name {
+		for j, sk := range allSkills.Name {
+			if sk == skill {
+				allSkills.Value[j] = selectedSkills.Value[i]
+			}
+		}
+	}
+	return allSkills
 }

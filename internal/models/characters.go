@@ -17,6 +17,7 @@ type CharacterModelInterface interface {
 	GetAvailableSkills() (Skills, error)
 	AddSkill(characterId int, skill string, value int) error
 	EditSkill(characterId int, skill string, newValue int) error
+	AddCustomSkill(characterId int, customSkill string, category string, value int) error
 	EditCustomSkill(characterId int, skill string, newValue int) error
 	AddItem(characterId int, name, description string, count int) error
 	DeleteItem(itemId int) error
@@ -498,6 +499,30 @@ func (c *CharacterModel) AddSkill(characterId int, skill string, value int) erro
 func (c *CharacterModel) EditSkill(characterId int, skill string, newValue int) error {
 	stmt := "UPDATE character_skills SET value=? WHERE character_id=? AND skill_name=?;"
 	_, err := c.DB.Exec(stmt, newValue, characterId, skill)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) AddCustomSkill(characterId int, customSkill string, category string, value int) error {
+	tx, err := c.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt := "INSERT INTO custom_skills (name, category, default_value) VALUES (?,?,?);"
+	_, err = tx.Exec(stmt, customSkill, category, DefaultForCategory(category))
+	if err != nil {
+		return err
+	}
+	stmt = "INSERT INTO character_custom_skills (character_id, custom_skill_name, value) VALUES (?,?,?);"
+	_, err = tx.Exec(stmt, characterId, customSkill, value)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
 	if err != nil {
 		return err
 	}

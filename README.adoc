@@ -6,11 +6,11 @@ A humble web-application to create and manage characters for the Pen&Paper syste
 . Start the MySQL Docker container via ``docker compose up`` (requires Docker Compose to be installed)
 . Run the application via the ``NoPenNoPaper`` executable
 .. Alternatively, run via ``go run ./cmd/web`` (requires Go to be installed)
-. Go to ``https://localhost:8080`` (or replace 'localhost' with the server's IP to connect from within the same network)
+. Go to ``https://localhost:8080`` (or replace 'localhost' with the server's IP)
 
 == TODO
     * frontend needs more functionality (editing, validation)
     * more testing
     * implement campaigns and campaign management
     * implement game material (maps/images) distribution for game masters
-    * proper skill validation (need to learn the system more first)
+    * proper css (disclaimer: as of now, the style sheet is a slightly modified version of the one from https://lets-go.alexedwards.net/[Let's Go by Alex Edwards])

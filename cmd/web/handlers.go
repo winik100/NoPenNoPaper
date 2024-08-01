@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"slices"
 	"strconv"
 
+	"github.com/justinas/nosurf"
 	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
@@ -45,6 +47,19 @@ type skillEditForm struct {
 	validators.FormValidator `schema:"-"`
 }
 
+type skillAddForm struct {
+	ID           int
+	AddableSkill string
+	Value        int
+}
+
+type customSkillAddForm struct {
+	ID          int
+	CustomSkill string
+	Category    string
+	Value       int
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
 	if userId == 0 {
@@ -56,7 +71,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	role := app.sessionManager.GetString(r.Context(), "role")
 	data := app.newTemplateData(r)
-	if role == RoleGM {
+	if role == "gm" {
 		characters, err := app.characters.GetAll()
 		if err != nil {
 			app.serverError(w, r, err)
@@ -179,17 +194,6 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func mergeSkills(allSkills models.Skills, selectedSkills models.Skills) models.Skills {
-	for i, skill := range selectedSkills.Name {
-		for j, sk := range allSkills.Name {
-			if sk == skill {
-				allSkills.Value[j] = selectedSkills.Value[i]
-			}
-		}
-	}
-	return allSkills
-}
-
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
 	data.Form = userForm{}
@@ -276,12 +280,6 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 	app.sessionManager.Put(r.Context(), string(authenticatedUserIdContextKey), id)
 
-	role, err := app.users.GetRole(id)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	app.sessionManager.Put(r.Context(), "role", role)
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
 		app.serverError(w, r, err)
@@ -298,7 +296,7 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.sessionManager.Remove(r.Context(), string(authenticatedUserIdContextKey))
-	app.sessionManager.Put(r.Context(), "role", RoleAnon)
+	app.sessionManager.Put(r.Context(), "role", "anonymous")
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -325,6 +323,107 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "characterId", characterId)
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "character.tmpl.html", data)
+}
+
+func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	character, err := app.characters.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			http.NotFound(w, r)
+		} else {
+			app.serverError(w, r, err)
+		}
+		return
+	}
+	allSkills, err := app.characters.GetAvailableSkills()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	var addableSkills models.Skills
+	for i, sk := range allSkills.Name {
+		if !slices.Contains(character.Skills.Name, sk) {
+			addableSkills.Name = append(addableSkills.Name, sk)
+			addableSkills.Value = append(addableSkills.Value, allSkills.Value[i])
+		}
+	}
+
+	tmplStr := `<form id="addSkillForm" hx-post="/characters/{{.ID}}/addSkill" hx-target="this" hx-swap="outerHTML">
+				<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+				<input type="hidden" name="ID" value="{{.ID}}">
+				<select name='AddableSkill'>
+					{{range .AddableSkills.Name}}
+						<option value='{{.}}'>{{.}}</option>
+					{{end}}
+				</select>
+				<input type="number" name="Value">
+				<button type="submit">OK</button>
+				</form>`
+
+	data := map[string]any{
+		"ID":            id,
+		"AddableSkills": addableSkills,
+		"CSRFToken":     nosurf.Token(r),
+	}
+
+	t, err := template.New("addSkill").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "addSkill", data)
+}
+
+func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
+	var form skillAddForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	err = app.characters.AddSkill(form.ID, form.AddableSkill, form.Value)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	half := form.Value / 2
+	fifth := form.Value / 5
+	tmplStr := fmt.Sprintf(`<template>
+							<tr hx-swap-oob="beforeend:#Skills">
+								<th>%s</th>
+								<td>
+									<div id="Values%s" value="%d">%d | %d | %d</div>
+									<form id="edit%s" hx-get="/characters/%d/editSkill" hx-target="this" hx-swap="outerHTML">
+										<input type="hidden" name="skill" value="%s">
+										<input type="hidden" name="value" value="%d">
+										<button type="submit">Bearbeiten</button>
+									</form>
+								</td>
+							</tr>
+							</template>
+							<div id="addskill" hx-target="this" hx-swap="outerHTML">
+								<button hx-get="/characters/{{%d}}/addSkill">Fertigkeit hinzufügen</button>
+							</div>`,
+		form.AddableSkill, form.AddableSkill, form.Value, form.Value, half, fifth, form.AddableSkill, form.ID, form.AddableSkill, form.Value, form.ID)
+
+	t, err := template.New("addSkillDone").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "addSkillDone", nil)
 }
 
 func (app *application) editSkill(w http.ResponseWriter, r *http.Request) {
@@ -391,10 +490,92 @@ func (app *application) editSkillPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := app.newTemplateData(r)
-	data.Form = form
 	w.WriteHeader(http.StatusOK)
-	t.ExecuteTemplate(w, "editskilldone", data)
+	t.ExecuteTemplate(w, "editskilldone", nil)
+}
+
+func (app *application) addCustomSkill(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.ID}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
+				<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+				<input type="hidden" name="ID" value="{{.ID}}">
+				<select name='Category'>
+                            <option value='' disabled selected>Wähle Kategorie</option>
+                            <option value='Muttersprache'>Muttersprache</option>
+                            <option value='Fremdsprache'>Fremdsprache</option>
+                            <option value='Handwerk'>Handwerk und Kunst</option>
+                            <option value='Naturwissenschaft'>Naturwissenschaft</option>
+                            <option value='Steuern'>Steuern</option>
+                            <option value='Überlebenskunst'>Überlebenskunst</option>
+                            <option value='Sonstiges'>Sonstiges</option>
+                        </select>
+				<input type="text" name="CustomSkill">                       
+				<input type="number" name="Value">
+				<button type="submit">OK</button>
+				</form>`
+
+	data := map[string]any{
+		"ID":        id,
+		"CSRFToken": nosurf.Token(r),
+	}
+
+	t, err := template.New("addCustomSkill").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "addCustomSkill", data)
+}
+
+func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Request) {
+	var form customSkillAddForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	err = app.characters.AddCustomSkill(form.ID, form.CustomSkill, form.Category, form.Value)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	half := form.Value / 2
+	fifth := form.Value / 5
+	tmplStr := fmt.Sprintf(`<template>
+							<tr hx-swap-oob="beforeend:#CustomSkills">
+								<th>%s</th>
+								<td>
+									<div id="Values%s" value="%d">%d | %d | %d</div>
+									<form id="edit%s" hx-get="/characters/%d/editSkill" hx-target="this" hx-swap="outerHTML">
+										<input type="hidden" name="skill" value="%s">
+										<input type="hidden" name="value" value="%d">
+										<button type="submit">Bearbeiten</button>
+									</form>
+								</td>
+							</tr>
+							</template>
+							<div id="addcustomskill" hx-target="this" hx-swap="outerHTML">
+								<button hx-get="/characters/{{%d}}/addCustomSkill">Fertigkeit hinzufügen</button>
+							</div>`,
+		form.CustomSkill, form.CustomSkill, form.Value, form.Value, half, fifth, form.CustomSkill, form.ID, form.CustomSkill, form.Value, form.ID)
+
+	t, err := template.New("addCustomSkillDone").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "addCustomSkillDone", nil)
 }
 
 func (app *application) editCustomSkill(w http.ResponseWriter, r *http.Request) {

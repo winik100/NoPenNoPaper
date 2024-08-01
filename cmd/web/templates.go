@@ -31,11 +31,19 @@ func (app *application) newTemplateData(r *http.Request) templateData {
 }
 
 func half(value int) int {
-	return value / 2
+	res := value / 2
+	if res == 0 {
+		return 1
+	}
+	return res
 }
 
 func fifth(value int) int {
-	return value / 5
+	res := value / 5
+	if res == 0 {
+		return 1
+	}
+	return res
 }
 
 func contains(skills []string, skill string) bool {

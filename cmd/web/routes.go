@@ -20,14 +20,18 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /login", dynamicChain.ThenFunc(app.loginPost))
 	mux.Handle("POST /logout", dynamicChain.ThenFunc(app.logoutPost))
 
-	protectedChain := dynamicChain.Append(app.requireAuthentication, app.restrict)
+	protectedChain := dynamicChain.Append(app.requireAuthentication)
 	mux.Handle("GET /create", protectedChain.ThenFunc(app.create))
 	mux.Handle("POST /create", protectedChain.ThenFunc(app.createPost))
 	mux.Handle("GET /characters/{id}/delete", protectedChain.ThenFunc(app.delete))
 	mux.Handle("POST /characters/{id}/delete", protectedChain.ThenFunc(app.deletePost))
 	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
+	mux.Handle("GET /characters/{id}/addSkill", protectedChain.ThenFunc(app.addSkill))
+	mux.Handle("POST /characters/{id}/addSkill", protectedChain.ThenFunc(app.addSkillPost))
 	mux.Handle("GET /characters/{id}/editSkill", protectedChain.ThenFunc(app.editSkill))
 	mux.Handle("POST /characters/{id}/editSkill", protectedChain.ThenFunc(app.editSkillPost))
+	mux.Handle("GET /characters/{id}/addCustomSkill", protectedChain.ThenFunc(app.addCustomSkill))
+	mux.Handle("POST /characters/{id}/addCustomSkill", protectedChain.ThenFunc(app.addCustomSkillPost))
 	mux.Handle("GET /characters/{id}/editCustomSkill", protectedChain.ThenFunc(app.editCustomSkill))
 	mux.Handle("POST /characters/{id}/editCustomSkill", protectedChain.ThenFunc(app.editCustomSkillPost))
 	mux.Handle("GET /characters/{id}/addItem", protectedChain.ThenFunc(app.addItem))
@@ -46,18 +50,6 @@ func (app *application) routes() http.Handler {
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
 	return standardChain.Then(mux)
-}
-
-const (
-	RoleAnon   string = "anonymous"
-	RolePlayer string = "player"
-	RoleGM     string = "gm"
-)
-
-var Permissions = map[string][]string{
-	RoleAnon:   {"/", "/signup", "/login"},
-	RolePlayer: {"/", "/signup", "/login", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/characters/.*/addNote", "/inc", "/dec", "/customSkillInput"},
-	RoleGM:     {"/", "/signup", "/login", "/logout", "/create", "/characters/.*", "/characters/.*/addItem", "/characters/.*/addNote", "/inc", "/dec", "/customSkillInput"},
 }
 
 func (app *application) routesNoMW() http.Handler {

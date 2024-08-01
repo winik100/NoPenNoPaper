@@ -97,6 +97,10 @@ func (m *CharacterModel) EditSkill(characterId int, skill string, newValue int) 
 	return nil
 }
 
+func (m *CharacterModel) AddCustomSkill(characterId int, Customkill string, category string, value int) error {
+	return nil
+}
+
 func (m *CharacterModel) EditCustomSkill(characterId int, skill string, newValue int) error {
 	return nil
 }

@@ -62,49 +62,57 @@
         <details>
             <summary>Fertigkeiten</summary>
             <label>Allgemeine Fertigkeiten</label>
+            <div id="addskill" hx-target="this" hx-swap="outerHTML">
+                <button hx-get="/characters/{{.ID}}/addSkill">Fertigkeit hinzufügen</button>
+            </div>
             <table>
-                {{$charId := .ID}}
-                {{$skills := .Skills}}
-                {{$keys := $skills.Name}}
-                {{$values := $skills.Value}}
-                {{range $ind, $key := $keys}}
-                <tr>
-                    {{$val := (index $values $ind)}}
-                    <th value="{{$key}}">{{$key}}</th>
-                    <td>
-                        <div id="Values{{$key}}" value="{{$val}}">{{$val}} | {{half $val}} | {{fifth $val}}</div>
-                        <form id="edit{{$key}}" hx-get="/characters/{{$charId}}/editSkill" hx-target="this" hx-swap="outerHTML">
-                            <input type="hidden" name="skill" value="{{$key}}">
-                            <input type="hidden" name="value" value="{{$val}}">
-                            <button type="submit">Bearbeiten</button>
-                        </form>
-                    </td>
-                </tr>
-                {{end}}
+                <tbody id="Skills">
+                    {{$charId := .ID}}
+                    {{$skills := .Skills}}
+                    {{$keys := $skills.Name}}
+                    {{$values := $skills.Value}}
+                    {{range $ind, $key := $keys}}
+                    <tr>
+                        {{$val := (index $values $ind)}}
+                        <th>{{$key}}</th>
+                        <td>
+                            <div id="Values{{$key}}" value="{{$val}}">{{$val}} | {{half $val}} | {{fifth $val}}</div>
+                            <form id="edit{{$key}}" hx-get="/characters/{{$charId}}/editSkill" hx-target="this" hx-swap="outerHTML">
+                                <input type="hidden" name="skill" value="{{$key}}">
+                                <input type="hidden" name="value" value="{{$val}}">
+                                <button type="submit">Bearbeiten</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
             </table>
-            {{if .CustomSkills.Name}}
             <label>Eigene Fertigkeiten</label>
+            <div id="addskill" hx-target="this" hx-swap="outerHTML">
+                <button hx-get="/characters/{{.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
+            </div>
             <table>
-                {{$charId := .ID}}
-                {{$customskills := .CustomSkills}}
-                {{$keys := $customskills.Name}}
-                {{$values := $customskills.Value}}
-                {{range $ind, $key := $keys}}
-                <tr>
-                    {{$val := (index $values $ind)}}
-                    <th value="{{$key}}">{{$key}}</th>
-                    <td>
-                        <div id="Values{{$key}}" value="{{$val}}">{{$val}} | {{half $val}} | {{fifth $val}}</div>
-                        <form id="edit{{$key}}" hx-get="/characters/{{$charId}}/editCustomSkill" hx-target="this" hx-swap="outerHTML">
-                            <input type="hidden" name="skill" value="{{$key}}">
-                            <input type="hidden" name="value" value="{{$val}}">
-                            <button type="submit">Bearbeiten</button>
-                        </form>
-                    </td>
-                </tr>
-                {{end}}
+                <tbody id="CustomSkills">
+                    {{$charId := .ID}}
+                    {{$customskills := .CustomSkills}}
+                    {{$keys := $customskills.Name}}
+                    {{$values := $customskills.Value}}
+                    {{range $ind, $key := $keys}}
+                    <tr>
+                        {{$val := (index $values $ind)}}
+                        <th>{{$key}}</th>
+                        <td>
+                            <div id="Values{{$key}}" value="{{$val}}">{{$val}} | {{half $val}} | {{fifth $val}}</div>
+                            <form id="edit{{$key}}" hx-get="/characters/{{$charId}}/editCustomSkill" hx-target="this" hx-swap="outerHTML">
+                                <input type="hidden" name="skill" value="{{$key}}">
+                                <input type="hidden" name="value" value="{{$val}}">
+                                <button type="submit">Bearbeiten</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
             </table>
-            {{end}}
         </details>
     </div>
     <div id='items'>
