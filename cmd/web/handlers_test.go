@@ -38,7 +38,7 @@ func TestHome(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.routesNoMW()), map[string]any{
-				string(authenticatedUserIdContextKey): testCase.authenticatedUserId,
+				authenticatedUserIdKey: testCase.authenticatedUserId,
 			})))
 			defer ts.Close()
 
@@ -54,7 +54,7 @@ func TestSignup(t *testing.T) {
 	app := newTestApplication(t)
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(noSurf(app.routesNoMW())), map[string]any{
-		string(authenticatedUserIdContextKey): 0,
+		authenticatedUserIdKey: 0,
 	})))
 	defer ts.Close()
 	_, _, body := ts.get(t, "/signup")
@@ -245,7 +245,7 @@ func TestLogout(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.requireAuthentication(app.routesNoMW())), map[string]any{
-				string(authenticatedUserIdContextKey): testCase.authenticatedUserId,
+				authenticatedUserIdKey: testCase.authenticatedUserId,
 			})))
 			defer ts.Close()
 
@@ -307,7 +307,7 @@ func TestCreateGet(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.requireAuthentication(app.routesNoMW())), map[string]any{
-				string(authenticatedUserIdContextKey): testCase.authenticatedUserId,
+				authenticatedUserIdKey: testCase.authenticatedUserId,
 			})))
 			defer ts.Close()
 
@@ -351,7 +351,7 @@ func TestCreatePost(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(noSurf(app.requireAuthentication(app.routesNoMW()))), map[string]any{
-				string(authenticatedUserIdContextKey): testCase.authenticatedUserId,
+				authenticatedUserIdKey: testCase.authenticatedUserId,
 			})))
 			defer ts.Close()
 			_, _, body := ts.get(t, "/create")
@@ -399,7 +399,7 @@ func TestViewCharacter(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			string(authenticatedUserIdContextKey): 1,
+			authenticatedUserIdKey: 1,
 		})))
 	defer ts.Close()
 	wantContent := []string{
@@ -540,8 +540,8 @@ func TestAddItem(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 				map[string]any{
-					string(authenticatedUserIdContextKey): 1,
-					"characterId":                         1,
+					authenticatedUserIdKey: 1,
+					"characterId":          1,
 				})))
 			defer ts.Close()
 			_, _, body := ts.get(t, "/characters/1/addItem")
@@ -578,8 +578,8 @@ func TestDeleteItem(t *testing.T) {
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			string(authenticatedUserIdContextKey): 1,
-			"characterId":                         1,
+			authenticatedUserIdKey: 1,
+			"characterId":          1,
 		})))
 	defer ts.Close()
 	_, _, body := ts.get(t, "/characters/1")
@@ -620,8 +620,8 @@ func TestAddNote(t *testing.T) {
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			string(authenticatedUserIdContextKey): 1,
-			"characterId":                         1,
+			authenticatedUserIdKey: 1,
+			"characterId":          1,
 		})))
 	defer ts.Close()
 
@@ -670,8 +670,8 @@ func TestDeleteNote(t *testing.T) {
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			string(authenticatedUserIdContextKey): 1,
-			"characterId":                         1,
+			authenticatedUserIdKey: 1,
+			"characterId":          1,
 		})))
 	defer ts.Close()
 	_, _, body := ts.get(t, "/characters/1")

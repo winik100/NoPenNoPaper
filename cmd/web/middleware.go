@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -10,8 +9,6 @@ import (
 
 func headers(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//w.Header().Set("Content-Security-Policy",
-		//	"default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "deny")
@@ -55,14 +52,13 @@ func noSurf(next http.Handler) http.Handler {
 	return csrfHandler
 }
 
-type contextKey string
-const isAuthenticatedContextKey = contextKey("isAuthenticated")
-const authenticatedUserIdContextKey = contextKey("authenticatedUserID")
-const roleContextKey = contextKey("role")
+const isAuthenticatedKey = "isAuthenticated"
+const authenticatedUserIdKey = "authenticatedUserID"
+const roleKey = "role"
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
+		id := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
 		if id == 0 {
 			next.ServeHTTP(w, r)
 			return
@@ -81,9 +77,8 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		if exists {
-			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
-			app.sessionManager.Put(ctx, string(roleContextKey), role)
-			r = r.WithContext(ctx)
+			app.sessionManager.Put(r.Context(), isAuthenticatedKey, true)
+			app.sessionManager.Put(r.Context(), roleKey, role)
 		}
 
 		next.ServeHTTP(w, r)

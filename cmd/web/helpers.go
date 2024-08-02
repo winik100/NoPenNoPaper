@@ -53,10 +53,7 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 }
 
 func (app *application) isAuthenticated(r *http.Request) bool {
-	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
-	if !ok {
-		return false
-	}
+	isAuthenticated := app.sessionManager.GetBool(r.Context(), isAuthenticatedKey)
 	return isAuthenticated
 }
 

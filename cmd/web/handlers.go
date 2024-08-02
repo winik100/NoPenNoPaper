@@ -62,7 +62,7 @@ type customSkillAddForm struct {
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey))
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
 	if userId == 0 {
 		data := app.newTemplateData(r)
 		w.WriteHeader(http.StatusOK)
@@ -70,7 +70,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	role := app.sessionManager.GetString(r.Context(), "role")
+	role := app.sessionManager.GetString(r.Context(), roleKey)
 	data := app.newTemplateData(r)
 	if role == "gm" {
 		characters, err := app.characters.GetAll()
@@ -185,7 +185,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = app.characters.Insert(models.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills, CustomSkills: form.CustomSkills},
-		app.sessionManager.GetInt(r.Context(), string(authenticatedUserIdContextKey)))
+		app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey))
 
 	if err != nil {
 		app.serverError(w, r, err)
@@ -279,7 +279,7 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	app.sessionManager.Put(r.Context(), string(authenticatedUserIdContextKey), id)
+	app.sessionManager.Put(r.Context(), authenticatedUserIdKey, id)
 
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
@@ -296,7 +296,7 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.sessionManager.Remove(r.Context(), string(authenticatedUserIdContextKey))
+	app.sessionManager.Remove(r.Context(), authenticatedUserIdKey)
 	app.sessionManager.Put(r.Context(), "role", "anonymous")
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)

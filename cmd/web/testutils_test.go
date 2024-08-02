@@ -50,7 +50,6 @@ func (app *application) mockSession(next http.Handler, keyValuePairs map[string]
 		for key, value := range keyValuePairs {
 			app.sessionManager.Put(r.Context(), key, value)
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
