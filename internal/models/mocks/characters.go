@@ -4,7 +4,7 @@ import (
 	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
-var MockCharacter = models.Character{
+var MockCharacterOtto = models.Character{
 	ID:           1,
 	Info:         mockInfo,
 	Attributes:   mockAttributes,
@@ -14,6 +14,11 @@ var MockCharacter = models.Character{
 	Notes:        mockNotes,
 }
 
+var MockCharacterViserys = models.Character{
+	ID:   2,
+	Info: mockInfo2,
+}
+
 var mockInfo = models.CharacterInfo{
 	Name:       "Otto Hightower",
 	Profession: "Lord von Oldtown",
@@ -21,6 +26,15 @@ var mockInfo = models.CharacterInfo{
 	Gender:     "männlich",
 	Residence:  "Oldtown",
 	Birthplace: "Oldtown",
+}
+
+var mockInfo2 = models.CharacterInfo{
+	Name:       "Viserys Targaryen",
+	Profession: "König von Westeros",
+	Age:        "45",
+	Gender:     "männlich",
+	Residence:  "King's Landing",
+	Birthplace: "King's Landing",
 }
 
 var mockAttributes = models.CharacterAttributes{
@@ -60,27 +74,33 @@ func (m *CharacterModel) Insert(character models.Character, created_by int) (int
 
 func (m *CharacterModel) Get(characterId int) (models.Character, error) {
 	if characterId == 1 {
-		return MockCharacter, nil
+		return MockCharacterOtto, nil
+	}
+	if characterId == 2 {
+		return MockCharacterViserys, nil
 	}
 	return models.Character{}, models.ErrNoRecord
 }
 
 func (m *CharacterModel) Delete(characterId int) error {
 	if characterId == 1 {
-		MockCharacter = models.Character{}
+		MockCharacterOtto = models.Character{}
+	}
+	if characterId == 2 {
+		MockCharacterViserys = models.Character{}
 	}
 	return nil
 }
 
 func (m *CharacterModel) GetAllFrom(userId int) ([]models.Character, error) {
 	if userId == 1 {
-		return []models.Character{MockCharacter}, nil
+		return []models.Character{MockCharacterOtto}, nil
 	}
 	return nil, models.ErrNoRecord
 }
 
 func (m *CharacterModel) GetAll() ([]models.Character, error) {
-	return []models.Character{MockCharacter}, nil
+	return []models.Character{MockCharacterOtto, MockCharacterViserys}, nil
 }
 
 func (m *CharacterModel) GetAvailableSkills() (models.Skills, error) {
@@ -111,7 +131,7 @@ func (m *CharacterModel) AddItem(characterId int, name, description string, coun
 
 func (m *CharacterModel) DeleteItem(itemId int) error {
 	if itemId == 1 {
-		MockCharacter.Items = models.Items{}
+		MockCharacterOtto.Items = models.Items{}
 	}
 	return nil
 }
@@ -125,10 +145,10 @@ func (m *CharacterModel) AddNote(characterId int, text string) (int, error) {
 
 func (m *CharacterModel) DeleteNote(noteId int) error {
 	if noteId == 1 {
-		MockCharacter.Notes = models.Notes{ID: []int{2}, Text: []string{"Viserys war viel besser."}}
+		MockCharacterOtto.Notes = models.Notes{ID: []int{2}, Text: []string{"Viserys war viel besser."}}
 	}
 	if noteId == 2 {
-		MockCharacter.Notes = models.Notes{ID: []int{1}, Text: []string{"Aegon ist blöde."}}
+		MockCharacterOtto.Notes = models.Notes{ID: []int{1}, Text: []string{"Aegon ist blöde."}}
 	}
 	return nil
 }

@@ -18,19 +18,29 @@ func TestHome(t *testing.T) {
 	tests := []struct {
 		name                string
 		authenticatedUserId int
+		role                string
 		wantCode            int
-		wantTag             string
+		wantContent         []string
 	}{
 		{
 			name:                "Authenticated",
 			authenticatedUserId: 1,
-			wantTag:             "<td><a href='/characters/1'>Otto Hightower</a></td>",
+			role:                "player",
+			wantContent:         []string{"<td><a href='/characters/1'>Otto Hightower</a></td>"},
+			wantCode:            http.StatusOK,
+		},
+		{
+			name:                "Authenticated as GM",
+			authenticatedUserId: 2,
+			role:                "gm",
+			wantContent:         []string{"<td><a href='/characters/1'>Otto Hightower</a></td>", "<td><a href='/characters/2'>Viserys Targaryen</a></td>"},
 			wantCode:            http.StatusOK,
 		},
 		{
 			name:                "Unauthenticated",
 			authenticatedUserId: 0,
-			wantTag:             "<p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>",
+			role:                "anonymous",
+			wantContent:         []string{"<p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>"},
 			wantCode:            http.StatusOK,
 		},
 	}
@@ -39,12 +49,15 @@ func TestHome(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.routesNoMW()), map[string]any{
 				authenticatedUserIdKey: testCase.authenticatedUserId,
+				roleKey:                testCase.role,
 			})))
 			defer ts.Close()
 
 			code, _, body := ts.get(t, "/")
 			testHelpers.Equal(t, code, testCase.wantCode)
-			testHelpers.StringContains(t, body, testCase.wantTag)
+			for _, tag := range testCase.wantContent {
+				testHelpers.StringContains(t, body, tag)
+			}
 		})
 	}
 
@@ -339,10 +352,10 @@ func TestCreatePost(t *testing.T) {
 	}{
 		{
 			name:                "Valid Creation",
-			info:                mocks.MockCharacter.Info,
-			attributes:          mocks.MockCharacter.Attributes,
-			skills:              mocks.MockCharacter.Skills,
-			customSkills:        mocks.MockCharacter.CustomSkills,
+			info:                mocks.MockCharacterOtto.Info,
+			attributes:          mocks.MockCharacterOtto.Attributes,
+			skills:              mocks.MockCharacterOtto.Skills,
+			customSkills:        mocks.MockCharacterOtto.CustomSkills,
 			authenticatedUserId: 1,
 			wantCode:            http.StatusSeeOther,
 		},
@@ -475,34 +488,34 @@ func TestAddItem(t *testing.T) {
 	}{
 		{
 			name:      "Valid Item, Status",
-			itemName:  mocks.MockCharacter.Items.Name[0],
-			itemDesc:  mocks.MockCharacter.Items.Description[0],
-			itemCount: strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			itemName:  mocks.MockCharacterOtto.Items.Name[0],
+			itemDesc:  mocks.MockCharacterOtto.Items.Description[0],
+			itemCount: strconv.Itoa(mocks.MockCharacterOtto.Items.Count[0]),
 			redirect:  false,
 			wantCode:  http.StatusSeeOther,
 		},
 		{
 			name:        "Valid Item, Content",
-			itemName:    mocks.MockCharacter.Items.Name[0],
-			itemDesc:    mocks.MockCharacter.Items.Description[0],
-			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			itemName:    mocks.MockCharacterOtto.Items.Name[0],
+			itemDesc:    mocks.MockCharacterOtto.Items.Description[0],
+			itemCount:   strconv.Itoa(mocks.MockCharacterOtto.Items.Count[0]),
 			redirect:    true,
 			wantContent: wantContent,
 		},
 		{
 			name:        "Empty Name",
 			itemName:    "",
-			itemDesc:    mocks.MockCharacter.Items.Description[0],
-			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			itemDesc:    mocks.MockCharacterOtto.Items.Description[0],
+			itemCount:   strconv.Itoa(mocks.MockCharacterOtto.Items.Count[0]),
 			redirect:    false,
 			wantCode:    http.StatusUnprocessableEntity,
 			wantContent: []string{wantFormTag},
 		},
 		{
 			name:        "Empty Description",
-			itemName:    mocks.MockCharacter.Items.Name[0],
+			itemName:    mocks.MockCharacterOtto.Items.Name[0],
 			itemDesc:    "",
-			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			itemCount:   strconv.Itoa(mocks.MockCharacterOtto.Items.Count[0]),
 			redirect:    false,
 			wantCode:    http.StatusUnprocessableEntity,
 			wantContent: []string{wantFormTag},
@@ -510,24 +523,24 @@ func TestAddItem(t *testing.T) {
 		{
 			name:        "Name length > 50",
 			itemName:    strings.Repeat(".", 51),
-			itemDesc:    mocks.MockCharacter.Items.Description[0],
-			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			itemDesc:    mocks.MockCharacterOtto.Items.Description[0],
+			itemCount:   strconv.Itoa(mocks.MockCharacterOtto.Items.Count[0]),
 			redirect:    false,
 			wantCode:    http.StatusUnprocessableEntity,
 			wantContent: []string{wantFormTag},
 		},
 		{
 			name:        "Description length > 255",
-			itemName:    mocks.MockCharacter.Items.Name[0],
+			itemName:    mocks.MockCharacterOtto.Items.Name[0],
 			itemDesc:    strings.Repeat(".", 256),
-			itemCount:   strconv.Itoa(mocks.MockCharacter.Items.Count[0]),
+			itemCount:   strconv.Itoa(mocks.MockCharacterOtto.Items.Count[0]),
 			redirect:    false,
 			wantCode:    http.StatusUnprocessableEntity,
 			wantContent: []string{wantFormTag},
 		},
 		{
 			name:        "Item count < 1",
-			itemName:    mocks.MockCharacter.Items.Name[0],
+			itemName:    mocks.MockCharacterOtto.Items.Name[0],
 			itemDesc:    strings.Repeat(".", 256),
 			itemCount:   "0",
 			redirect:    false,

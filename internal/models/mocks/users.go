@@ -24,7 +24,7 @@ func (m *UserModel) Authenticate(name, password string) (int, error) {
 }
 
 func (m *UserModel) Exists(id int) (bool, error) {
-	if id == 1 {
+	if id == 1 || id == 2 {
 		return true, nil
 	}
 	return false, nil
@@ -33,6 +33,9 @@ func (m *UserModel) Exists(id int) (bool, error) {
 func (m *UserModel) GetRole(id int) (string, error) {
 	if id == 1 {
 		return "player", nil
+	}
+	if id == 2 {
+		return "gm", nil
 	}
 	return "anonymous", nil
 }
