@@ -438,7 +438,7 @@ func TestViewCharacter(t *testing.T) {
 		},
 		{
 			name:        "Nonexistent, valid ID",
-			characterId: "2",
+			characterId: "69",
 			wantCode:    http.StatusNotFound,
 		},
 		{
