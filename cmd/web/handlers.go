@@ -957,33 +957,3 @@ func (app *application) deleteNotePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "deleteNoteDone", nil)
 }
-
-func (app *application) cancel(w http.ResponseWriter, r *http.Request) {
-	replaceWith := app.replacement(r)
-	t, err := template.New("cancel").Parse(replaceWith)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	t.ExecuteTemplate(w, "cancel", nil)
-}
-
-func (app *application) replacement(r *http.Request) string {
-	kind := r.PathValue("kind")
-	id := app.sessionManager.GetInt(r.Context(), "characterId")
-	if id == 0 {
-		return ""
-	}
-	var tmplStr string
-	switch kind {
-	case "note":
-		tmplStr = fmt.Sprintf(`<div id="note" hx-target="this" hx-swap="outerHTML">
-                		<button hx-get="/characters/%d/addNote">Notiz hinzufügen</button>
-            		</div>`, id)
-	case "customSkillInput":
-		tmplStr = ""
-	}
-	return tmplStr
-}

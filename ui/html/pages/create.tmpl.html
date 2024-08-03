@@ -178,7 +178,7 @@
                                 <option value="50">50</option>
                                 <option value="40">40</option>
                             </select>
-                            <button id="cancel" hx-get="/cancel/customSkill" hx-target="#{{$key}}" hx-swap="outerHTML">Abbrechen</button>
+                            <button hx-get="/create" hx-target="#{{$key}}" hx-swap="delete">Abbrechen</button>
                         </td>
                     </tr>
                     {{end}}
