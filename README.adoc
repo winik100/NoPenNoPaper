@@ -3,9 +3,11 @@
 A humble web-application to create and manage characters for the Pen&Paper system https://pegasus.de/cthulhu[Cthulhu].
 
 == How to run
+In any Command-Line Interface:
 . Start the MySQL Docker container via ``docker compose up`` (requires Docker Compose to be installed)
-. Run the application via the ``NoPenNoPaper`` executable
-.. Alternatively, run via ``go run ./cmd/web`` (requires Go to be installed)
+. Create a `/tls` folder containing a https://letsencrypt.org/[TLS certificate] (filenames `cert.pem` and `key.pem`)
+.. For dev/playing around: generate via `go run /<PATH>/go/src/crypto/tls/generate_cert.go --rsa-bits=2048 --host=localhost` in the newly created folder
+. Run the application via the ``NoPenNoPaper`` executable or `go run ./cmd/web`
 . Go to ``https://localhost:8080`` (or replace 'localhost' with the server's IP)
 
 == TODO
