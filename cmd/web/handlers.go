@@ -298,7 +298,8 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.sessionManager.Remove(r.Context(), authenticatedUserIdKey)
-	app.sessionManager.Put(r.Context(), "role", "anonymous")
+	app.sessionManager.Remove(r.Context(), isAuthenticatedKey)
+	app.sessionManager.Put(r.Context(), roleKey, "anonymous")
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
@@ -366,6 +367,7 @@ func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
 				</select>
 				<input type="number" name="Value">
 				<button type="submit">OK</button>
+				<button hx-get="/characters/{{.ID}}" hx-target="#addSkillForm" hx-swap="outerHTML" hx-select="#addSkill">Abbrechen</button>
 				</form>`
 
 	data := map[string]any{
@@ -405,7 +407,7 @@ func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
 								<th>{{.Form.AddableSkill}}</th>
 								<td>
 									<div id="Values{{.Form.AddableSkill}}">{{.Form.Value}} | %d | %d</div>
-									<form id="edit{{.Form.AddableSkill}}" hx-get="/characters/{{.Form.ID}/editSkill" hx-target="this" hx-swap="outerHTML">
+									<form id="edit{{.Form.AddableSkill}}" hx-get="/characters/{{.Form.ID}}/editSkill" hx-target="this" hx-swap="outerHTML">
 										<input type="hidden" name="skill" value="{{.Form.AddableSkill}}">
 										<input type="hidden" name="value" value="{{.Form.Value}}">
 										<button type="submit">Bearbeiten</button>
@@ -413,7 +415,7 @@ func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
 								</td>
 							</tr>
 							</template>
-							<div id="addskill" hx-target="this" hx-swap="outerHTML">
+							<div id="addSkill" hx-target="this" hx-swap="outerHTML">
 								<button hx-get="/characters/{{.Form.ID}}/addSkill">Fertigkeit hinzufügen</button>
 							</div>`, half, fifth)
 

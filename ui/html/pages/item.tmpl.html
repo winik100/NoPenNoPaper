@@ -22,7 +22,8 @@
         <input type='number' name='Count' {{if .Form.Count}} value='{{.Form.Count}}' {{else}} value='1' {{end}}>
     </div>
     <div>
-        <input type='submit' value='Gegenstand hinzufügen'>
+        <button type='submit'>Gegenstand hinzufügen</button>
+        <a href='/characters/{{.Form.CharacterId}}'>Zurück</button>
     </div>
 </form>
 {{end}}
