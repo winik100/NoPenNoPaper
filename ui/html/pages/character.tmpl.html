@@ -88,7 +88,7 @@
                 </tbody>
             </table>
             <h3>Eigene Fertigkeiten</h3>
-            <div id="addcustomskill" hx-target="this" hx-swap="outerHTML">
+            <div id="addCustomSkill" hx-target="this" hx-swap="outerHTML">
                 <button hx-get="/characters/{{.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
             </div>
             <table>
@@ -168,7 +168,7 @@
         </details>
     </div>
         <div>
-            <button id="deleteCharacter" hx-get="/characters/{{.ID}}/delete" hx-target="#deleteCharacter" hx-swap="outerHTML">Charakter löschen</button>
+            <button id="deleteCharacter" hx-get="/characters/{{.ID}}/delete">Charakter löschen</button>
         </div>
     {{end}}
 {{end}}

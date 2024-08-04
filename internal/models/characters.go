@@ -511,11 +511,32 @@ func (c *CharacterModel) AddCustomSkill(characterId int, customSkill string, cat
 		return err
 	}
 	defer tx.Rollback()
-	stmt := "INSERT INTO custom_skills (name, category, default_value) VALUES (?,?,?);"
-	_, err = tx.Exec(stmt, customSkill, category, DefaultForCategory(category))
+
+	var exists bool
+	stmt := "SELECT EXISTS(SELECT true FROM custom_skills WHERE name=? AND category=?);"
+	err = tx.QueryRow(stmt, customSkill, category).Scan(&exists)
 	if err != nil {
 		return err
 	}
+
+	if !exists {
+		stmt = "INSERT INTO custom_skills (name, category, default_value) VALUES (?,?,?);"
+		_, err = tx.Exec(stmt, customSkill, category, DefaultForCategory(category))
+		if err != nil {
+			return err
+		}
+	}
+
+	stmt = "SELECT EXISTS(SELECT true FROM character_custom_skills WHERE character_id=? AND custom_skill_name=?);"
+	err = tx.QueryRow(stmt, characterId, customSkill).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return ErrAlreadyHasSkill
+	}
+
 	stmt = "INSERT INTO character_custom_skills (character_id, custom_skill_name, value) VALUES (?,?,?);"
 	_, err = tx.Exec(stmt, characterId, customSkill, value)
 	if err != nil {

@@ -55,10 +55,11 @@ type skillAddForm struct {
 }
 
 type customSkillAddForm struct {
-	ID          int
-	CustomSkill string
-	Category    string
-	Value       int
+	ID                       int
+	CustomSkill              string
+	Category                 string
+	Value                    int
+	validators.FormValidator `schema:"-"`
 }
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -506,21 +507,22 @@ func (app *application) addCustomSkill(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.ID}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
-				<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-				<input type="hidden" name="ID" value="{{.ID}}">
-				<select name='Category'>
-                            <option value='' disabled selected>Wähle Kategorie</option>
-                            <option value='Muttersprache'>Muttersprache</option>
-                            <option value='Fremdsprache'>Fremdsprache</option>
-                            <option value='Handwerk'>Handwerk und Kunst</option>
-                            <option value='Naturwissenschaft'>Naturwissenschaft</option>
-                            <option value='Steuern'>Steuern</option>
-                            <option value='Überlebenskunst'>Überlebenskunst</option>
-                            <option value='Sonstiges'>Sonstiges</option>
-                        </select>
-				<input type="text" name="CustomSkill">                       
-				<input type="number" name="Value">
-				<button type="submit">OK</button>
+					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+					<input type="hidden" name="ID" value="{{.ID}}">
+					<select name='Category'>
+								<option value='' disabled selected>Wähle Kategorie</option>
+								<option value='Muttersprache'>Muttersprache</option>
+								<option value='Fremdsprache'>Fremdsprache</option>
+								<option value='Handwerk'>Handwerk und Kunst</option>
+								<option value='Naturwissenschaft'>Naturwissenschaft</option>
+								<option value='Steuern'>Steuern</option>
+								<option value='Überlebenskunst'>Überlebenskunst</option>
+								<option value='Sonstiges'>Sonstiges</option>
+							</select>
+					<input type="text" name="CustomSkill">
+					<input type="number" name="Value">
+					<button type="submit">OK</button>
+					<button hx-get="/characters/{{.ID}}" hx-target="#addCustomSkillForm" hx-swap="outerHTML" hx-select="#addCustomSkill">Abbrechen</button>
 				</form>`
 
 	data := map[string]any{
@@ -546,8 +548,64 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	form.CheckField(validators.NotBlank(form.CustomSkill), "Name", "Dieses Feld kann nicht leer sein.")
+	form.CheckField(form.Value != 0, "Value", "Dieses Feld muss einen positiven Wert enthalten.")
+	form.CheckField(models.DefaultForCategory(form.Category) != -1, "Category", "Es muss eine gültige Kategorie gewählt werden.")
+
+	if !form.Valid() {
+		tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.Form.ID}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
+						<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+						<input type="hidden" name="ID" value="{{.Form.ID}}">
+						<select name='Category'>
+							<option value='' disabled selected>Wähle Kategorie</option>
+							<option value='Muttersprache'>Muttersprache</option>
+							<option value='Fremdsprache'>Fremdsprache</option>
+							<option value='Handwerk'>Handwerk und Kunst</option>
+							<option value='Naturwissenschaft'>Naturwissenschaft</option>
+							<option value='Steuern'>Steuern</option>
+							<option value='Überlebenskunst'>Überlebenskunst</option>
+							<option value='Sonstiges'>Sonstiges</option>
+						</select>
+						{{with .Form.FieldErrors.Category}}<label class='error'>{{.}}</label>{{end}}
+						<input type="text" name="CustomSkill">
+						{{with .Form.FieldErrors.Name}}<label class='error'>{{.}}</label>{{end}}
+						<input type="number" name="Value">
+						{{with .Form.FieldErrors.Value}}<label class='error'>{{.}}</label>{{end}}
+						<button type="submit">OK</button>
+						<button hx-get="/characters/{{.Form.ID}}" hx-target="#addCustomSkillForm" hx-swap="outerHTML" hx-select="#addCustomSkill">Abbrechen</button>
+					</form>`
+		t, err := template.New("addCustomSkillFailed").Parse(tmplStr)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		data := app.newTemplateData(r)
+		data.Form = form
+		w.WriteHeader(http.StatusOK)
+		t.ExecuteTemplate(w, "addCustomSkillFailed", data)
+		return
+	}
+
 	err = app.characters.AddCustomSkill(form.ID, form.CustomSkill, form.Category, form.Value)
 	if err != nil {
+		if errors.Is(err, models.ErrAlreadyHasSkill) {
+			tmplStr := `<div id="addCustomSkill" hx-target="this" hx-swap="outerHTML">
+                			<button hx-get="/characters/{{.Form.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
+							<label class="error">Der Charaktere verfügt bereits über eine gleichnamige Fertigkeit.</label>
+            			</div>`
+			t, err := template.New("addCustomSkillDuplicate").Parse(tmplStr)
+			if err != nil {
+				app.serverError(w, r, err)
+				return
+			}
+
+			data := app.newTemplateData(r)
+			data.Form = form
+			w.WriteHeader(http.StatusOK)
+			t.ExecuteTemplate(w, "addCustomSkillDuplicate", data)
+			return
+		}
 		app.serverError(w, r, err)
 		return
 	}
@@ -567,7 +625,7 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 								</td>
 							</tr>
 							</template>
-							<div id="addcustomskill" hx-target="this" hx-swap="outerHTML">
+							<div id="addCustomSkill" hx-target="this" hx-swap="outerHTML">
 								<button hx-get="/characters/{{.Form.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
 							</div>`, half, fifth)
 
