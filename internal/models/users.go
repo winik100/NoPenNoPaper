@@ -15,8 +15,9 @@ type User struct {
 
 type UserModelInterface interface {
 	Insert(name, password string) error
+	Get(name string) (User, error)
 	Authenticate(name, password string) (int, error)
-	Exists(id int) (bool, error)
+	Exists(userId int) (bool, error)
 	GetRole(id int) (string, error)
 }
 
@@ -36,6 +37,22 @@ func (u *UserModel) Insert(name, password string) error {
 		return err
 	}
 	return nil
+}
+
+func (u *UserModel) Get(name string) (User, error) {
+	stmt := "SELECT id, hashed_password FROM users WHERE name=?;"
+	row := u.DB.QueryRow(stmt, name)
+
+	var user User
+	err := row.Scan(&user.ID, &user.HashedPassword)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return User{}, ErrNoRecord
+		}
+		return User{}, err
+	}
+	user.Name = name
+	return user, nil
 }
 
 func (u *UserModel) Authenticate(name, password string) (int, error) {
@@ -64,11 +81,11 @@ func (u *UserModel) Authenticate(name, password string) (int, error) {
 	return id, nil
 }
 
-func (u *UserModel) Exists(id int) (bool, error) {
+func (u *UserModel) Exists(userId int) (bool, error) {
 	var exists bool
 
-	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id = ?);"
-	err := u.DB.QueryRow(stmt, id).Scan(&exists)
+	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id=?);"
+	err := u.DB.QueryRow(stmt, userId).Scan(&exists)
 
 	return exists, err
 }

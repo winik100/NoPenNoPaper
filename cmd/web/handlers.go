@@ -223,15 +223,27 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.users.Insert(form.Name, form.Password)
+	_, err = app.users.Get(form.Name)
 	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			err = app.users.Insert(form.Name, form.Password)
+			if err != nil {
+				app.serverError(w, r, err)
+				return
+			}
+			app.sessionManager.Put(r.Context(), "flash", "Erfolgreich registriert! Bitte einloggen.")
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+			return
+		}
 		app.serverError(w, r, err)
 		return
 	}
 
-	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich registriert! Bitte einloggen.")
-
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	form.CheckField(false, "Name", "Dieser Name ist bereits vergeben.")
+	data := app.newTemplateData(r)
+	data.Form = form
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	app.render(w, r, "signup.tmpl.html", data)
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {

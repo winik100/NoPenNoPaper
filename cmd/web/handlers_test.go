@@ -75,7 +75,7 @@ func TestSignup(t *testing.T) {
 	validCSRF := extractCSRFToken(t, body)
 
 	const (
-		validName     string = "Testnutzer"
+		validName     string = "Neuer Nutzer"
 		validPassword string = "Klartext ole"
 		formTag       string = "<form action='/signup' method='POST' novalidate>"
 	)
@@ -93,6 +93,14 @@ func TestSignup(t *testing.T) {
 			userPassword: validPassword,
 			csrfToken:    validCSRF,
 			wantCode:     http.StatusSeeOther,
+		},
+		{
+			name:         "Name Taken",
+			userName:     "Testnutzer",
+			userPassword: validPassword,
+			csrfToken:    validCSRF,
+			wantCode:     http.StatusUnprocessableEntity,
+			wantFormTag:  "<label class='error'>Dieser Name ist bereits vergeben.</label>",
 		},
 		{
 			name:         "Invalid CSRF",

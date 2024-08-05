@@ -4,16 +4,23 @@ import (
 	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
-// var MockUser = models.User{
-// 	ID:             1,
-// 	Name:           "Testnutzer",
-// 	HashedPassword: "$2a$12$uK5Qivao7pieZMOZWtRTGubxPV3PgBf6ljFr3ACYtGPYZOrinx3ie", //"Klartext ole"
-// }
+var MockUser = models.User{
+	ID:             1,
+	Name:           "Testnutzer",
+	HashedPassword: "$2a$12$uK5Qivao7pieZMOZWtRTGubxPV3PgBf6ljFr3ACYtGPYZOrinx3ie", //"Klartext ole"
+}
 
 type UserModel struct{}
 
 func (m *UserModel) Insert(name, password string) error {
 	return nil
+}
+
+func (m *UserModel) Get(name string) (models.User, error) {
+	if name == "Testnutzer" {
+		return MockUser, nil
+	}
+	return models.User{}, models.ErrNoRecord
 }
 
 func (m *UserModel) Authenticate(name, password string) (int, error) {
