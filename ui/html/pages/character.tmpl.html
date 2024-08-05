@@ -140,7 +140,20 @@
                             </form>
                         </td>
                         <td>{{index $items.Description $ind}}</td>
-                        <td>{{index $items.Count $ind}}</td>
+                        <td>
+                            <form id="editItemCount" hx-post="/characters/{{$charId}}/editItemCount" hx-target="#itemCount" hx-swap="outerHTML">
+                                <input type="hidden" name="csrf_token" value="{{$csrf}}">
+                                <div id="itemCount">
+                                    {{if gt (index $items.Count $ind) 1}}
+                                    <button type="submit" name="Direction" value="dec">-</button>
+                                    {{end}}
+                                    <input type="hidden" name="ItemId" value="{{$id}}">
+                                    <input type="hidden" name="Count" value="{{index $items.Count $ind}}">
+                                    {{index $items.Count $ind}}
+                                    <button type="submit" name="Direction" value="inc">+</button>
+                                </div>
+                            </form>
+                        </td>
                     </tr>
                 </form>
                 {{end}}

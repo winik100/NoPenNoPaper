@@ -129,6 +129,10 @@ func (m *CharacterModel) AddItem(characterId int, name, description string, coun
 	return nil
 }
 
+func (m *CharacterModel) EditItemCount(characterId, itemId, NewCount int) error {
+	return nil
+}
+
 func (m *CharacterModel) DeleteItem(itemId int) error {
 	if itemId == 1 {
 		MockCharacterOtto.Items = models.Items{}

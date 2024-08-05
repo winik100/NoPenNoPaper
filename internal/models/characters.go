@@ -20,6 +20,7 @@ type CharacterModelInterface interface {
 	AddCustomSkill(characterId int, customSkill string, category string, value int) error
 	EditCustomSkill(characterId int, skill string, newValue int) error
 	AddItem(characterId int, name, description string, count int) error
+	EditItemCount(characterId, itemId, NewCount int) error
 	DeleteItem(itemId int) error
 	AddNote(characterId int, text string) (int, error)
 	DeleteNote(noteId int) error
@@ -562,6 +563,15 @@ func (c *CharacterModel) EditCustomSkill(characterId int, skill string, newValue
 func (c *CharacterModel) AddItem(characterId int, name, description string, count int) error {
 	stmt := "INSERT INTO items (character_id, name, description, cnt) VALUES (?,?,?,?);"
 	_, err := c.DB.Exec(stmt, characterId, name, description, count)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *CharacterModel) EditItemCount(characterId, itemId, newCount int) error {
+	stmt := "UPDATE items SET cnt=? WHERE character_id=? AND item_id=?;"
+	_, err := c.DB.Exec(stmt, newCount, characterId, itemId)
 	if err != nil {
 		return err
 	}

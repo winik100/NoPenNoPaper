@@ -36,6 +36,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /characters/{id}/editCustomSkill", protectedChain.ThenFunc(app.editCustomSkillPost))
 	mux.Handle("GET /characters/{id}/addItem", protectedChain.ThenFunc(app.addItem))
 	mux.Handle("POST /characters/{id}/addItem", protectedChain.ThenFunc(app.addItemPost))
+	mux.Handle("POST /characters/{id}/editItemCount", protectedChain.ThenFunc(app.editItemCount))
 	mux.Handle("POST /characters/{id}/deleteItem", protectedChain.ThenFunc(app.deleteItemPost))
 	mux.Handle("GET /characters/{id}/addNote", protectedChain.ThenFunc(app.addNote))
 	mux.Handle("POST /characters/{id}/addNote", protectedChain.ThenFunc(app.addNotePost))

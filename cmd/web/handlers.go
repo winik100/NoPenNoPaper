@@ -36,6 +36,13 @@ type itemForm struct {
 	validators.FormValidator `schema:"-"`
 }
 
+type itemEditForm struct {
+	ItemId                   int
+	Count                    int
+	Direction                string
+	validators.FormValidator `schema:"-"`
+}
+
 type noteForm struct {
 	Text                     string
 	validators.FormValidator `schema:"-"`
@@ -841,24 +848,28 @@ func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 	data := app.newTemplateData(r)
 	data.Form = itemForm{
-		CharacterId: app.sessionManager.GetInt(r.Context(), "characterId"),
+		CharacterId: characterId,
 	}
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "item.tmpl.html", data)
 }
 
 func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
-	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
-	if characterId == 0 {
-		http.NotFound(w, r)
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, r, err)
 		return
 	}
 
 	var form itemForm
-
-	err := app.decodePostForm(r, &form)
+	err = app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
@@ -885,6 +896,62 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 	}
 	redirect := fmt.Sprintf("/characters/%d", characterId)
 	http.Redirect(w, r, redirect, http.StatusSeeOther)
+}
+
+func (app *application) editItemCount(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	var form itemEditForm
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	tmplStr := `<div id="itemCount">
+					{{if gt .Form.NewCount 1}}
+                    <button type="submit" name="Direction" value="dec">-</button>
+                    {{end}}
+					<input type="hidden" name="ItemId" value="{{.Form.ItemId}}">
+					<input type="hidden" name="Count" value="{{.Form.NewCount}}">
+					{{.Form.NewCount}}
+					<button type="submit" name="Direction" value="inc">+</button>
+				</div>`
+
+	t, err := template.New("editCountDone").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	var tmplData map[string]int
+	switch form.Direction {
+	case "inc":
+		err = app.characters.EditItemCount(characterId, form.ItemId, form.Count+1)
+		tmplData = map[string]int{
+			"ItemId":   form.ItemId,
+			"NewCount": form.Count + 1,
+		}
+	case "dec":
+		err = app.characters.EditItemCount(characterId, form.ItemId, form.Count-1)
+		tmplData = map[string]int{
+			"ItemId":   form.ItemId,
+			"NewCount": form.Count - 1,
+		}
+	}
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.Form = tmplData
+	w.WriteHeader(http.StatusOK)
+	t.ExecuteTemplate(w, "editCountDone", data)
 }
 
 func (app *application) deleteItemPost(w http.ResponseWriter, r *http.Request) {
