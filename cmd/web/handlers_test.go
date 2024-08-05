@@ -482,8 +482,7 @@ func TestAddItem(t *testing.T) {
 		`<form id="deleteItem" hx-post="/characters/1/deleteItem" hx-target="#item1" hx-swap="outerHTML">`,
 		`<input type="hidden" name="ItemId" Value="1">`,
 		`Hand-Brosche   <button type="submit">entfernen</button>`,
-		"<td>Brosche der Hand des Königs</td>",
-		"<td>1</td>"}
+		"<td>Brosche der Hand des Königs</td>"}
 
 	tests := []struct {
 		name        string

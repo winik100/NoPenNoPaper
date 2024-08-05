@@ -24,8 +24,8 @@ type CharacterModelInterface interface {
 	DeleteItem(itemId int) error
 	AddNote(characterId int, text string) (int, error)
 	DeleteNote(noteId int) error
-	IncrementStat(character Character, stat string) (Character, error)
-	DecrementStat(character Character, stat string) (Character, error)
+	IncrementStat(characterId int, stat string) (int, error)
+	DecrementStat(characterId int, stat string) (int, error)
 }
 
 type CharacterModel struct {
@@ -609,74 +609,94 @@ func (c *CharacterModel) DeleteNote(noteId int) error {
 	return nil
 }
 
-func (c *CharacterModel) IncrementStat(character Character, stat string) (Character, error) {
+func (c *CharacterModel) IncrementStat(characterId int, stat string) (int, error) {
+	character, err := c.Get(characterId)
+	if err != nil {
+		return -1, err
+	}
+
+	var updated int
 	var stmt string
 	switch stat {
 	case "TP":
 		stmt = "UPDATE character_stats SET tp=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.TP+1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.TP = character.Stats.TP + 1
+		updated = character.Stats.TP
 	case "STA":
 		stmt = "UPDATE character_stats SET sta=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.STA+1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.STA = character.Stats.STA + 1
+		updated = character.Stats.STA
 	case "MP":
 		stmt = "UPDATE character_stats SET mp=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.MP+1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.MP = character.Stats.MP + 1
+		updated = character.Stats.MP
 	case "LUCK":
 		stmt = "UPDATE character_stats SET luck=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.LUCK+1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.LUCK = character.Stats.LUCK + 1
+		updated = character.Stats.LUCK
 	}
-	return character, nil
+	return updated, nil
 }
 
-func (c *CharacterModel) DecrementStat(character Character, stat string) (Character, error) {
+func (c *CharacterModel) DecrementStat(characterId int, stat string) (int, error) {
+	character, err := c.Get(characterId)
+	if err != nil {
+		return -1, err
+	}
+
+	var updated int
 	var stmt string
 	switch stat {
 	case "TP":
 		stmt = "UPDATE character_stats SET tp=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.TP-1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.TP = character.Stats.TP - 1
+		updated = character.Stats.TP
 	case "STA":
 		stmt = "UPDATE character_stats SET sta=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.STA-1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.STA = character.Stats.STA - 1
+		updated = character.Stats.STA
 	case "MP":
 		stmt = "UPDATE character_stats SET mp=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.MP-1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.MP = character.Stats.MP - 1
+		updated = character.Stats.MP
 	case "LUCK":
 		stmt = "UPDATE character_stats SET luck=? WHERE character_id=?;"
 		_, err := c.DB.Exec(stmt, character.Stats.LUCK-1, character.ID)
 		if err != nil {
-			return character, err
+			return -1, err
 		}
 		character.Stats.LUCK = character.Stats.LUCK - 1
+		updated = character.Stats.LUCK
 	}
-	return character, nil
+	return updated, nil
 }
 
 func DefaultForCategory(category string) int {

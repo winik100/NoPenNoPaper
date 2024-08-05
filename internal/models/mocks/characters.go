@@ -157,32 +157,44 @@ func (m *CharacterModel) DeleteNote(noteId int) error {
 	return nil
 }
 
-func (m *CharacterModel) IncrementStat(character models.Character, stat string) (models.Character, error) {
-	var updated = character
+func (m *CharacterModel) IncrementStat(characterId int, stat string) (int, error) {
+	character := MockCharacterOtto
+
+	var updated int
 	switch stat {
 	case "TP":
-		updated.Stats.TP++
+		character.Stats.TP++
+		updated = character.Stats.TP
 	case "STA":
-		updated.Stats.STA++
+		character.Stats.STA++
+		updated = character.Stats.STA
 	case "MP":
-		updated.Stats.MP++
+		character.Stats.MP++
+		updated = character.Stats.MP
 	case "LUCK":
-		updated.Stats.LUCK++
+		character.Stats.LUCK++
+		updated = character.Stats.LUCK
 	}
 	return updated, nil
 }
 
-func (m *CharacterModel) DecrementStat(character models.Character, stat string) (models.Character, error) {
-	var updated = character
+func (m *CharacterModel) DecrementStat(characterId int, stat string) (int, error) {
+	character := MockCharacterOtto
+
+	var updated int
 	switch stat {
 	case "TP":
-		updated.Stats.TP--
+		character.Stats.TP--
+		updated = character.Stats.TP
 	case "STA":
-		updated.Stats.STA--
+		character.Stats.STA--
+		updated = character.Stats.STA
 	case "MP":
-		updated.Stats.MP--
+		character.Stats.MP--
+		updated = character.Stats.MP
 	case "LUCK":
-		updated.Stats.LUCK--
+		character.Stats.LUCK--
+		updated = character.Stats.LUCK
 	}
 	return updated, nil
 }

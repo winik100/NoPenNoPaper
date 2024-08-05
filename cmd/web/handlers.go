@@ -28,6 +28,13 @@ type userForm struct {
 	validators.FormValidator `schema:"-"`
 }
 
+type statEditForm struct {
+	Name                     string
+	Value                    int
+	Direction                string
+	validators.FormValidator `schema:"-"`
+}
+
 type itemForm struct {
 	CharacterId              int
 	Name                     string
@@ -767,85 +774,140 @@ func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request)
 	t.ExecuteTemplate(w, "customSkillInput", data)
 }
 
-func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
-	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
-	if characterId == 0 {
-		http.NotFound(w, r)
+func (app *application) editStat(w http.ResponseWriter, r *http.Request) {
+	characterId, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		app.serverError(w, r, err)
 		return
 	}
 
-	character, err := app.characters.Get(characterId)
+	var form statEditForm
+	err = app.decodePostForm(r, &form)
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	tmplStr := `<div id="{{.Stat}}">
+					{{if gt .NewValue 1}}
+					<button type="submit" name="Direction" value="dec">-</button>
+					{{end}}
+					<input type="hidden" name="Name" value="{{.Stat}}">
+					<input type="hidden" name="Value" value="{{.NewValue}}">
+					{{.NewValue}}
+					<button type="submit" name="Direction" value="inc">+</button>
+				</div>`
+
+	t, err := template.New("editStatDone").Parse(tmplStr)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	var updated int
+	var tmplData map[string]any
+	switch form.Direction {
+	case "inc":
+		updated, err = app.characters.IncrementStat(characterId, form.Name)
+		tmplData = map[string]any{
+			"Stat":     form.Name,
+			"NewValue": updated,
 		}
-		return
+	case "dec":
+		updated, err = app.characters.DecrementStat(characterId, form.Name)
+		tmplData = map[string]any{
+			"Stat":     form.Name,
+			"NewValue": updated,
+		}
 	}
-
-	stat := r.FormValue("inc")
-	updated, err := app.characters.IncrementStat(character, stat)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	updatedStat := updated.Stats.CurrentAsMap()[stat]
-	tmplStr := `<div id="{{.Stat}}" value="{{.Value}}">{{.Value}}</div>`
-
-	t, err := template.New("inc").Parse(tmplStr)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	data := map[string]string{
-		"Stat":  stat,
-		"Value": strconv.Itoa(updatedStat),
-	}
 	w.WriteHeader(http.StatusOK)
-	t.ExecuteTemplate(w, "inc", data)
+	t.ExecuteTemplate(w, "editStatDone", tmplData)
 }
 
-func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
-	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
-	if characterId == 0 {
-		http.NotFound(w, r)
-		return
-	}
+// func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
+// 	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
+// 	if characterId == 0 {
+// 		http.NotFound(w, r)
+// 		return
+// 	}
 
-	character, err := app.characters.Get(characterId)
-	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			http.NotFound(w, r)
-		} else {
-			app.serverError(w, r, err)
-		}
-		return
-	}
+// 	character, err := app.characters.Get(characterId)
+// 	if err != nil {
+// 		if errors.Is(err, models.ErrNoRecord) {
+// 			http.NotFound(w, r)
+// 		} else {
+// 			app.serverError(w, r, err)
+// 		}
+// 		return
+// 	}
 
-	stat := r.FormValue("dec")
-	updated, err := app.characters.DecrementStat(character, stat)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+// 	stat := r.FormValue("inc")
+// 	updated, err := app.characters.IncrementStat(character, stat)
+// 	if err != nil {
+// 		app.serverError(w, r, err)
+// 		return
+// 	}
 
-	updatedStat := updated.Stats.CurrentAsMap()[stat]
-	tmplStr := `<div id="{{.Stat}}" name="Stat" value="{{.Value}}">{{.Value}}</div>`
+// 	updatedStat := updated.Stats.CurrentAsMap()[stat]
+// 	tmplStr := `<div id="{{.Stat}}" value="{{.Value}}">{{.Value}}</div>`
 
-	t, err := template.New("dec").Parse(tmplStr)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	data := map[string]string{
-		"Stat":  stat,
-		"Value": strconv.Itoa(updatedStat),
-	}
-	w.WriteHeader(http.StatusOK)
-	t.ExecuteTemplate(w, "dec", data)
-}
+// 	t, err := template.New("inc").Parse(tmplStr)
+// 	if err != nil {
+// 		app.serverError(w, r, err)
+// 		return
+// 	}
+// 	data := map[string]string{
+// 		"Stat":  stat,
+// 		"Value": strconv.Itoa(updatedStat),
+// 	}
+// 	w.WriteHeader(http.StatusOK)
+// 	t.ExecuteTemplate(w, "inc", data)
+// }
+
+// func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
+// 	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
+// 	if characterId == 0 {
+// 		http.NotFound(w, r)
+// 		return
+// 	}
+
+// 	character, err := app.characters.Get(characterId)
+// 	if err != nil {
+// 		if errors.Is(err, models.ErrNoRecord) {
+// 			http.NotFound(w, r)
+// 		} else {
+// 			app.serverError(w, r, err)
+// 		}
+// 		return
+// 	}
+
+// 	stat := r.FormValue("dec")
+// 	updated, err := app.characters.DecrementStat(character, stat)
+// 	if err != nil {
+// 		app.serverError(w, r, err)
+// 		return
+// 	}
+
+// 	updatedStat := updated.Stats.CurrentAsMap()[stat]
+// 	tmplStr := `<div id="{{.Stat}}" name="Stat" value="{{.Value}}">{{.Value}}</div>`
+
+// 	t, err := template.New("dec").Parse(tmplStr)
+// 	if err != nil {
+// 		app.serverError(w, r, err)
+// 		return
+// 	}
+// 	data := map[string]string{
+// 		"Stat":  stat,
+// 		"Value": strconv.Itoa(updatedStat),
+// 	}
+// 	w.WriteHeader(http.StatusOK)
+// 	t.ExecuteTemplate(w, "dec", data)
+// }
 
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
 	characterId, err := strconv.Atoi(r.PathValue("id"))
@@ -913,12 +975,12 @@ func (app *application) editItemCount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tmplStr := `<div id="itemCount">
-					{{if gt .Form.NewCount 1}}
+					{{if gt .NewCount 1}}
                     <button type="submit" name="Direction" value="dec">-</button>
                     {{end}}
-					<input type="hidden" name="ItemId" value="{{.Form.ItemId}}">
-					<input type="hidden" name="Count" value="{{.Form.NewCount}}">
-					{{.Form.NewCount}}
+					<input type="hidden" name="ItemId" value="{{.ItemId}}">
+					<input type="hidden" name="Count" value="{{.NewCount}}">
+					{{.NewCount}}
 					<button type="submit" name="Direction" value="inc">+</button>
 				</div>`
 
@@ -948,10 +1010,8 @@ func (app *application) editItemCount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := app.newTemplateData(r)
-	data.Form = tmplData
 	w.WriteHeader(http.StatusOK)
-	t.ExecuteTemplate(w, "editCountDone", data)
+	t.ExecuteTemplate(w, "editCountDone", tmplData)
 }
 
 func (app *application) deleteItemPost(w http.ResponseWriter, r *http.Request) {

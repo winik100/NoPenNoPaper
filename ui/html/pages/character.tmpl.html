@@ -44,14 +44,21 @@
                     <th>Glück ({{.Stats.MaxLUCK}})</th>
                 </tr>
                 <tr>
+                    {{$charId := .ID}}
                     {{$stats := .Stats}}
                     {{range $stat := $stats.OrderedKeysCurrent}}
                     <td>
-                        <form>
+                        <form id="editStat" hx-post="/characters/{{$charId}}/editStat" hx-target="#{{$stat}}" hx-swap="outerHTML">
                             <input type="hidden" name="csrf_token" value="{{$csrf}}">
-                            <button type="submit" name="inc" hx-post="/inc" hx-target="#{{$stat}}" hx-swap="outerHTML" value="{{$stat}}">+</button>
-                            <div id="{{$stat}}" value="{{$stat}}">{{index $stats.CurrentAsMap $stat}}</div>
-                            <button type="submit" name="dec" hx-post="/dec" hx-target="#{{$stat}}" hx-swap="outerHTML" value="{{$stat}}">-</button>
+                            <div id="{{$stat}}">
+                                {{if gt (index $stats.CurrentAsMap $stat) 1}}
+                                <button type="submit" name="Direction" value="dec">-</button>
+                                {{end}}
+                                <input type="hidden" name="Name" value="{{$stat}}">
+                                <input type="hidden" name="Value" value="{{index $stats.CurrentAsMap $stat}}">
+                                {{index $stats.CurrentAsMap $stat}}
+                                <button type="submit" name="Direction" value="inc">+</button>
+                            </div>
                         </form>
                     </td>
                     {{end}}  

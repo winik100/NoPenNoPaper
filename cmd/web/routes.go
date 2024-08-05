@@ -26,6 +26,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /characters/{id}/delete", protectedChain.ThenFunc(app.delete))
 	mux.Handle("POST /characters/{id}/delete", protectedChain.ThenFunc(app.deletePost))
 	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
+	mux.Handle("POST /characters/{id}/editStat", protectedChain.ThenFunc(app.editStat))
 	mux.Handle("GET /characters/{id}/addSkill", protectedChain.ThenFunc(app.addSkill))
 	mux.Handle("POST /characters/{id}/addSkill", protectedChain.ThenFunc(app.addSkillPost))
 	mux.Handle("GET /characters/{id}/editSkill", protectedChain.ThenFunc(app.editSkill))
@@ -43,8 +44,8 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /characters/{id}/deleteNote", protectedChain.ThenFunc(app.deleteNotePost))
 
 	//some helpers
-	mux.Handle("POST /inc", protectedChain.ThenFunc(app.Inc))
-	mux.Handle("POST /dec", protectedChain.ThenFunc(app.Dec))
+	// mux.Handle("POST /inc", protectedChain.ThenFunc(app.Inc))
+	// mux.Handle("POST /dec", protectedChain.ThenFunc(app.Dec))
 	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
@@ -67,6 +68,7 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("GET /characters/{id}/delete", app.delete)
 	mux.HandleFunc("POST /characters/{id}/delete", app.deletePost)
 	mux.HandleFunc("GET /characters/{id}", app.viewCharacter)
+	mux.HandleFunc("GET /characters/{id}/editStat", app.editStat)
 	mux.HandleFunc("GET /characters/{id}/addSkill", app.addSkill)
 	mux.HandleFunc("POST /characters/{id}/addSkill", app.addSkillPost)
 	mux.HandleFunc("GET /characters/{id}/editSkill", app.editSkill)
@@ -83,8 +85,8 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("POST /characters/{id}/deleteNote", app.deleteNotePost)
 
 	//some helpers
-	mux.HandleFunc("POST /inc", app.Inc)
-	mux.HandleFunc("POST /dec", app.Dec)
+	// mux.HandleFunc("POST /inc", app.Inc)
+	// mux.HandleFunc("POST /dec", app.Dec)
 	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
