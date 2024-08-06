@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/justinas/nosurf"
 	"github.com/winik100/NoPenNoPaper/internal/core"
@@ -50,10 +51,15 @@ func contains(skills []string, skill string) bool {
 	return slices.Contains(skills, skill)
 }
 
+func trim(s string) string {
+	return strings.Join(strings.Split(s, " "), "")
+}
+
 var funcs = template.FuncMap{
 	"half":     half,
 	"fifth":    fifth,
 	"contains": contains,
+	"trim":     trim,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

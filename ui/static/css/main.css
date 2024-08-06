@@ -8,6 +8,11 @@
 
 #deleteCharacter {
     color: darkred;
+
+}
+#deleteCharacterMessage {
+    color: darkred;
+    font-weight: bold;
 }
 
 html, body {

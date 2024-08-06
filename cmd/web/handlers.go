@@ -115,12 +115,13 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	tmplStr := `<form id="deleteCharacter" action="/characters/{{.Character.ID}}/delete" method="POST">
-					<p>Sicher? Kann nicht rückgängig gemacht werden!</p>
+
+	tmplStr := `<form id="deleteCharacterForm" action="/characters/{{.Form.CharacterId}}/delete" method="POST">
+					<p id="deleteCharacterMessage">Sicher? Kann nicht rückgängig gemacht werden!</p>
 					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-					<input type="hidden" name="CharacterId" Value="{{.Character.ID}}">
+					<input type="hidden" name="CharacterId" Value="{{.Form.CharacterId}}">
 					<button type="submit">OK</button>
-					<button hx-get="/characters/{{.Character.ID}}" hx-target="#deleteCharacter" hx-select="#deleteCharacter">Abbrechen</button>
+					<button hx-get="/characters/{{.Form.CharacterId}}" hx-target="#deleteCharacterForm" hx-select="#deleteCharacter" hx-swap="outerHTML">Abbrechen</button>
             	</form>`
 
 	t, err := template.New("delete").Parse(tmplStr)
@@ -129,14 +130,10 @@ func (app *application) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	character, err := app.characters.Get(characterId)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
 	data := app.newTemplateData(r)
-	data.Character = character
+	data.Form = map[string]any{
+		"CharacterId": characterId,
+	}
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "delete", data)
 }
@@ -513,8 +510,8 @@ func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) editSkill(w http.ResponseWriter, r *http.Request) {
+	characterId := r.PathValue("id")
 	params := r.URL.Query()
-	id := r.PathValue("id")
 	skill := params.Get("skill")
 	value, err := strconv.Atoi(params.Get("value"))
 	if err != nil {
@@ -522,13 +519,15 @@ func (app *application) editSkill(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/%s/editSkill" hx-target="this" hx-swap="outerHTML">
+	trimmed := trim(skill)
+	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/{{.Form.CharacterId}}/editSkill" hx-target="this" hx-swap="outerHTML">
                 <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-				<input type="hidden" name="Skill" value="%s">
-                <input type="number" name="NewValue" value="%d">
+				<input type="hidden" name="CharacterId" value="{{.Form.CharacterId}}">
+				<input type="hidden" name="Skill" value="{{.Form.Skill}}">
+                <input type="number" name="NewValue" value="{{.Form.Value}}">
 				<button type="submit">OK</button>
-				<button hx-get="/characters/%s" hx-target="#editForm" hx-swap="outerHTML" hx-select="#edit%s">Abbrechen</button>
-            </form>`, id, skill, value, id, skill)
+				<button hx-get="/characters/{{.Form.CharacterId}}" hx-target="#editForm" hx-swap="outerHTML" hx-select="#edit%s">Abbrechen</button>
+            </form>`, trimmed)
 
 	t, err := template.New("editForm").Parse(tmplStr)
 	if err != nil {
@@ -537,25 +536,24 @@ func (app *application) editSkill(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := app.newTemplateData(r)
+	data.Form = map[string]any{
+		"CharacterId": characterId,
+		"Skill":       skill,
+		"Value":       value,
+	}
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "editForm", data)
 }
 
 func (app *application) editSkillPost(w http.ResponseWriter, r *http.Request) {
-	characterId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
-
 	var form skillEditForm
-	err = app.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	err = app.characters.EditSkill(characterId, form.Skill, form.NewValue)
+	err = app.characters.EditSkill(form.CharacterId, form.Skill, form.NewValue)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -563,12 +561,13 @@ func (app *application) editSkillPost(w http.ResponseWriter, r *http.Request) {
 
 	half := half(form.NewValue)
 	fifth := fifth(form.NewValue)
-	tmplStr := fmt.Sprintf(`<div hx-swap-oob="outerHTML:#Values{{.Form.Skill}}">{{.Form.NewValue}} | %d | %d</div>
+	trimmed := trim(form.Skill)
+	tmplStr := fmt.Sprintf(`<div id="Values%s" hx-swap-oob="outerHTML:#Values%s">{{.Form.NewValue}} | %d | %d</div>
 							<form hx-get="/characters/{{.Form.CharacterId}}/editSkill" hx-target="this" hx-swap="outerHTML">	
                             	<input type="hidden" name="skill" value="{{.Form.Skill}}">
                             	<input type="hidden" name="value" value="{{.Form.NewValue}}">
                             	<button type="submit">Bearbeiten</button>
-                        	</form>`, half, fifth)
+                        	</form>`, trimmed, trimmed, half, fifth)
 
 	t, err := template.New("editSkillDone").Parse(tmplStr)
 	if err != nil {

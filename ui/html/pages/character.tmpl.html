@@ -83,8 +83,8 @@
                         {{$val := (index $values $ind)}}
                         <th>{{$key}}</th>
                         <td>
-                            <div id="Values{{$key}}" value="{{$val}}">{{$val}} | {{half $val}} | {{fifth $val}}</div>
-                            <form id="edit{{$key}}" hx-get="/characters/{{$charId}}/editSkill" hx-target="this" hx-swap="outerHTML">
+                            <div id="Values{{trim $key}}" value="{{$val}}">{{$val}} | {{half $val}} | {{fifth $val}}</div>
+                            <form id="edit{{trim $key}}" hx-get="/characters/{{$charId}}/editSkill" hx-target="this" hx-swap="outerHTML">
                                 <input type="hidden" name="skill" value="{{$key}}">
                                 <input type="hidden" name="value" value="{{$val}}">
                                 <button type="submit">Bearbeiten</button>
@@ -190,7 +190,7 @@
     <details>
         <summary>...</summary>
         <div>
-            <button id="deleteCharacter" hx-get="/characters/{{.ID}}/delete">Charakter löschen</button>
+            <button id="deleteCharacter" hx-get="/characters/{{.ID}}/delete" hx-target="this" hx-swap="outerHTML">Charakter löschen</button>
         </div>
     </details>
     {{end}}
