@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/winik100/NoPenNoPaper/internal/models"
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/models/mocks"
 	"github.com/winik100/NoPenNoPaper/internal/testHelpers"
 )
@@ -351,10 +351,10 @@ func TestCreatePost(t *testing.T) {
 
 	tests := []struct {
 		name                string
-		info                models.CharacterInfo
-		attributes          models.CharacterAttributes
-		skills              models.Skills
-		customSkills        models.CustomSkills
+		info                core.CharacterInfo
+		attributes          core.CharacterAttributes
+		skills              core.Skills
+		customSkills        core.CustomSkills
 		authenticatedUserId int
 		wantCode            int
 	}{

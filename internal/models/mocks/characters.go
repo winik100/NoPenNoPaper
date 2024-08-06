@@ -1,10 +1,11 @@
 package mocks
 
 import (
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
-var MockCharacterOtto = models.Character{
+var MockCharacterOtto = core.Character{
 	ID:           1,
 	Info:         mockInfo,
 	Attributes:   mockAttributes,
@@ -14,12 +15,12 @@ var MockCharacterOtto = models.Character{
 	Notes:        mockNotes,
 }
 
-var MockCharacterViserys = models.Character{
+var MockCharacterViserys = core.Character{
 	ID:   2,
 	Info: mockInfo2,
 }
 
-var mockInfo = models.CharacterInfo{
+var mockInfo = core.CharacterInfo{
 	Name:       "Otto Hightower",
 	Profession: "Lord von Oldtown",
 	Age:        "65",
@@ -28,7 +29,7 @@ var mockInfo = models.CharacterInfo{
 	Birthplace: "Oldtown",
 }
 
-var mockInfo2 = models.CharacterInfo{
+var mockInfo2 = core.CharacterInfo{
 	Name:       "Viserys Targaryen",
 	Profession: "König von Westeros",
 	Age:        "45",
@@ -37,7 +38,7 @@ var mockInfo2 = models.CharacterInfo{
 	Birthplace: "King's Landing",
 }
 
-var mockAttributes = models.CharacterAttributes{
+var mockAttributes = core.CharacterAttributes{
 	ST: 40,
 	GE: 50,
 	MA: 50,
@@ -49,62 +50,62 @@ var mockAttributes = models.CharacterAttributes{
 	BW: 6,
 }
 
-var mockSkills = models.Skills{
+var mockSkills = core.Skills{
 	Name:  []string{"Politik", "Intrige", "Manipulation"},
 	Value: []int{70, 60, 60},
 }
 
-var mockCustomSkills = models.CustomSkills{
+var mockCustomSkills = core.CustomSkills{
 	Name:     []string{"Westerosi"},
 	Value:    []int{50},
 	Category: []string{"Muttersprache"},
 }
 
-var mockItems = models.Items{ItemId: []int{1}, Name: []string{"Hand-Brosche"}, Description: []string{"Brosche der Hand des Königs"}, Count: []int{1}}
+var mockItems = core.Items{ItemId: []int{1}, Name: []string{"Hand-Brosche"}, Description: []string{"Brosche der Hand des Königs"}, Count: []int{1}}
 
-var mockNotes = models.Notes{
+var mockNotes = core.Notes{
 	ID:   []int{1, 2},
 	Text: []string{"Aegon ist blöde.", "Viserys war viel besser."}}
 
 type CharacterModel struct{}
 
-func (m *CharacterModel) Insert(character models.Character, created_by int) (int, error) {
+func (m *CharacterModel) Insert(character core.Character, created_by int) (int, error) {
 	return 1, nil
 }
 
-func (m *CharacterModel) Get(characterId int) (models.Character, error) {
+func (m *CharacterModel) Get(characterId int) (core.Character, error) {
 	if characterId == 1 {
 		return MockCharacterOtto, nil
 	}
 	if characterId == 2 {
 		return MockCharacterViserys, nil
 	}
-	return models.Character{}, models.ErrNoRecord
+	return core.Character{}, models.ErrNoRecord
 }
 
 func (m *CharacterModel) Delete(characterId int) error {
 	if characterId == 1 {
-		MockCharacterOtto = models.Character{}
+		MockCharacterOtto = core.Character{}
 	}
 	if characterId == 2 {
-		MockCharacterViserys = models.Character{}
+		MockCharacterViserys = core.Character{}
 	}
 	return nil
 }
 
-func (m *CharacterModel) GetAllFrom(userId int) ([]models.Character, error) {
+func (m *CharacterModel) GetAllFrom(userId int) ([]core.Character, error) {
 	if userId == 1 {
-		return []models.Character{MockCharacterOtto}, nil
+		return []core.Character{MockCharacterOtto}, nil
 	}
 	return nil, models.ErrNoRecord
 }
 
-func (m *CharacterModel) GetAll() ([]models.Character, error) {
-	return []models.Character{MockCharacterOtto, MockCharacterViserys}, nil
+func (m *CharacterModel) GetAll() ([]core.Character, error) {
+	return []core.Character{MockCharacterOtto, MockCharacterViserys}, nil
 }
 
-func (m *CharacterModel) GetAvailableSkills() (models.Skills, error) {
-	skills := models.Skills{Name: []string{"Politik", "Intrige", "Manipulation", "Schwertkampf", "Singen", "Tanzen"},
+func (m *CharacterModel) GetAvailableSkills() (core.Skills, error) {
+	skills := core.Skills{Name: []string{"Politik", "Intrige", "Manipulation", "Schwertkampf", "Singen", "Tanzen"},
 		Value: []int{10, 5, 5, 10, 20, 20}}
 	return skills, nil
 }
@@ -135,7 +136,7 @@ func (m *CharacterModel) EditItemCount(characterId, itemId, NewCount int) error 
 
 func (m *CharacterModel) DeleteItem(itemId int) error {
 	if itemId == 1 {
-		MockCharacterOtto.Items = models.Items{}
+		MockCharacterOtto.Items = core.Items{}
 	}
 	return nil
 }
@@ -149,10 +150,10 @@ func (m *CharacterModel) AddNote(characterId int, text string) (int, error) {
 
 func (m *CharacterModel) DeleteNote(noteId int) error {
 	if noteId == 1 {
-		MockCharacterOtto.Notes = models.Notes{ID: []int{2}, Text: []string{"Viserys war viel besser."}}
+		MockCharacterOtto.Notes = core.Notes{ID: []int{2}, Text: []string{"Viserys war viel besser."}}
 	}
 	if noteId == 2 {
-		MockCharacterOtto.Notes = models.Notes{ID: []int{1}, Text: []string{"Aegon ist blöde."}}
+		MockCharacterOtto.Notes = core.Notes{ID: []int{1}, Text: []string{"Aegon ist blöde."}}
 	}
 	return nil
 }

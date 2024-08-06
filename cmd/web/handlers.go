@@ -9,16 +9,17 @@ import (
 	"strconv"
 
 	"github.com/justinas/nosurf"
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/models"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
 type characterCreateForm struct {
-	Info                     models.CharacterInfo
-	Attributes               models.CharacterAttributes
-	Skills                   models.Skills
+	Info                     core.CharacterInfo
+	Attributes               core.CharacterAttributes
+	Skills                   core.Skills
 	SelectedSkills           []string
-	CustomSkills             models.CustomSkills
+	CustomSkills             core.CustomSkills
 	validators.FormValidator `schema:"-"`
 }
 
@@ -199,7 +200,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.characters.Insert(models.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills, CustomSkills: form.CustomSkills},
+	_, err = app.characters.Insert(core.Character{Info: form.Info, Attributes: form.Attributes, Skills: form.Skills, CustomSkills: form.CustomSkills},
 		app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey))
 
 	if err != nil {
@@ -375,7 +376,7 @@ func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var addableSkills models.Skills
+	var addableSkills core.Skills
 	for i, sk := range allSkills.Name {
 		if !slices.Contains(character.Skills.Name, sk) {
 			addableSkills.Name = append(addableSkills.Name, sk)
@@ -828,86 +829,6 @@ func (app *application) editStat(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	t.ExecuteTemplate(w, "editStatDone", tmplData)
 }
-
-// func (app *application) Inc(w http.ResponseWriter, r *http.Request) {
-// 	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
-// 	if characterId == 0 {
-// 		http.NotFound(w, r)
-// 		return
-// 	}
-
-// 	character, err := app.characters.Get(characterId)
-// 	if err != nil {
-// 		if errors.Is(err, models.ErrNoRecord) {
-// 			http.NotFound(w, r)
-// 		} else {
-// 			app.serverError(w, r, err)
-// 		}
-// 		return
-// 	}
-
-// 	stat := r.FormValue("inc")
-// 	updated, err := app.characters.IncrementStat(character, stat)
-// 	if err != nil {
-// 		app.serverError(w, r, err)
-// 		return
-// 	}
-
-// 	updatedStat := updated.Stats.CurrentAsMap()[stat]
-// 	tmplStr := `<div id="{{.Stat}}" value="{{.Value}}">{{.Value}}</div>`
-
-// 	t, err := template.New("inc").Parse(tmplStr)
-// 	if err != nil {
-// 		app.serverError(w, r, err)
-// 		return
-// 	}
-// 	data := map[string]string{
-// 		"Stat":  stat,
-// 		"Value": strconv.Itoa(updatedStat),
-// 	}
-// 	w.WriteHeader(http.StatusOK)
-// 	t.ExecuteTemplate(w, "inc", data)
-// }
-
-// func (app *application) Dec(w http.ResponseWriter, r *http.Request) {
-// 	characterId := app.sessionManager.GetInt(r.Context(), "characterId")
-// 	if characterId == 0 {
-// 		http.NotFound(w, r)
-// 		return
-// 	}
-
-// 	character, err := app.characters.Get(characterId)
-// 	if err != nil {
-// 		if errors.Is(err, models.ErrNoRecord) {
-// 			http.NotFound(w, r)
-// 		} else {
-// 			app.serverError(w, r, err)
-// 		}
-// 		return
-// 	}
-
-// 	stat := r.FormValue("dec")
-// 	updated, err := app.characters.DecrementStat(character, stat)
-// 	if err != nil {
-// 		app.serverError(w, r, err)
-// 		return
-// 	}
-
-// 	updatedStat := updated.Stats.CurrentAsMap()[stat]
-// 	tmplStr := `<div id="{{.Stat}}" name="Stat" value="{{.Value}}">{{.Value}}</div>`
-
-// 	t, err := template.New("dec").Parse(tmplStr)
-// 	if err != nil {
-// 		app.serverError(w, r, err)
-// 		return
-// 	}
-// 	data := map[string]string{
-// 		"Stat":  stat,
-// 		"Value": strconv.Itoa(updatedStat),
-// 	}
-// 	w.WriteHeader(http.StatusOK)
-// 	t.ExecuteTemplate(w, "dec", data)
-// }
 
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
 	characterId, err := strconv.Atoi(r.PathValue("id"))

@@ -3,18 +3,17 @@ package models
 import (
 	"database/sql"
 	"errors"
-	"slices"
 
-	"github.com/justinian/dice"
+	"github.com/winik100/NoPenNoPaper/internal/core"
 )
 
 type CharacterModelInterface interface {
-	Insert(character Character, created_by int) (int, error)
-	Get(characterId int) (Character, error)
-	GetAllFrom(userId int) ([]Character, error)
-	GetAll() ([]Character, error)
+	Insert(character core.Character, created_by int) (int, error)
+	Get(characterId int) (core.Character, error)
+	GetAllFrom(userId int) ([]core.Character, error)
+	GetAll() ([]core.Character, error)
 	Delete(characterId int) error
-	GetAvailableSkills() (Skills, error)
+	GetAvailableSkills() (core.Skills, error)
 	AddSkill(characterId int, skill string, value int) error
 	EditSkill(characterId int, skill string, newValue int) error
 	AddCustomSkill(characterId int, customSkill string, category string, value int) error
@@ -32,148 +31,7 @@ type CharacterModel struct {
 	DB *sql.DB
 }
 
-type Character struct {
-	ID           int
-	Info         CharacterInfo
-	Attributes   CharacterAttributes
-	Stats        CharacterStats
-	Skills       Skills
-	CustomSkills CustomSkills
-	Items        Items
-	Notes        Notes
-}
-
-type CharacterInfo struct {
-	Name       string
-	Profession string
-	Age        string
-	Gender     string
-	Residence  string
-	Birthplace string
-}
-
-func (ci CharacterInfo) AsMap() map[string]string {
-	return map[string]string{
-		"Name":       ci.Name,
-		"Beruf":      ci.Profession,
-		"Alter":      ci.Age,
-		"Geschlecht": ci.Gender,
-		"Wohnort":    ci.Residence,
-		"Geburtsort": ci.Birthplace,
-	}
-}
-
-type CharacterAttributes struct {
-	ST int
-	GE int
-	MA int
-	KO int
-	ER int
-	BI int
-	GR int
-	IN int
-	BW int
-}
-
-func (a CharacterAttributes) AsMap() map[string]int {
-	return map[string]int{
-		"ST": a.ST,
-		"GE": a.GE,
-		"MA": a.MA,
-		"KO": a.KO,
-		"ER": a.ER,
-		"BI": a.BI,
-		"GR": a.GR,
-		"IN": a.IN,
-		"BW": a.BW,
-	}
-}
-
-func (a CharacterAttributes) OrderedKeys() []string {
-	return []string{"ST", "GE", "MA", "KO", "ER", "BI", "GR", "IN", "BW"}
-}
-
-type CharacterStats struct {
-	MaxTP   int
-	TP      int
-	MaxSTA  int
-	STA     int
-	MaxMP   int
-	MP      int
-	MaxLUCK int
-	LUCK    int
-}
-
-func (st CharacterStats) OrderedKeysCurrent() []string {
-	return []string{"TP", "STA", "MP", "LUCK"}
-}
-
-func (st CharacterStats) CurrentAsMap() map[string]int {
-	return map[string]int{
-		"TP":   st.TP,
-		"STA":  st.STA,
-		"MP":   st.MP,
-		"LUCK": st.LUCK,
-	}
-}
-
-func (c *Character) deriveStats() CharacterStats {
-	tp := (c.Attributes.KO + c.Attributes.GR) / 10
-	sta := c.Attributes.MA
-	mp := c.Attributes.MA / 5
-
-	res, _, err := dice.Roll("3d6kh3")
-	if err != nil {
-		return CharacterStats{}
-	}
-	luck := res.Int() * 5
-
-	return CharacterStats{
-		MaxTP:   tp,
-		TP:      tp,
-		MaxSTA:  sta,
-		STA:     sta,
-		MaxMP:   mp,
-		MP:      mp,
-		MaxLUCK: luck,
-		LUCK:    luck,
-	}
-}
-
-// workaround due to gorillas.schema not being able to parse into slices of structs
-type Skills struct {
-	Name  []string
-	Value []int
-}
-
-type CustomSkills struct {
-	Category []string
-	Name     []string
-	Value    []int
-}
-
-func (character Character) AllSkills() Skills {
-	allNames := append(character.Skills.Name, character.CustomSkills.Name...)
-	allValues := append(character.Skills.Value, character.CustomSkills.Value...)
-
-	slices.Sort(allNames)
-	slices.Sort(allValues)
-	return Skills{Name: allNames, Value: allValues}
-}
-
-type Items struct {
-	ItemId      []int
-	Name        []string
-	Description []string
-	Count       []int
-}
-
-type Notes struct {
-	ID   []int
-	Text []string
-}
-
-func (c *CharacterModel) Insert(character Character, created_by int) (int, error) {
+func (c *CharacterModel) Insert(character core.Character, created_by int) (int, error) {
 	tx, err := c.DB.Begin()
 	if err != nil {
 		return 0, err
@@ -205,7 +63,7 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 		return 0, err
 	}
 
-	stats := character.deriveStats()
+	stats := character.DeriveStats()
 	stmt = "INSERT INTO character_stats (character_id, maxtp, tp, maxsta, sta, maxmp, mp, maxluck, luck) VALUES (?,?,?,?,?,?,?,?,?);"
 	_, err = tx.Exec(stmt, id, stats.TP, stats.TP, stats.STA, stats.STA, stats.MP, stats.MP, stats.LUCK, stats.LUCK)
 	if err != nil {
@@ -250,23 +108,23 @@ func (c *CharacterModel) Insert(character Character, created_by int) (int, error
 	return int(id), nil
 }
 
-func (c *CharacterModel) Get(characterId int) (Character, error) {
-	var info CharacterInfo
-	var attr CharacterAttributes
-	var stats CharacterStats
-	var skills Skills
-	var customSkills CustomSkills
-	var items Items
-	var notes Notes
+func (c *CharacterModel) Get(characterId int) (core.Character, error) {
+	var info core.CharacterInfo
+	var attr core.CharacterAttributes
+	var stats core.CharacterStats
+	var skills core.Skills
+	var customSkills core.CustomSkills
+	var items core.Items
+	var notes core.Notes
 
 	stmt := "SELECT name, profession, age, gender, residence, birthplace FROM character_info WHERE character_id=?;"
 	result := c.DB.QueryRow(stmt, characterId)
 	err := result.Scan(&info.Name, &info.Profession, &info.Age, &info.Gender, &info.Residence, &info.Birthplace)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 
 	stmt = "SELECT st, ge, ma, ko, er, bi, gr, i, bw FROM character_attributes WHERE character_id=?;"
@@ -274,9 +132,9 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	err = result.Scan(&attr.ST, &attr.GE, &attr.MA, &attr.KO, &attr.ER, &attr.BI, &attr.GR, &attr.IN, &attr.BW)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 
 	stmt = "SELECT maxtp, tp, maxsta, sta, maxmp, mp, maxluck, luck FROM character_stats WHERE character_id=?;"
@@ -284,18 +142,18 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	err = result.Scan(&stats.MaxTP, &stats.TP, &stats.MaxSTA, &stats.STA, &stats.MaxMP, &stats.MP, &stats.MaxLUCK, &stats.LUCK)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 
 	stmt = "SELECT skill_name, value FROM character_skills WHERE character_id=?;"
 	rows, err := c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 
 	var skillsName []string
@@ -306,7 +164,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 
 		err = rows.Scan(&name, &value)
 		if err != nil {
-			return Character{}, err
+			return core.Character{}, err
 		}
 		skillsName = append(skillsName, name)
 		skillsValue = append(skillsValue, value)
@@ -318,9 +176,9 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 	var customSkillsName []string
 	var customSkillsValue []int
@@ -330,7 +188,7 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 
 		err = rows.Scan(&name, &value)
 		if err != nil {
-			return Character{}, err
+			return core.Character{}, err
 		}
 		customSkillsName = append(customSkillsName, name)
 		customSkillsValue = append(customSkillsValue, value)
@@ -342,16 +200,16 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 	for rows.Next() {
 		var id, count int
 		var name, description string
 		err = rows.Scan(&id, &name, &description, &count)
 		if err != nil {
-			return Character{}, err
+			return core.Character{}, err
 		}
 		items.ItemId = append(items.ItemId, id)
 		items.Name = append(items.Name, name)
@@ -363,22 +221,22 @@ func (c *CharacterModel) Get(characterId int) (Character, error) {
 	rows, err = c.DB.Query(stmt, characterId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Character{}, ErrNoRecord
+			return core.Character{}, ErrNoRecord
 		}
-		return Character{}, err
+		return core.Character{}, err
 	}
 	for rows.Next() {
 		var id int
 		var text string
 		err = rows.Scan(&id, &text)
 		if err != nil {
-			return Character{}, err
+			return core.Character{}, err
 		}
 		notes.ID = append(notes.ID, id)
 		notes.Text = append(notes.Text, text)
 	}
 
-	return Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, CustomSkills: customSkills, Items: items, Notes: notes}, nil
+	return core.Character{ID: characterId, Info: info, Attributes: attr, Stats: stats, Skills: skills, CustomSkills: customSkills, Items: items, Notes: notes}, nil
 }
 
 func (c *CharacterModel) Delete(characterId int) error {
@@ -390,7 +248,7 @@ func (c *CharacterModel) Delete(characterId int) error {
 	return nil
 }
 
-func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {
+func (c *CharacterModel) GetAllFrom(userId int) ([]core.Character, error) {
 	stmt := "SELECT id FROM characters WHERE created_by=?;"
 	rows, err := c.DB.Query(stmt, userId)
 	if err != nil {
@@ -414,7 +272,7 @@ func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {
 		return nil, err
 	}
 
-	var characters []Character
+	var characters []core.Character
 	for _, id := range characterIds {
 		character, err := c.Get(id)
 		if err != nil {
@@ -426,7 +284,7 @@ func (c *CharacterModel) GetAllFrom(userId int) ([]Character, error) {
 	return characters, nil
 }
 
-func (c *CharacterModel) GetAll() ([]Character, error) {
+func (c *CharacterModel) GetAll() ([]core.Character, error) {
 	stmt := "SELECT id FROM characters;"
 	rows, err := c.DB.Query(stmt)
 	if err != nil {
@@ -450,7 +308,7 @@ func (c *CharacterModel) GetAll() ([]Character, error) {
 		return nil, err
 	}
 
-	var characters []Character
+	var characters []core.Character
 	for _, id := range characterIds {
 		character, err := c.Get(id)
 		if err != nil {
@@ -462,16 +320,16 @@ func (c *CharacterModel) GetAll() ([]Character, error) {
 	return characters, nil
 }
 
-func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
+func (c *CharacterModel) GetAvailableSkills() (core.Skills, error) {
 	var skillsName []string
 	var skillsValue []int
 	stmt := "SELECT name, default_value FROM skills;"
 	rows, err := c.DB.Query(stmt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Skills{}, ErrNoRecord
+			return core.Skills{}, ErrNoRecord
 		}
-		return Skills{}, err
+		return core.Skills{}, err
 	}
 	defer rows.Close()
 
@@ -480,12 +338,12 @@ func (c *CharacterModel) GetAvailableSkills() (Skills, error) {
 		var value int
 		err = rows.Scan(&name, &value)
 		if err != nil {
-			return Skills{}, err
+			return core.Skills{}, err
 		}
 		skillsName = append(skillsName, name)
 		skillsValue = append(skillsValue, value)
 	}
-	return Skills{Name: skillsName, Value: skillsValue}, nil
+	return core.Skills{Name: skillsName, Value: skillsValue}, nil
 }
 
 func (c *CharacterModel) AddSkill(characterId int, skill string, value int) error {

@@ -4,18 +4,13 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID             int
-	Name           string
-	HashedPassword string
-}
-
 type UserModelInterface interface {
 	Insert(name, password string) error
-	Get(name string) (User, error)
+	Get(name string) (core.User, error)
 	Authenticate(name, password string) (int, error)
 	Exists(userId int) (bool, error)
 	GetRole(id int) (string, error)
@@ -39,17 +34,17 @@ func (u *UserModel) Insert(name, password string) error {
 	return nil
 }
 
-func (u *UserModel) Get(name string) (User, error) {
+func (u *UserModel) Get(name string) (core.User, error) {
 	stmt := "SELECT id, hashed_password FROM users WHERE name=?;"
 	row := u.DB.QueryRow(stmt, name)
 
-	var user User
+	var user core.User
 	err := row.Scan(&user.ID, &user.HashedPassword)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return User{}, ErrNoRecord
+			return core.User{}, ErrNoRecord
 		}
-		return User{}, err
+		return core.User{}, err
 	}
 	user.Name = name
 	return user, nil

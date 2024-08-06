@@ -44,8 +44,6 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /characters/{id}/deleteNote", protectedChain.ThenFunc(app.deleteNotePost))
 
 	//some helpers
-	// mux.Handle("POST /inc", protectedChain.ThenFunc(app.Inc))
-	// mux.Handle("POST /dec", protectedChain.ThenFunc(app.Dec))
 	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)
@@ -85,8 +83,6 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("POST /characters/{id}/deleteNote", app.deleteNotePost)
 
 	//some helpers
-	// mux.HandleFunc("POST /inc", app.Inc)
-	// mux.HandleFunc("POST /dec", app.Dec)
 	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)
 
 	standardChain := alice.New(app.recoverPanic, app.logRequest, headers)

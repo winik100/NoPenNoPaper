@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/winik100/NoPenNoPaper/internal/models"
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
@@ -82,7 +82,7 @@ func (form *characterCreateForm) AttributeChecks() {
 	}
 }
 
-func mergeSkills(allSkills models.Skills, selectedSkills models.Skills) models.Skills {
+func mergeSkills(allSkills core.Skills, selectedSkills core.Skills) core.Skills {
 	for i, skill := range selectedSkills.Name {
 		for j, sk := range allSkills.Name {
 			if sk == skill {

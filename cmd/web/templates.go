@@ -8,14 +8,14 @@ import (
 	"slices"
 
 	"github.com/justinas/nosurf"
-	"github.com/winik100/NoPenNoPaper/internal/models"
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/ui"
 )
 
 type templateData struct {
-	Characters      []models.Character
-	Character       models.Character
-	User            models.User
+	Characters      []core.Character
+	Character       core.Character
+	User            core.User
 	Form            any
 	CSRFToken       string
 	Flash           string

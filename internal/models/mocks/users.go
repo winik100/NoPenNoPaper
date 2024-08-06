@@ -1,10 +1,11 @@
 package mocks
 
 import (
+	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
-var MockUser = models.User{
+var MockUser = core.User{
 	ID:             1,
 	Name:           "Testnutzer",
 	HashedPassword: "$2a$12$uK5Qivao7pieZMOZWtRTGubxPV3PgBf6ljFr3ACYtGPYZOrinx3ie", //"Klartext ole"
@@ -16,11 +17,11 @@ func (m *UserModel) Insert(name, password string) error {
 	return nil
 }
 
-func (m *UserModel) Get(name string) (models.User, error) {
+func (m *UserModel) Get(name string) (core.User, error) {
 	if name == "Testnutzer" {
 		return MockUser, nil
 	}
-	return models.User{}, models.ErrNoRecord
+	return core.User{}, models.ErrNoRecord
 }
 
 func (m *UserModel) Authenticate(name, password string) (int, error) {
