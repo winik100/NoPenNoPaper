@@ -1,6 +1,8 @@
 package core
 
 import (
+	"slices"
+
 	"github.com/justinian/dice"
 )
 
@@ -13,6 +15,17 @@ type Character struct {
 	CustomSkills CustomSkills
 	Items        Items
 	Notes        Notes
+}
+
+func (character Character) AddableSkills(availableSkills Skills) Skills {
+	var addableSkills Skills
+	for i, sk := range availableSkills.Name {
+		if !slices.Contains(character.Skills.Name, sk) {
+			addableSkills.Name = append(addableSkills.Name, sk)
+			addableSkills.Value = append(addableSkills.Value, availableSkills.Value[i])
+		}
+	}
+	return addableSkills
 }
 
 func (character Character) DeriveStats() CharacterStats {

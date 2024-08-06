@@ -57,20 +57,21 @@ type noteForm struct {
 }
 
 type skillEditForm struct {
-	ID                       int
+	CharacterId              int
 	Skill                    string
 	NewValue                 int
 	validators.FormValidator `schema:"-"`
 }
 
 type skillAddForm struct {
-	ID           int
-	AddableSkill string
-	Value        int
+	CharacterId              int
+	AddableSkill             string
+	Value                    int
+	validators.FormValidator `schema:"-"`
 }
 
 type customSkillAddForm struct {
-	ID                       int
+	CharacterId              int
 	CustomSkill              string
 	Category                 string
 	Value                    int
@@ -370,6 +371,7 @@ func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
 	allSkills, err := app.characters.GetAvailableSkills()
 	if err != nil {
 		app.serverError(w, r, err)
@@ -384,21 +386,21 @@ func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmplStr := `<form id="addSkillForm" hx-post="/characters/{{.ID}}/addSkill" hx-target="this" hx-swap="outerHTML">
+	tmplStr := `<form id="addSkillForm" hx-post="/characters/{{.CharacterId}}/addSkill" hx-target="this" hx-swap="outerHTML">
 				<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-				<input type="hidden" name="ID" value="{{.ID}}">
+				<input type="hidden" name="CharacterId" value="{{.CharacterId}}">
 				<select name='AddableSkill'>
 					{{range .AddableSkills.Name}}
 						<option value='{{.}}'>{{.}}</option>
 					{{end}}
-				</select>
-				<input type="number" name="Value">
+				</select><br>
+				<input type="number" name="Value"><br>
 				<button type="submit">OK</button>
-				<button hx-get="/characters/{{.ID}}" hx-target="#addSkillForm" hx-swap="outerHTML" hx-select="#addSkill">Abbrechen</button>
+				<button hx-get="/characters/{{.CharacterId}}" hx-target="#addSkillForm" hx-swap="outerHTML" hx-select="#addSkill">Abbrechen</button>
 				</form>`
 
 	data := map[string]any{
-		"ID":            id,
+		"CharacterId":   id,
 		"AddableSkills": addableSkills,
 		"CSRFToken":     nosurf.Token(r),
 	}
@@ -421,20 +423,72 @@ func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.characters.AddSkill(form.ID, form.AddableSkill, form.Value)
+	form.CheckField(form.Value != 0, "Value", "Dieses Feld muss einen positiven Wert enthalten.")
+
+	if !form.Valid() {
+		tmplStr := `<form id="addSkillForm" hx-post="/characters/{{.Form.CharacterId}}/addSkill" hx-target="this" hx-swap="outerHTML">
+						<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+						<input type="hidden" name="CharacterId" value="{{.Form.CharacterId}}">
+						<select name='AddableSkill'>
+							{{range .AddableSkills.Name}}
+								<option value='{{.}}'>{{.}}</option>
+							{{end}}
+						</select><br>
+						<input type="number" name="Value"><br>
+						{{with .Form.FieldErrors.Value}}
+							<label class='error'>{{.}}</label>
+						{{end}}
+						<button type="submit">OK</button>
+						<button hx-get="/characters/{{.Form.CharacterId}}" hx-target="#addSkillForm" hx-swap="outerHTML" hx-select="#addSkill">Abbrechen</button>
+					</form>`
+
+		t, err := template.New("addSkillFailed").Parse(tmplStr)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		character, err := app.characters.Get(form.CharacterId)
+		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				http.NotFound(w, r)
+			} else {
+				app.serverError(w, r, err)
+			}
+			return
+		}
+
+		allSkills, err := app.characters.GetAvailableSkills()
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+		addableSkills := character.AddableSkills(allSkills)
+
+		data := map[string]any{
+			"Form":          form,
+			"AddableSkills": addableSkills,
+			"CSRFToken":     nosurf.Token(r),
+		}
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		t.ExecuteTemplate(w, "addSkillFailed", data)
+		return
+	}
+
+	err = app.characters.AddSkill(form.CharacterId, form.AddableSkill, form.Value)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	half := form.Value / 2
-	fifth := form.Value / 5
+	half := half(form.Value)
+	fifth := fifth(form.Value)
 	tmplStr := fmt.Sprintf(`<template>
 							<tr hx-swap-oob="beforeend:#Skills">
 								<th>{{.Form.AddableSkill}}</th>
 								<td>
 									<div id="Values{{.Form.AddableSkill}}">{{.Form.Value}} | %d | %d</div>
-									<form id="edit{{.Form.AddableSkill}}" hx-get="/characters/{{.Form.ID}}/editSkill" hx-target="this" hx-swap="outerHTML">
+									<form id="edit{{.Form.AddableSkill}}" hx-get="/characters/{{.Form.CharacterId}}/editSkill" hx-target="this" hx-swap="outerHTML">
 										<input type="hidden" name="skill" value="{{.Form.AddableSkill}}">
 										<input type="hidden" name="value" value="{{.Form.Value}}">
 										<button type="submit">Bearbeiten</button>
@@ -443,7 +497,7 @@ func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
 							</tr>
 							</template>
 							<div id="addSkill" hx-target="this" hx-swap="outerHTML">
-								<button hx-get="/characters/{{.Form.ID}}/addSkill">Fertigkeit hinzufügen</button>
+								<button hx-get="/characters/{{.Form.CharacterId}}/addSkill">Fertigkeit hinzufügen</button>
 							</div>`, half, fifth)
 
 	t, err := template.New("addSkillDone").Parse(tmplStr)
@@ -507,10 +561,10 @@ func (app *application) editSkillPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	half := form.NewValue / 2
-	fifth := form.NewValue / 5
+	half := half(form.NewValue)
+	fifth := fifth(form.NewValue)
 	tmplStr := fmt.Sprintf(`<div hx-swap-oob="outerHTML:#Values{{.Form.Skill}}">{{.Form.NewValue}} | %d | %d</div>
-							<form hx-get="/characters/{{.Form.ID}}/editSkill" hx-target="this" hx-swap="outerHTML">	
+							<form hx-get="/characters/{{.Form.CharacterId}}/editSkill" hx-target="this" hx-swap="outerHTML">	
                             	<input type="hidden" name="skill" value="{{.Form.Skill}}">
                             	<input type="hidden" name="value" value="{{.Form.NewValue}}">
                             	<button type="submit">Bearbeiten</button>
@@ -535,9 +589,9 @@ func (app *application) addCustomSkill(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.ID}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
+	tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.CharacterId}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
 					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-					<input type="hidden" name="ID" value="{{.ID}}">
+					<input type="hidden" name="CharacterId" value="{{.CharacterId}}">
 					<select name='Category'>
 								<option value='' disabled selected>Wähle Kategorie</option>
 								<option value='Muttersprache'>Muttersprache</option>
@@ -549,14 +603,14 @@ func (app *application) addCustomSkill(w http.ResponseWriter, r *http.Request) {
 								<option value='Sonstiges'>Sonstiges</option>
 							</select>
 					<input type="text" name="CustomSkill">
-					<input type="number" name="Value">
+					<input type="number" name="Value"><br>
 					<button type="submit">OK</button>
-					<button hx-get="/characters/{{.ID}}" hx-target="#addCustomSkillForm" hx-swap="outerHTML" hx-select="#addCustomSkill">Abbrechen</button>
+					<button hx-get="/characters/{{.CharacterId}}" hx-target="#addCustomSkillForm" hx-swap="outerHTML" hx-select="#addCustomSkill">Abbrechen</button>
 				</form>`
 
 	data := map[string]any{
-		"ID":        id,
-		"CSRFToken": nosurf.Token(r),
+		"CharacterId": id,
+		"CSRFToken":   nosurf.Token(r),
 	}
 
 	t, err := template.New("addCustomSkill").Parse(tmplStr)
@@ -582,9 +636,9 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 	form.CheckField(models.DefaultForCategory(form.Category) != -1, "Category", "Es muss eine gültige Kategorie gewählt werden.")
 
 	if !form.Valid() {
-		tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.Form.ID}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
+		tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.Form.CharacterId}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
 						<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-						<input type="hidden" name="ID" value="{{.Form.ID}}">
+						<input type="hidden" name="CharacterId" value="{{.Form.CharacterId}}">
 						<select name='Category'>
 							<option value='' disabled selected>Wähle Kategorie</option>
 							<option value='Muttersprache'>Muttersprache</option>
@@ -601,7 +655,7 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 						<input type="number" name="Value">
 						{{with .Form.FieldErrors.Value}}<label class='error'>{{.}}</label>{{end}}
 						<button type="submit">OK</button>
-						<button hx-get="/characters/{{.Form.ID}}" hx-target="#addCustomSkillForm" hx-swap="outerHTML" hx-select="#addCustomSkill">Abbrechen</button>
+						<button hx-get="/characters/{{.Form.CharacterId}}" hx-target="#addCustomSkillForm" hx-swap="outerHTML" hx-select="#addCustomSkill">Abbrechen</button>
 					</form>`
 		t, err := template.New("addCustomSkillFailed").Parse(tmplStr)
 		if err != nil {
@@ -611,16 +665,16 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 
 		data := app.newTemplateData(r)
 		data.Form = form
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		t.ExecuteTemplate(w, "addCustomSkillFailed", data)
 		return
 	}
 
-	err = app.characters.AddCustomSkill(form.ID, form.CustomSkill, form.Category, form.Value)
+	err = app.characters.AddCustomSkill(form.CharacterId, form.CustomSkill, form.Category, form.Value)
 	if err != nil {
 		if errors.Is(err, models.ErrAlreadyHasSkill) {
 			tmplStr := `<div id="addCustomSkill" hx-target="this" hx-swap="outerHTML">
-                			<button hx-get="/characters/{{.Form.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
+                			<button hx-get="/characters/{{.Form.CharacterId}}/addCustomSkill">Fertigkeit hinzufügen</button>
 							<label class="error">Der Charaktere verfügt bereits über eine gleichnamige Fertigkeit.</label>
             			</div>`
 			t, err := template.New("addCustomSkillDuplicate").Parse(tmplStr)
@@ -639,14 +693,14 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	half := form.Value / 2
-	fifth := form.Value / 5
+	half := half(form.Value)
+	fifth := fifth(form.Value)
 	tmplStr := fmt.Sprintf(`<template>
 							<tr hx-swap-oob="beforeend:#CustomSkills">
 								<th>{{.Form.CustomSkill}}</th>
 								<td>
 									<div id="Values{{.Form.CustomSkill}}" value="{{.Form.Value}}">{{.Form.Value}} | %d | %d</div>
-									<form id="edit{{.Form.CustomSkill}}" hx-get="/characters/{{.Form.ID}}/editCustomSkill" hx-target="this" hx-swap="outerHTML">
+									<form id="edit{{.Form.CustomSkill}}" hx-get="/characters/{{.Form.characterId}}/editCustomSkill" hx-target="this" hx-swap="outerHTML">
 										<input type="hidden" name="skill" value="{{.Form.CustomSkill}}">
 										<input type="hidden" name="value" value="{{.Form.Value}}">
 										<button type="submit">Bearbeiten</button>
@@ -655,7 +709,7 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 							</tr>
 							</template>
 							<div id="addCustomSkill" hx-target="this" hx-swap="outerHTML">
-								<button hx-get="/characters/{{.Form.ID}}/addCustomSkill">Fertigkeit hinzufügen</button>
+								<button hx-get="/characters/{{.Form.CharacterId}}/addCustomSkill">Fertigkeit hinzufügen</button>
 							</div>`, half, fifth)
 
 	t, err := template.New("addCustomSkillDone").Parse(tmplStr)
@@ -682,7 +736,7 @@ func (app *application) editCustomSkill(w http.ResponseWriter, r *http.Request) 
 
 	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/%s/editCustomSkill" hx-target="this" hx-swap="outerHTML">
                 <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-				<input type="hidden" name="ID" value="%s">
+				<input type="hidden" name="CharacterId" value="%s">
 				<input type="hidden" name="Skill" value="%s">
                 <input type="number" name="NewValue" value="%d">
 				<button type="submit">OK</button>
@@ -714,10 +768,10 @@ func (app *application) editCustomSkillPost(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	half := form.NewValue / 2
-	fifth := form.NewValue / 5
+	half := half(form.NewValue)
+	fifth := fifth(form.NewValue)
 	tmplStr := fmt.Sprintf(`<div value="{{.Form.NewValue}}" hx-swap-oob="outerHTML:#Values{{.Form.Skill}}">{{.Form.NewValue}} | %d | %d</div>
-							<form hx-get="/characters/{{.Form.ID}}/editCustomSkill" hx-target="this" hx-swap="outerHTML">	
+							<form hx-get="/characters/{{.Form.CharacterId}}/editCustomSkill" hx-target="this" hx-swap="outerHTML">	
                             	<input type="hidden" name="skill" value="{{.Form.Skill}}">
                             	<input type="hidden" name="value" value="{{.Form.NewValue}}">
                             	<button type="submit">Bearbeiten</button>
