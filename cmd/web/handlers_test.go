@@ -641,7 +641,6 @@ func TestAddNote(t *testing.T) {
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
 			authenticatedUserIdKey: 1,
-			"characterId":          1,
 		})))
 	defer ts.Close()
 
@@ -651,7 +650,7 @@ func TestAddNote(t *testing.T) {
 
 	wantContent := []string{
 		`<form id="deleteNote" hx-post="/characters/1/deleteNote" hx-target="this" hx-swap="outerHTML">`,
-		`<input type="hidden" name="NoteId" Value="2">`,
+		`<input type="hidden" name="NoteId" value="2">`,
 		`<li>Dies ist eine gültige Notiz.    <button type="submit">löschen</button></li>`,
 	}
 
@@ -672,6 +671,7 @@ func TestAddNote(t *testing.T) {
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			form := url.Values{}
+			form.Add("CharacterId", "1")
 			form.Add("Text", testCase.text)
 			form.Add("csrf_token", validCSRF)
 

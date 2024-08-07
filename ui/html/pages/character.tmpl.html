@@ -47,6 +47,7 @@
                     {{$charId := .ID}}
                     {{$stats := .Stats}}
                     {{range $stat := $stats.OrderedKeysCurrent}}
+                    {{$maxname := printf "Max%s" .}}
                     <td>
                         <form id="editStat" hx-post="/characters/{{$charId}}/editStat" hx-target="#{{$stat}}" hx-swap="outerHTML">
                             <input type="hidden" name="csrf_token" value="{{$csrf}}">
@@ -57,7 +58,9 @@
                                 <input type="hidden" name="Name" value="{{$stat}}">
                                 <input type="hidden" name="Value" value="{{index $stats.CurrentAsMap $stat}}">
                                 {{index $stats.CurrentAsMap $stat}}
+                                {{if lt (index $stats.CurrentAsMap $stat) (index $stats.MaxAsMap $maxname)}}
                                 <button type="submit" name="Direction" value="inc">+</button>
+                                {{end}}
                             </div>
                         </form>
                     </td>

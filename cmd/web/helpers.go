@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"text/template"
 
 	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
@@ -24,6 +25,20 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, page stri
 		return
 	}
 	buf.WriteTo(w)
+}
+
+func (app *application) renderHtmx(w http.ResponseWriter, r *http.Request, templateName string, templateString string, data templateData) {
+	t, err := template.New(templateName).Parse(templateString)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	err = t.ExecuteTemplate(w, templateName, data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 func (app *application) decodePostForm(r *http.Request, dst any) error {

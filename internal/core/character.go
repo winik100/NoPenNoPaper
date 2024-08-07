@@ -112,6 +112,20 @@ type CharacterStats struct {
 	LUCK    int
 }
 
+func (st CharacterStats) GetStatMax(stat string) int {
+	switch stat {
+	case "TP":
+		return st.MaxTP
+	case "STA":
+		return st.MaxSTA
+	case "MP":
+		return st.MaxMP
+	case "LUCK":
+		return st.MaxLUCK
+	}
+	return -1
+}
+
 func (st CharacterStats) OrderedKeysCurrent() []string {
 	return []string{"TP", "STA", "MP", "LUCK"}
 }
@@ -122,6 +136,15 @@ func (st CharacterStats) CurrentAsMap() map[string]int {
 		"STA":  st.STA,
 		"MP":   st.MP,
 		"LUCK": st.LUCK,
+	}
+}
+
+func (st CharacterStats) MaxAsMap() map[string]int {
+	return map[string]int{
+		"MaxTP":   st.MaxTP,
+		"MaxSTA":  st.MaxSTA,
+		"MaxMP":   st.MaxMP,
+		"MaxLUCK": st.MaxLUCK,
 	}
 }
 

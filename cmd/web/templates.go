@@ -18,6 +18,7 @@ type templateData struct {
 	Character       core.Character
 	User            core.User
 	Form            any
+	AdditionalData  any
 	CSRFToken       string
 	Flash           string
 	IsAuthenticated bool
