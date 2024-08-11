@@ -25,6 +25,15 @@ type templateData struct {
 }
 
 func (app *application) newTemplateData(r *http.Request) templateData {
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
+	if userId != 0 {
+		return templateData{
+			User:            core.User{ID: userId},
+			CSRFToken:       nosurf.Token(r),
+			Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+			IsAuthenticated: app.isAuthenticated(r),
+		}
+	}
 	return templateData{
 		CSRFToken:       nosurf.Token(r),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),

@@ -42,6 +42,8 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /characters/{id}/addNote", protectedChain.ThenFunc(app.addNote))
 	mux.Handle("POST /characters/{id}/addNote", protectedChain.ThenFunc(app.addNotePost))
 	mux.Handle("POST /characters/{id}/deleteNote", protectedChain.ThenFunc(app.deleteNotePost))
+	mux.Handle("GET /users/{id}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterial))
+	mux.Handle("POST /users/{id}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterialPost))
 
 	//some helpers
 	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))

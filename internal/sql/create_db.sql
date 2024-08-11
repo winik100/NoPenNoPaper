@@ -23,6 +23,14 @@ CREATE TABLE IF NOT EXISTS users (
 
 INSERT INTO users (name, hashed_password, role) VALUES ('testgm', '$2a$12$EeAcZSu5HYgydNKQVKaAW.qdBMSNVEeGugDA1yoyrMQF12BZTxf76', 'gm');
 
+CREATE TABLE IF NOT EXISTS materials (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    file_name VARCHAR(100) NOT NULL,
+    uploaded_by INTEGER NOT NULL,
+    CONSTRAINT fk_users_materials_id FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT unique_filename_user UNIQUE (file_name, uploaded_by)
+);
+
 -- characters.sql
 CREATE TABLE IF NOT EXISTS characters (
 	id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,

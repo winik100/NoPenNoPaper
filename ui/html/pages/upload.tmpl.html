@@ -1,0 +1,16 @@
+{{define "title"}}Material hochladen{{end}}
+
+{{define "main"}}
+<form action='/users/{{.Form.UploadedBy}}/uploadMaterial' method='POST' enctype="multipart/form-data">
+    {{range .Form.GenericErrors}}
+        <div class='error'>{{.}}</div>
+    {{end}}
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <input type="hidden" name="UploadedBy" value="{{.Form.UploadedBy}}">
+    <div>
+        <label>Datei auswählen:</label>
+        <input type="file" name="FilePath" accept="image/png">
+        <button type='submit'>Hochladen</button>
+    </div>
+</form>
+{{end}}

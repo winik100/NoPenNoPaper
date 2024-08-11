@@ -47,3 +47,7 @@ func (m *UserModel) GetRole(id int) (string, error) {
 	}
 	return "anonymous", nil
 }
+
+func (m *UserModel) AddMaterial(fileName string, uploadedBy int) error {
+	return nil
+}

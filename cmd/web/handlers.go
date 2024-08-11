@@ -3,7 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 
@@ -997,4 +1000,72 @@ func (app *application) deleteNotePost(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	app.renderHtmx(w, r, "empty", "", templateData{})
+}
+
+type uploadForm struct {
+	UploadedBy               int
+	validators.FormValidator `schema:"-"`
+}
+
+func (app *application) uploadMaterial(w http.ResponseWriter, r *http.Request) {
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
+
+	data := app.newTemplateData(r)
+	data.Form = uploadForm{
+		UploadedBy: userId,
+	}
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "upload.tmpl.html", data)
+}
+
+func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Request) {
+	var form uploadForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	file, header, err := r.FormFile("FilePath")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	defer file.Close()
+
+	err = app.users.AddMaterial(header.Filename, form.UploadedBy)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateFileName) {
+			form.AddGenericError("Eine Datei mit diesem Namen existiert bereits.")
+
+			data := app.newTemplateData(r)
+			data.Form = form
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			app.render(w, r, "upload.tmpl.html", data)
+			return
+		}
+		app.serverError(w, r, err)
+		return
+	}
+
+	path := filepath.Join("ui/static/img/uploads/", strconv.Itoa(form.UploadedBy))
+	err = os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	f, err := os.Create(filepath.Join(path, header.Filename))
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/winik100/NoPenNoPaper/internal/core"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,6 +15,7 @@ type UserModelInterface interface {
 	Authenticate(name, password string) (int, error)
 	Exists(userId int) (bool, error)
 	GetRole(id int) (string, error)
+	AddMaterial(fileName string, uploadedBy int) error
 }
 
 type UserModel struct {
@@ -95,4 +97,18 @@ func (u *UserModel) GetRole(id int) (string, error) {
 	}
 
 	return role, nil
+}
+
+func (u *UserModel) AddMaterial(fileName string, uploadedBy int) error {
+	stmt := "INSERT INTO materials (file_name, uploaded_by) VALUES (?,?);"
+
+	_, err := u.DB.Exec(stmt, fileName, uploadedBy)
+	var mysqlErr *mysql.MySQLError
+	if err != nil {
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return ErrDuplicateFileName
+		}
+		return err
+	}
+	return nil
 }
