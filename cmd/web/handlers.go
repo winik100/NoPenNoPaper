@@ -82,6 +82,7 @@ type customSkillAddForm struct {
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
+	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
 	if userId == 0 {
 		data := app.newTemplateData(r)
 		w.WriteHeader(http.StatusOK)
@@ -91,6 +92,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	role := app.sessionManager.GetString(r.Context(), roleKey)
 	data := app.newTemplateData(r)
+	data.User = core.User{ID: userId, Name: userName}
 	if role == "gm" {
 		characters, err := app.characters.GetAll()
 		if err != nil {
@@ -112,11 +114,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) delete(w http.ResponseWriter, r *http.Request) {
-	characterId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 
 	tmplStr := `<form id="deleteCharacterForm" action="/characters/{{.Form.CharacterId}}/delete" method="POST">
 					<p id="deleteCharacterMessage">Sicher? Kann nicht rückgängig gemacht werden!</p>
@@ -232,27 +230,27 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = app.users.Get(form.Name)
+	exists, err := app.users.Exists(form.Name)
 	if err != nil {
-		if errors.Is(err, models.ErrNoRecord) {
-			err = app.users.Insert(form.Name, form.Password)
-			if err != nil {
-				app.serverError(w, r, err)
-				return
-			}
-			app.sessionManager.Put(r.Context(), "flash", "Erfolgreich registriert! Bitte einloggen.")
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-			return
-		}
 		app.serverError(w, r, err)
 		return
 	}
 
-	form.CheckField(false, "Name", "Dieser Name ist bereits vergeben.")
-	data := app.newTemplateData(r)
-	data.Form = form
-	w.WriteHeader(http.StatusUnprocessableEntity)
-	app.render(w, r, "signup.tmpl.html", data)
+	if exists {
+		form.CheckField(false, "Name", "Dieser Name ist bereits vergeben.")
+		data := app.newTemplateData(r)
+		data.Form = form
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		app.render(w, r, "signup.tmpl.html", data)
+		return
+	}
+
+	_, err = app.users.Insert(form.Name, form.Password)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
@@ -302,6 +300,7 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	app.sessionManager.Put(r.Context(), authenticatedUserIdKey, id)
+	app.sessionManager.Put(r.Context(), authenticatedUserNameKey, form.Name)
 
 	err = app.sessionManager.RenewToken(r.Context())
 	if err != nil {
@@ -319,6 +318,7 @@ func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.sessionManager.Remove(r.Context(), authenticatedUserIdKey)
+	app.sessionManager.Remove(r.Context(), authenticatedUserNameKey)
 	app.sessionManager.Remove(r.Context(), isAuthenticatedKey)
 	app.sessionManager.Put(r.Context(), roleKey, "anonymous")
 	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich ausgeloggt!")
@@ -344,18 +344,14 @@ func (app *application) viewCharacter(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Character = character
-	app.sessionManager.Put(r.Context(), "characterId", characterId)
+	app.sessionManager.Put(r.Context(), characterIdKey, characterId)
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "character.tmpl.html", data)
 }
 
 func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-	character, err := app.characters.Get(id)
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
+	character, err := app.characters.Get(characterId)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			http.NotFound(w, r)
@@ -394,7 +390,7 @@ func (app *application) addSkill(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Form = map[string]any{
-		"CharacterId":   id,
+		"CharacterId":   characterId,
 		"AddableSkills": addableSkills,
 	}
 
@@ -487,7 +483,7 @@ func (app *application) addSkillPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) editSkill(w http.ResponseWriter, r *http.Request) {
-	characterId := r.PathValue("id")
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 	params := r.URL.Query()
 	skill := params.Get("skill")
 	value, err := strconv.Atoi(params.Get("value"))
@@ -547,11 +543,7 @@ func (app *application) editSkillPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) addCustomSkill(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 
 	tmplStr := `<form id="addCustomSkillForm" hx-post="/characters/{{.Form.CharacterId}}/addCustomSkill" hx-target="this" hx-swap="outerHTML">
 					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
@@ -574,7 +566,7 @@ func (app *application) addCustomSkill(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Form = map[string]any{
-		"CharacterId": id,
+		"CharacterId": characterId,
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -667,8 +659,8 @@ func (app *application) addCustomSkillPost(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) editCustomSkill(w http.ResponseWriter, r *http.Request) {
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 	params := r.URL.Query()
-	id := r.PathValue("id")
 	skill := params.Get("skill")
 	value, err := strconv.Atoi(params.Get("value"))
 	if err != nil {
@@ -676,14 +668,14 @@ func (app *application) editCustomSkill(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/%s/editCustomSkill" hx-target="this" hx-swap="outerHTML">
+	tmplStr := fmt.Sprintf(`<form id="editForm" hx-post="/characters/%d/editCustomSkill" hx-target="this" hx-swap="outerHTML">
                 <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-				<input type="hidden" name="CharacterId" value="%s">
+				<input type="hidden" name="CharacterId" value="%d">
 				<input type="hidden" name="Skill" value="%s">
                 <input type="number" name="NewValue" value="%d">
 				<button type="submit">OK</button>
-				<button hx-get="/characters/%s" hx-target="#editForm" hx-swap="outerHTML" hx-select="#edit%s">Abbrechen</button>
-            </form>`, id, id, skill, value, id, skill)
+				<button hx-get="/characters/%d" hx-target="#editForm" hx-swap="outerHTML" hx-select="#edit%s">Abbrechen</button>
+            </form>`, characterId, characterId, skill, value, characterId, skill)
 
 	data := app.newTemplateData(r)
 	w.WriteHeader(http.StatusOK)
@@ -749,14 +741,10 @@ func (app *application) customSkillInput(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) editStat(w http.ResponseWriter, r *http.Request) {
-	characterId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 
 	var form statEditForm
-	err = app.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
@@ -809,11 +797,7 @@ func (app *application) editStat(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) addItem(w http.ResponseWriter, r *http.Request) {
-	characterId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 	data := app.newTemplateData(r)
 	data.Form = itemForm{
 		CharacterId: characterId,
@@ -856,14 +840,10 @@ func (app *application) addItemPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) editItemCount(w http.ResponseWriter, r *http.Request) {
-	characterId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 
 	var form itemEditForm
-	err = app.decodePostForm(r, &form)
+	err := app.decodePostForm(r, &form)
 	if err != nil {
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
@@ -926,11 +906,7 @@ func (app *application) deleteItemPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) addNote(w http.ResponseWriter, r *http.Request) {
-	characterId, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil {
-		http.NotFound(w, r)
-		return
-	}
+	characterId := app.sessionManager.GetInt(r.Context(), characterIdKey)
 
 	tmplStr := `<form id="addNoteForm" hx-post="/characters/{{.Form.CharacterId}}/addNote" hx-target="this" hx-swap="outerHTML">
 					<input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
@@ -1003,6 +979,7 @@ func (app *application) deleteNotePost(w http.ResponseWriter, r *http.Request) {
 }
 
 type uploadForm struct {
+	Title                    string
 	UploadedBy               int
 	validators.FormValidator `schema:"-"`
 }
@@ -1033,7 +1010,7 @@ func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Reques
 	}
 	defer file.Close()
 
-	err = app.users.AddMaterial(header.Filename, form.UploadedBy)
+	err = app.users.AddMaterial(form.Title, header.Filename, form.UploadedBy)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateFileName) {
 			form.AddGenericError("Eine Datei mit diesem Namen existiert bereits.")
@@ -1068,4 +1045,18 @@ func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Reques
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (app *application) materials(w http.ResponseWriter, r *http.Request) {
+	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
+	user, err := app.users.Get(userName)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	data.User = user
+	w.WriteHeader(http.StatusOK)
+	app.render(w, r, "materials.tmpl.html", data)
 }

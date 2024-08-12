@@ -10,43 +10,72 @@ import (
 )
 
 type UserModelInterface interface {
-	Insert(name, password string) error
+	Insert(name, password string) (int, error)
 	Get(name string) (core.User, error)
 	Authenticate(name, password string) (int, error)
-	Exists(userId int) (bool, error)
-	GetRole(id int) (string, error)
-	AddMaterial(fileName string, uploadedBy int) error
+	Exists(userName string) (bool, error)
+	AddMaterial(title string, fileName string, uploadedBy int) error
 }
 
 type UserModel struct {
 	DB *sql.DB
 }
 
-func (u *UserModel) Insert(name, password string) error {
+func (u *UserModel) Insert(name, password string) (int, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	stmt := "INSERT INTO users (name, hashed_password, role) VALUES (?,?,?);"
-	_, err = u.DB.Exec(stmt, name, hashedPassword, "player")
+	res, err := u.DB.Exec(stmt, name, hashedPassword, "player")
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	userId, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return int(userId), nil
 }
 
 func (u *UserModel) Get(name string) (core.User, error) {
-	stmt := "SELECT id, hashed_password FROM users WHERE name=?;"
+	stmt := "SELECT id, hashed_password, role FROM users WHERE name=?;"
 	row := u.DB.QueryRow(stmt, name)
 
 	var user core.User
-	err := row.Scan(&user.ID, &user.HashedPassword)
+	err := row.Scan(&user.ID, &user.HashedPassword, &user.Role)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return core.User{}, ErrNoRecord
 		}
 		return core.User{}, err
+	}
+
+	stmt = "SELECT title, file_name FROM materials WHERE uploaded_by=?;"
+	rows, err := u.DB.Query(stmt, user.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return core.User{}, ErrNoRecord
+		}
+		return core.User{}, err
+	}
+
+	var titles, fileNames []string
+	for rows.Next() {
+		var title string
+		var fileName string
+		err = rows.Scan(&title, &fileName)
+		if err != nil {
+			return core.User{}, err
+		}
+		titles = append(titles, title)
+		fileNames = append(fileNames, fileName)
+	}
+
+	user.Materials = core.Materials{
+		Title:    titles,
+		FileName: fileNames,
 	}
 	user.Name = name
 	return user, nil
@@ -78,31 +107,19 @@ func (u *UserModel) Authenticate(name, password string) (int, error) {
 	return id, nil
 }
 
-func (u *UserModel) Exists(userId int) (bool, error) {
+func (u *UserModel) Exists(userName string) (bool, error) {
 	var exists bool
 
-	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id=?);"
-	err := u.DB.QueryRow(stmt, userId).Scan(&exists)
+	stmt := "SELECT EXISTS(SELECT true FROM users WHERE name=?);"
+	err := u.DB.QueryRow(stmt, userName).Scan(&exists)
 
 	return exists, err
 }
 
-func (u *UserModel) GetRole(id int) (string, error) {
-	stmt := "SELECT role FROM users WHERE id=?;"
+func (u *UserModel) AddMaterial(title string, fileName string, uploadedBy int) error {
+	stmt := "INSERT INTO materials (title, file_name, uploaded_by) VALUES (?, ?,?);"
 
-	var role string
-	err := u.DB.QueryRow(stmt, id).Scan(&role)
-	if err != nil {
-		return "", err
-	}
-
-	return role, nil
-}
-
-func (u *UserModel) AddMaterial(fileName string, uploadedBy int) error {
-	stmt := "INSERT INTO materials (file_name, uploaded_by) VALUES (?,?);"
-
-	_, err := u.DB.Exec(stmt, fileName, uploadedBy)
+	_, err := u.DB.Exec(stmt, title, fileName, uploadedBy)
 	var mysqlErr *mysql.MySQLError
 	if err != nil {
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {

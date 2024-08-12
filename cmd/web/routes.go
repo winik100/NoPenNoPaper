@@ -42,8 +42,9 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /characters/{id}/addNote", protectedChain.ThenFunc(app.addNote))
 	mux.Handle("POST /characters/{id}/addNote", protectedChain.ThenFunc(app.addNotePost))
 	mux.Handle("POST /characters/{id}/deleteNote", protectedChain.ThenFunc(app.deleteNotePost))
-	mux.Handle("GET /users/{id}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterial))
-	mux.Handle("POST /users/{id}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterialPost))
+	mux.Handle("GET /users/{name}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterial))
+	mux.Handle("POST /users/{name}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterialPost))
+	mux.Handle("GET /users/{name}/materials", protectedChain.ThenFunc(app.materials))
 
 	//some helpers
 	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))
@@ -83,6 +84,9 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("GET /characters/{id}/addNote", app.addNote)
 	mux.HandleFunc("POST /characters/{id}/addNote", app.addNotePost)
 	mux.HandleFunc("POST /characters/{id}/deleteNote", app.deleteNotePost)
+	mux.HandleFunc("GET /users/{name}/uploadMaterial", app.uploadMaterial)
+	mux.HandleFunc("POST /users/{name}/uploadMaterial", app.uploadMaterialPost)
+	mux.HandleFunc("GET /users/{name}/materials", app.materials)
 
 	//some helpers
 	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)

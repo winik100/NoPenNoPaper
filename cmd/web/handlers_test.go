@@ -16,40 +16,45 @@ func TestHome(t *testing.T) {
 	app := newTestApplication(t)
 
 	tests := []struct {
-		name                string
-		authenticatedUserId int
-		role                string
-		wantCode            int
-		wantContent         []string
+		name                  string
+		authenticatedUserId   int
+		authenticatedUserName string
+		role                  string
+		wantCode              int
+		wantContent           []string
 	}{
 		{
-			name:                "Authenticated",
-			authenticatedUserId: 1,
-			role:                "player",
-			wantContent:         []string{"<td><a href='/characters/1'>Otto Hightower</a></td>"},
-			wantCode:            http.StatusOK,
+			name:                  "Authenticated",
+			authenticatedUserId:   1,
+			authenticatedUserName: "Testnutzer",
+			role:                  "player",
+			wantContent:           []string{"<td><a href='/characters/1'>Otto Hightower</a></td>"},
+			wantCode:              http.StatusOK,
 		},
 		{
-			name:                "Authenticated as GM",
-			authenticatedUserId: 2,
-			role:                "gm",
-			wantContent:         []string{"<td><a href='/characters/1'>Otto Hightower</a></td>", "<td><a href='/characters/2'>Viserys Targaryen</a></td>"},
-			wantCode:            http.StatusOK,
+			name:                  "Authenticated as GM",
+			authenticatedUserId:   2,
+			authenticatedUserName: "Test-GM",
+			role:                  "gm",
+			wantContent:           []string{"<td><a href='/characters/1'>Otto Hightower</a></td>", "<td><a href='/characters/2'>Viserys Targaryen</a></td>"},
+			wantCode:              http.StatusOK,
 		},
 		{
-			name:                "Unauthenticated",
-			authenticatedUserId: 0,
-			role:                "anonymous",
-			wantContent:         []string{"<p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>"},
-			wantCode:            http.StatusOK,
+			name:                  "Unauthenticated",
+			authenticatedUserId:   0,
+			authenticatedUserName: "",
+			role:                  "anonymous",
+			wantContent:           []string{"<p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>"},
+			wantCode:              http.StatusOK,
 		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.routesNoMW()), map[string]any{
-				authenticatedUserIdKey: testCase.authenticatedUserId,
-				roleKey:                testCase.role,
+				authenticatedUserIdKey:   testCase.authenticatedUserId,
+				authenticatedUserNameKey: testCase.authenticatedUserName,
+				roleKey:                  testCase.role,
 			})))
 			defer ts.Close()
 
@@ -244,29 +249,33 @@ func TestLogout(t *testing.T) {
 	app := newTestApplication(t)
 
 	tests := []struct {
-		name                string
-		authenticatedUserId int
-		wantCode            int
-		wantRedirect        string
+		name                  string
+		authenticatedUserId   int
+		authenticatedUserName string
+		wantCode              int
+		wantRedirect          string
 	}{
 		{
-			name:                "Authenticated",
-			authenticatedUserId: 1,
-			wantCode:            http.StatusSeeOther,
-			wantRedirect:        "/",
+			name:                  "Authenticated",
+			authenticatedUserId:   1,
+			authenticatedUserName: "Testnutzer",
+			wantCode:              http.StatusSeeOther,
+			wantRedirect:          "/",
 		},
 		{
-			name:                "Unauthenticated",
-			authenticatedUserId: 0,
-			wantCode:            http.StatusSeeOther,
-			wantRedirect:        "/login",
+			name:                  "Unauthenticated",
+			authenticatedUserId:   0,
+			authenticatedUserName: "",
+			wantCode:              http.StatusSeeOther,
+			wantRedirect:          "/login",
 		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.requireAuthentication(app.routesNoMW())), map[string]any{
-				authenticatedUserIdKey: testCase.authenticatedUserId,
+				authenticatedUserIdKey:   testCase.authenticatedUserId,
+				authenticatedUserNameKey: testCase.authenticatedUserName,
 			})))
 			defer ts.Close()
 
@@ -301,34 +310,38 @@ func TestCreateGet(t *testing.T) {
 	}
 
 	tests := []struct {
-		name                string
-		isAuthenticated     bool
-		authenticatedUserId int
-		wantCode            int
-		wantFormTag         string
-		wantContent         []string
+		name                  string
+		isAuthenticated       bool
+		authenticatedUserId   int
+		authenticatedUserName string
+		wantCode              int
+		wantFormTag           string
+		wantContent           []string
 	}{
 		{
-			name:                "Authenticated",
-			isAuthenticated:     true,
-			authenticatedUserId: 1,
-			wantCode:            http.StatusOK,
-			wantFormTag:         wantTag,
-			wantContent:         wantContent,
+			name:                  "Authenticated",
+			isAuthenticated:       true,
+			authenticatedUserId:   1,
+			authenticatedUserName: "Testnutzer",
+			wantCode:              http.StatusOK,
+			wantFormTag:           wantTag,
+			wantContent:           wantContent,
 		},
 		{
-			name:                "Unauthenticated",
-			isAuthenticated:     false,
-			authenticatedUserId: 0,
-			wantCode:            http.StatusSeeOther,
-			wantFormTag:         wantTagRedirect,
+			name:                  "Unauthenticated",
+			isAuthenticated:       false,
+			authenticatedUserId:   0,
+			authenticatedUserName: "",
+			wantCode:              http.StatusSeeOther,
+			wantFormTag:           wantTagRedirect,
 		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(app.requireAuthentication(app.routesNoMW())), map[string]any{
-				authenticatedUserIdKey: testCase.authenticatedUserId,
+				authenticatedUserIdKey:   testCase.authenticatedUserId,
+				authenticatedUserNameKey: testCase.authenticatedUserName,
 			})))
 			defer ts.Close()
 
@@ -350,29 +363,32 @@ func TestCreatePost(t *testing.T) {
 	app := newTestApplication(t)
 
 	tests := []struct {
-		name                string
-		info                core.CharacterInfo
-		attributes          core.CharacterAttributes
-		skills              core.Skills
-		customSkills        core.CustomSkills
-		authenticatedUserId int
-		wantCode            int
+		name                  string
+		info                  core.CharacterInfo
+		attributes            core.CharacterAttributes
+		skills                core.Skills
+		customSkills          core.CustomSkills
+		authenticatedUserId   int
+		authenticatedUserName string
+		wantCode              int
 	}{
 		{
-			name:                "Valid Creation",
-			info:                mocks.MockCharacterOtto.Info,
-			attributes:          mocks.MockCharacterOtto.Attributes,
-			skills:              mocks.MockCharacterOtto.Skills,
-			customSkills:        mocks.MockCharacterOtto.CustomSkills,
-			authenticatedUserId: 1,
-			wantCode:            http.StatusSeeOther,
+			name:                  "Valid Creation",
+			info:                  mocks.MockCharacterOtto.Info,
+			attributes:            mocks.MockCharacterOtto.Attributes,
+			skills:                mocks.MockCharacterOtto.Skills,
+			customSkills:          mocks.MockCharacterOtto.CustomSkills,
+			authenticatedUserId:   1,
+			authenticatedUserName: "Testnutzer",
+			wantCode:              http.StatusSeeOther,
 		},
 	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(noSurf(app.requireAuthentication(app.routesNoMW()))), map[string]any{
-				authenticatedUserIdKey: testCase.authenticatedUserId,
+				authenticatedUserIdKey:   testCase.authenticatedUserId,
+				authenticatedUserNameKey: testCase.authenticatedUserName,
 			})))
 			defer ts.Close()
 			_, _, body := ts.get(t, "/create")
@@ -418,11 +434,6 @@ func TestCreatePost(t *testing.T) {
 
 func TestViewCharacter(t *testing.T) {
 	app := newTestApplication(t)
-	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
-		map[string]any{
-			authenticatedUserIdKey: 1,
-		})))
-	defer ts.Close()
 	wantContent := []string{
 		"<div id='info'>",
 		"<div id='attributes'>",
@@ -463,6 +474,13 @@ func TestViewCharacter(t *testing.T) {
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
+			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
+				map[string]any{
+					authenticatedUserIdKey:   1,
+					authenticatedUserNameKey: "Testnutzer",
+					characterIdKey:           testCase.characterId,
+				})))
+			defer ts.Close()
 
 			code, _, body := ts.get(t, "/characters/"+testCase.characterId)
 
@@ -560,8 +578,9 @@ func TestAddItem(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 				map[string]any{
-					authenticatedUserIdKey: 1,
-					"characterId":          1,
+					authenticatedUserIdKey:   1,
+					authenticatedUserNameKey: "Testnutzer",
+					"characterId":            1,
 				})))
 			defer ts.Close()
 			_, _, body := ts.get(t, "/characters/1/addItem")
@@ -598,8 +617,9 @@ func TestDeleteItem(t *testing.T) {
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			authenticatedUserIdKey: 1,
-			"characterId":          1,
+			authenticatedUserIdKey:   1,
+			authenticatedUserNameKey: "Testnutzer",
+			"characterId":            1,
 		})))
 	defer ts.Close()
 	_, _, body := ts.get(t, "/characters/1")
@@ -640,7 +660,8 @@ func TestAddNote(t *testing.T) {
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			authenticatedUserIdKey: 1,
+			authenticatedUserIdKey:   1,
+			authenticatedUserNameKey: "Testnutzer",
 		})))
 	defer ts.Close()
 
@@ -690,8 +711,9 @@ func TestDeleteNote(t *testing.T) {
 
 	ts := newTestServer(t, app.sessionManager.LoadAndSave(app.mockSession(noSurf(app.authenticate(app.requireAuthentication(app.routesNoMW()))),
 		map[string]any{
-			authenticatedUserIdKey: 1,
-			"characterId":          1,
+			authenticatedUserIdKey:   1,
+			authenticatedUserNameKey: "Testnutzer",
+			"characterId":            1,
 		})))
 	defer ts.Close()
 	_, _, body := ts.get(t, "/characters/1")

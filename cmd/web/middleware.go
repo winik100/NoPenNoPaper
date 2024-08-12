@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/justinas/nosurf"
+	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
 func headers(next http.Handler) http.Handler {
@@ -54,33 +56,30 @@ func noSurf(next http.Handler) http.Handler {
 
 const isAuthenticatedKey = "isAuthenticated"
 const authenticatedUserIdKey = "authenticatedUserID"
+const authenticatedUserNameKey = "authenticatedUserName"
+const characterIdKey = "characterId"
 const roleKey = "role"
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
-		if id == 0 {
+		userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
+		if userName == "" {
 			next.ServeHTTP(w, r)
 			return
 		}
 
-
-		exists, err := app.users.Exists(id)
+		user, err := app.users.Get(userName)
 		if err != nil {
+			if errors.Is(err, models.ErrNoRecord) {
+				next.ServeHTTP(w, r)
+				return
+			}
 			app.serverError(w, r, err)
 			return
 		}
 
-		role, err := app.users.GetRole(id)
-		if err != nil {
-			app.serverError(w, r, err)
-			return
-		}
-
-		if exists {
-			app.sessionManager.Put(r.Context(), isAuthenticatedKey, true)
-			app.sessionManager.Put(r.Context(), roleKey, role)
-		}
+		app.sessionManager.Put(r.Context(), isAuthenticatedKey, true)
+		app.sessionManager.Put(r.Context(), roleKey, user.Role)
 
 		next.ServeHTTP(w, r)
 	})

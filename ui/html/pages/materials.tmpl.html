@@ -1,0 +1,18 @@
+{{define "title"}}Materialübersicht{{end}}
+
+{{define "main"}}
+    {{$csrf := .CSRFToken}}
+    {{$userId := .User.ID}}
+    {{$titles := .User.Materials.Title}}
+    {{range $ind, $file := .User.Materials.FileName}}
+    <div>
+        <details>
+            <summary>{{index $titles $ind}}</summary>
+            <img src='/static/img/uploads/{{$userId}}/{{.}}' alt='{{index $titles $ind}}' height='400'/>
+        </details>
+    </div>
+    {{end}}
+    <div>
+        <a href='/users/{{.User.Name}}/uploadMaterial'>Material hochladen</a>
+    </div>
+{{end}}

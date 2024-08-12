@@ -9,7 +9,13 @@
     <input type="hidden" name="UploadedBy" value="{{.Form.UploadedBy}}">
     <div>
         <label>Datei auswählen:</label>
-        <input type="file" name="FilePath" accept="image/png">
+        <input type="file" name="FilePath" accept="image/*">
+    </div>
+    <div>
+        <label>Titel:</label>
+        <input type="text" name="Title" value="{{.Form.Title}}">
+    </div>
+    <div>
         <button type='submit'>Hochladen</button>
     </div>
 </form>
