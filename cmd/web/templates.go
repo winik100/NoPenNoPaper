@@ -22,6 +22,7 @@ type templateData struct {
 	CSRFToken       string
 	Flash           string
 	IsAuthenticated bool
+	IsAuthorized    bool
 }
 
 func (app *application) newTemplateData(r *http.Request) templateData {
@@ -33,6 +34,7 @@ func (app *application) newTemplateData(r *http.Request) templateData {
 		CSRFToken:       nosurf.Token(r),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
+		IsAuthorized:    app.isAuthorized(r),
 	}
 }
 

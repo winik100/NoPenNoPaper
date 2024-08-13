@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/winik100/NoPenNoPaper/internal/core"
 	"github.com/winik100/NoPenNoPaper/internal/validators"
 )
 
@@ -67,11 +66,6 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (app *application) isAuthenticated(r *http.Request) bool {
-	isAuthenticated := app.sessionManager.GetBool(r.Context(), isAuthenticatedKey)
-	return isAuthenticated
-}
-
 func (form *characterCreateForm) InfoChecks() {
 	for key, info := range form.Info.AsMap() {
 		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
@@ -95,15 +89,4 @@ func (form *characterCreateForm) AttributeChecks() {
 	if !validators.ValidDistribution(form.Attributes.AsMap(), []int{40, 50, 50, 50, 60, 60, 70, 80}) {
 		form.AddGenericError("Ungültige Attributsverteilung.")
 	}
-}
-
-func mergeSkills(allSkills core.Skills, selectedSkills core.Skills) core.Skills {
-	for i, skill := range selectedSkills.Name {
-		for j, sk := range allSkills.Name {
-			if sk == skill {
-				allSkills.Value[j] = selectedSkills.Value[i]
-			}
-		}
-	}
-	return allSkills
 }

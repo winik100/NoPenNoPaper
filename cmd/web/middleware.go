@@ -59,6 +59,9 @@ const authenticatedUserIdKey = "authenticatedUserID"
 const authenticatedUserNameKey = "authenticatedUserName"
 const characterIdKey = "characterId"
 const roleKey = "role"
+const roleAnon = "anonymous"
+const rolePlayer = "player"
+const roleGM = "gm"
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -94,6 +97,17 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 
 		//dont allow caching for pages requiring authentication
 		w.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) requireAuthorization(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !app.isAuthorized(r) {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

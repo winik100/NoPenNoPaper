@@ -185,7 +185,7 @@ func (app *application) createPost(w http.ResponseWriter, r *http.Request) {
 			app.serverError(w, r, err)
 			return
 		}
-		form.Skills = mergeSkills(availableSkills, form.Skills)
+		form.Skills = core.MergeSkills(availableSkills, form.Skills)
 		data.Form = form
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		app.render(w, r, "create.tmpl.html", data)

@@ -154,6 +154,17 @@ type Skills struct {
 	Value []int
 }
 
+func MergeSkills(allSkills Skills, selectedSkills Skills) Skills {
+	for i, skill := range selectedSkills.Name {
+		for j, sk := range allSkills.Name {
+			if sk == skill {
+				allSkills.Value[j] = selectedSkills.Value[i]
+			}
+		}
+	}
+	return allSkills
+}
+
 type CustomSkills struct {
 	Category []string
 	Name     []string
