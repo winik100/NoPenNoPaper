@@ -1,3 +1,19 @@
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30) NOT NULL,
+    hashed_password VARCHAR(60) NOT NULL,
+    role VARCHAR(10) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS materials (
+    id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(50) NOT NULL,
+    file_name VARCHAR(100) NOT NULL,
+    uploaded_by INTEGER NOT NULL,
+    CONSTRAINT fk_users_materials_id FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT unique_filename_user UNIQUE (file_name, uploaded_by)
+);
+
 CREATE TABLE IF NOT EXISTS characters (
 	id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	created_by INTEGER NOT NULL,
@@ -88,3 +104,40 @@ CREATE TABLE IF NOT EXISTS notes (
 	text VARCHAR(255) NOT NULL,
 	FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
+
+INSERT INTO skills (name, default_value) VALUES ('Anthropologie', 1),
+			('Archäologie', 1),
+			('Autofahren', 20),
+			('Bibliotheksnutzung', 20),
+			('Buchführung', 5),
+			('Charme', 15),
+			('Cthulhu-Mythos', 0),
+			('Einschüchtern', 15),
+			('Elektrische Reparaturen', 10),
+			('Erste Hilfe', 30),
+			('Finanzkraft', 0),
+			('Geschichte', 5),
+			('Horchen', 20),
+			('Kaschieren', 10),
+			('Klettern', 20),
+			('Mechanische Reparaturen', 10),
+			('Medizin', 1),
+			('Naturkunde', 10),
+			('Okkultismus', 5),
+			('Orientierung', 10),
+			('Psychoanalyse', 1),
+			('Psychologie', 10),
+			('Rechtswesen', 5),
+			('Reiten', 5),
+			('Schließtechnik', 1),
+			('Schweres Gerät', 1),
+			('Schwimmen', 20),
+			('Springen', 20),
+			('Spurensuche', 10),
+			('Überreden', 5),
+			('Überzeugen', 10),
+			('Verborgen bleiben', 20),
+			('Verborgenes erkennen', 25),
+			('Verkleiden', 5),
+			('Werfen', 20),
+			('Werte schätzen', 5);
