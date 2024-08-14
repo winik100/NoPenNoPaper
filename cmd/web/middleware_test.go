@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -58,7 +57,6 @@ func TestNoSurf(t *testing.T) {
 	result := rec.Result()
 
 	cookies := result.Cookies()
-	fmt.Println(cookies[0])
 	actual := cookies[0]
 	testHelpers.Equal(t, actual.HttpOnly, true)
 	testHelpers.Equal(t, actual.Secure, true)

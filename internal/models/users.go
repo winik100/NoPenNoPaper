@@ -15,6 +15,7 @@ type UserModelInterface interface {
 	Authenticate(name, password string) (int, error)
 	Exists(userName string) (bool, error)
 	AddMaterial(title string, fileName string, uploadedBy int) error
+	DeleteMaterial(fileName string, uploadedBy int) error
 }
 
 type UserModel struct {
@@ -28,6 +29,7 @@ func (u *UserModel) Insert(name, password string) (int, error) {
 	}
 
 	stmt := "INSERT INTO users (name, hashed_password, role) VALUES (?,?,?);"
+	//placeholder role
 	res, err := u.DB.Exec(stmt, name, hashedPassword, "player")
 	if err != nil {
 		return 0, err
@@ -51,6 +53,8 @@ func (u *UserModel) Get(name string) (core.User, error) {
 		}
 		return core.User{}, err
 	}
+
+	// stmt = `SELECT u.id, u.hashed_password, u.role, m.title, m.file_name FROM users AS u LEFT JOIN materials AS m ON u.id = m.uploaded_by WHERE u.name = ?;`
 
 	stmt = "SELECT title, file_name FROM materials WHERE uploaded_by=?;"
 	rows, err := u.DB.Query(stmt, user.ID)
@@ -125,6 +129,16 @@ func (u *UserModel) AddMaterial(title string, fileName string, uploadedBy int) e
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
 			return ErrDuplicateFileName
 		}
+		return err
+	}
+	return nil
+}
+
+func (u *UserModel) DeleteMaterial(fileName string, uploadedBy int) error {
+	stmt := "DELETE FROM materials WHERE file_name = ? AND uploaded_by = ?"
+
+	_, err := u.DB.Exec(stmt, fileName, uploadedBy)
+	if err != nil {
 		return err
 	}
 	return nil

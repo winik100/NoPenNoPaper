@@ -979,17 +979,21 @@ func (app *application) deleteNotePost(w http.ResponseWriter, r *http.Request) {
 }
 
 type uploadForm struct {
+	FileName                 string
 	Title                    string
-	UploadedBy               int
+	UploadedById             int
+	UploadedByName           string
 	validators.FormValidator `schema:"-"`
 }
 
 func (app *application) uploadMaterial(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
+	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
 
 	data := app.newTemplateData(r)
 	data.Form = uploadForm{
-		UploadedBy: userId,
+		UploadedById:   userId,
+		UploadedByName: userName,
 	}
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "upload.tmpl.html", data)
@@ -1010,7 +1014,7 @@ func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Reques
 	}
 	defer file.Close()
 
-	err = app.users.AddMaterial(form.Title, header.Filename, form.UploadedBy)
+	err = app.users.AddMaterial(form.Title, header.Filename, form.UploadedById)
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateFileName) {
 			form.AddGenericError("Eine Datei mit diesem Namen existiert bereits.")
@@ -1025,7 +1029,7 @@ func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	path := filepath.Join("ui/static/img/uploads/", strconv.Itoa(form.UploadedBy))
+	path := filepath.Join("ui/static/img/uploads/", strconv.Itoa(form.UploadedById))
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		app.serverError(w, r, err)
@@ -1047,7 +1051,7 @@ func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (app *application) materials(w http.ResponseWriter, r *http.Request) {
+func (app *application) viewMaterials(w http.ResponseWriter, r *http.Request) {
 	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
 	user, err := app.users.Get(userName)
 	if err != nil {
@@ -1059,4 +1063,22 @@ func (app *application) materials(w http.ResponseWriter, r *http.Request) {
 	data.User = user
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "materials.tmpl.html", data)
+}
+
+func (app *application) deleteMaterial(w http.ResponseWriter, r *http.Request) {
+	var form uploadForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = app.users.DeleteMaterial(form.FileName, form.UploadedById)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	data := app.newTemplateData(r)
+	app.renderHtmx(w, r, "deleteMaterial", "", data)
 }

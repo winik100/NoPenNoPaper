@@ -3,14 +3,22 @@
 {{define "main"}}
     {{$csrf := .CSRFToken}}
     {{$userId := .User.ID}}
+    {{$userName := .User.Name}}
     {{$titles := .User.Materials.Title}}
     {{range $ind, $file := .User.Materials.FileName}}
-    <div>
-        <details>
-            <summary>{{index $titles $ind}}</summary>
-            <img src='/static/img/uploads/{{$userId}}/{{.}}' alt='{{index $titles $ind}}' height='400'/>
-        </details>
-    </div>
+        {{$title := (index $titles $ind)}}
+        <div id="{{$title}}">
+            <details>
+                <summary>{{index $titles $ind}}</summary>
+                <img src='/static/img/uploads/{{$userId}}/{{.}}' alt='{{$title}}' height='400'/>
+                <form id="deleteMaterial" hx-post="/users/{{$userName}}/materials/deleteMaterial" hx-target="#{{$title}}" hx-swap="delete">
+                    <input type="hidden" name="csrf_token" value="{{$csrf}}">
+                    <input type="hidden" name="FileName" Value="{{.}}">
+                    <input type="hidden" name="UploadedBy" Value="{{$userId}}">
+                    <button type="submit">löschen</button>
+                </form>
+            </details>
+        </div>
     {{end}}
     <div>
         <a href='/users/{{.User.Name}}/uploadMaterial'>Material hochladen</a>

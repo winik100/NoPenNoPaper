@@ -55,3 +55,7 @@ func (m *UserModel) Exists(userName string) (bool, error) {
 func (m *UserModel) AddMaterial(title string, fileName string, uploadedBy int) error {
 	return nil
 }
+
+func (m *UserModel) DeleteMaterial(fileName string, uploadedBy int) error {
+	return nil
+}

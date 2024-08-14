@@ -9,6 +9,7 @@ import (
 
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("GET /static/img/uploads/", http.FileServer(http.Dir("./ui")))
 	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
 	dynamicChain := alice.New(app.sessionManager.LoadAndSave, app.authenticate, noSurf)
@@ -23,9 +24,10 @@ func (app *application) routes() http.Handler {
 	protectedChain := dynamicChain.Append(app.requireAuthentication, app.requireAuthorization)
 	mux.Handle("GET /create", protectedChain.ThenFunc(app.create))
 	mux.Handle("POST /create", protectedChain.ThenFunc(app.createPost))
-	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
 	mux.Handle("GET /characters/{id}/delete", protectedChain.ThenFunc(app.delete))
 	mux.Handle("POST /characters/{id}/delete", protectedChain.ThenFunc(app.deletePost))
+
+	mux.Handle("GET /characters/{id}", protectedChain.ThenFunc(app.viewCharacter))
 	mux.Handle("POST /characters/{id}/editStat", protectedChain.ThenFunc(app.editStat))
 	mux.Handle("GET /characters/{id}/addSkill", protectedChain.ThenFunc(app.addSkill))
 	mux.Handle("POST /characters/{id}/addSkill", protectedChain.ThenFunc(app.addSkillPost))
@@ -35,16 +37,20 @@ func (app *application) routes() http.Handler {
 	mux.Handle("POST /characters/{id}/addCustomSkill", protectedChain.ThenFunc(app.addCustomSkillPost))
 	mux.Handle("GET /characters/{id}/editCustomSkill", protectedChain.ThenFunc(app.editCustomSkill))
 	mux.Handle("POST /characters/{id}/editCustomSkill", protectedChain.ThenFunc(app.editCustomSkillPost))
+
 	mux.Handle("GET /characters/{id}/addItem", protectedChain.ThenFunc(app.addItem))
 	mux.Handle("POST /characters/{id}/addItem", protectedChain.ThenFunc(app.addItemPost))
 	mux.Handle("POST /characters/{id}/editItemCount", protectedChain.ThenFunc(app.editItemCount))
 	mux.Handle("POST /characters/{id}/deleteItem", protectedChain.ThenFunc(app.deleteItemPost))
+
 	mux.Handle("GET /characters/{id}/addNote", protectedChain.ThenFunc(app.addNote))
 	mux.Handle("POST /characters/{id}/addNote", protectedChain.ThenFunc(app.addNotePost))
 	mux.Handle("POST /characters/{id}/deleteNote", protectedChain.ThenFunc(app.deleteNotePost))
+
 	mux.Handle("GET /users/{name}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterial))
 	mux.Handle("POST /users/{name}/uploadMaterial", protectedChain.ThenFunc(app.uploadMaterialPost))
-	mux.Handle("GET /users/{name}/materials", protectedChain.ThenFunc(app.materials))
+	mux.Handle("GET /users/{name}/materials", protectedChain.ThenFunc(app.viewMaterials))
+	mux.Handle("POST /users/{name}/materials/deleteMaterial", protectedChain.ThenFunc(app.deleteMaterial))
 
 	//some helpers
 	mux.Handle("GET /customSkillInput", protectedChain.ThenFunc(app.customSkillInput))
@@ -86,7 +92,7 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("POST /characters/{id}/deleteNote", app.deleteNotePost)
 	mux.HandleFunc("GET /users/{name}/uploadMaterial", app.uploadMaterial)
 	mux.HandleFunc("POST /users/{name}/uploadMaterial", app.uploadMaterialPost)
-	mux.HandleFunc("GET /users/{name}/materials", app.materials)
+	mux.HandleFunc("GET /users/{name}/materials", app.viewMaterials)
 
 	//some helpers
 	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)
