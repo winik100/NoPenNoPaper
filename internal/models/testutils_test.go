@@ -8,7 +8,7 @@ import (
 )
 
 func newTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("mysql", "root:testpw@/test_nopennopaper?multiStatements=true")
+	db, err := sql.Open("mysql", "root:testpw@tcp(localhost:3306)/test_nopennopaper?multiStatements=true")
 	if err != nil {
 		t.Fatal(err)
 	}
