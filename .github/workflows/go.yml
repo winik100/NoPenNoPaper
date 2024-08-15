@@ -3,12 +3,19 @@ name: Go
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-
   build:
+    services:
+      mysql:
+        image: mysql:8.0
+        env: 
+          MYSQL_DATABASE: test_nopennopaper
+          MYSQL_ROOT_PASSWORD: testpw
+        ports:
+          - 3307:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     runs-on: ubuntu-latest
       
     steps:

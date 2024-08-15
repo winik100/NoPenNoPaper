@@ -7,7 +7,6 @@ import (
 )
 
 func TestInsert(t *testing.T) {
-	t.SkipNow()
 	db := newTestDB(t)
 
 	u := UserModel{db}
