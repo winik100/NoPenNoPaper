@@ -80,20 +80,30 @@ type customSkillAddForm struct {
 	validators.FormValidator `schema:"-"`
 }
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
+func (app *application) index(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
 	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
-	if userId == 0 {
-		data := app.newTemplateData(r)
-		w.WriteHeader(http.StatusOK)
-		app.render(w, r, "home.tmpl.html", data)
+	if userId == 0 || userName == "" {
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		return
+	}
+	redirect := fmt.Sprintf("/users/%s", userName)
+	http.Redirect(w, r, redirect, http.StatusPermanentRedirect)
+}
+
+func (app *application) user(w http.ResponseWriter, r *http.Request) {
+	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
+	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
+
+	user, err := app.users.Get(userName)
+	if err != nil {
+		app.serverError(w, r, err)
 		return
 	}
 
-	role := app.sessionManager.GetString(r.Context(), roleKey)
 	data := app.newTemplateData(r)
-	data.User = core.User{ID: userId, Name: userName}
-	if role == "gm" {
+	data.User = user
+	if user.IsGM() {
 		characters, err := app.characters.GetAll()
 		if err != nil {
 			app.serverError(w, r, err)
@@ -110,7 +120,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	app.render(w, r, "home.tmpl.html", data)
+	app.render(w, r, "user.tmpl.html", data)
 }
 
 func (app *application) delete(w http.ResponseWriter, r *http.Request) {
@@ -250,7 +260,9 @@ func (app *application) signupPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	app.sessionManager.Put(r.Context(), "flash", "Erfolgreich registriert! Bitte einloggen.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
@@ -307,7 +319,9 @@ func (app *application) loginPost(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	redirect := fmt.Sprintf("/users/%s", form.Name)
+	http.Redirect(w, r, redirect, http.StatusSeeOther)
 }
 
 func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
@@ -1048,22 +1062,23 @@ func (app *application) uploadMaterialPost(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	redirect := fmt.Sprintf("/users/%s", form.UploadedByName)
+	http.Redirect(w, r, redirect, http.StatusSeeOther)
 }
 
-func (app *application) viewMaterials(w http.ResponseWriter, r *http.Request) {
-	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
-	user, err := app.users.Get(userName)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+// func (app *application) viewMaterials(w http.ResponseWriter, r *http.Request) {
+// 	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
+// 	user, err := app.users.Get(userName)
+// 	if err != nil {
+// 		app.serverError(w, r, err)
+// 		return
+// 	}
 
-	data := app.newTemplateData(r)
-	data.User = user
-	w.WriteHeader(http.StatusOK)
-	app.render(w, r, "materials.tmpl.html", data)
-}
+// 	data := app.newTemplateData(r)
+// 	data.User = user
+// 	w.WriteHeader(http.StatusOK)
+// 	app.render(w, r, "materials.tmpl.html", data)
+// }
 
 func (app *application) deleteMaterial(w http.ResponseWriter, r *http.Request) {
 	var form uploadForm

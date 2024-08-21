@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"regexp"
 	"slices"
+
+	"github.com/winik100/NoPenNoPaper/internal/core"
 )
 
 func (app *application) isAuthenticated(r *http.Request) bool {
@@ -18,7 +20,7 @@ func (app *application) isAuthorized(r *http.Request) bool {
 	requestedUserName := r.PathValue("name")
 
 	if requestedUserName != "" {
-		if role != roleGM {
+		if role != core.RoleGM {
 			userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
 			if userName != requestedUserName {
 				return false
@@ -40,10 +42,10 @@ func permitted(role string, path string) bool {
 }
 
 var permissions = map[string][]string{
-	"/":                   {roleAnon, rolePlayer, roleGM},
-	"/signup":             {roleAnon, rolePlayer, roleGM},
-	"/login":              {roleAnon, rolePlayer, roleGM},
-	"/logout":             {rolePlayer, roleGM},
-	"/characters/\\d+/.*": {rolePlayer, roleGM},
-	"/users/*/.*":         {rolePlayer, roleGM},
+	"/":                   {core.RoleAnon, core.RolePlayer, core.RoleGM},
+	"/signup":             {core.RoleAnon, core.RolePlayer, core.RoleGM},
+	"/login":              {core.RoleAnon, core.RolePlayer, core.RoleGM},
+	"/logout":             {core.RolePlayer, core.RoleGM},
+	"/characters/\\d+/.*": {core.RolePlayer, core.RoleGM},
+	"/users/*/.*":         {core.RolePlayer, core.RoleGM},
 }

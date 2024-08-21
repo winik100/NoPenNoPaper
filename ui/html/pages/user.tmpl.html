@@ -1,0 +1,48 @@
+{{define "title"}}Übersicht{{end}}
+
+{{define "main"}}
+    <div>
+        <h3>Charaktere</h3>
+        {{if .Characters}}
+        <table>
+            <tr>
+                <th>Charakter-ID</th>
+                <th>Charaktername</th>
+            </tr>
+            {{range .Characters}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td><a href='/characters/{{.ID}}'>{{.Info.Name}}</a></td>
+            </tr>
+            {{end}}
+        </table>
+        {{else}}
+        <p>Du hast noch keine Charaktere erstellt.</p>
+        {{end}}
+    </div>
+    <div>
+        <h3>Materialien</h3>
+        {{$csrf := .CSRFToken}}
+        {{$userId := .User.ID}}
+        {{$userName := .User.Name}}
+        {{$titles := .User.Materials.Title}}
+        {{range $ind, $file := .User.Materials.FileName}}
+        {{$title := (index $titles $ind)}}
+        <div id="{{$title}}">
+            <details>
+                <summary>{{index $titles $ind}}</summary>
+                <img src='/static/img/uploads/{{$userId}}/{{.}}' alt='{{$title}}' height='400'/>
+                <form id="deleteMaterial" hx-post="/users/{{$userName}}/deleteMaterial" hx-target="#{{$title}}" hx-swap="delete">
+                    <input type="hidden" name="csrf_token" value="{{$csrf}}">
+                    <input type="hidden" name="FileName" Value="{{.}}">
+                    <input type="hidden" name="UploadedById" Value="{{$userId}}">
+                    <button type="submit">löschen</button>
+                </form>
+            </details>
+        </div>
+        {{end}}
+        <div>
+            <a href='/users/{{.User.Name}}/uploadMaterial'>Material hochladen</a>
+        </div>
+    </div>
+{{end}}

@@ -1,22 +1,21 @@
 {{define "nav"}}
 <nav> 
+    {{if .IsAuthenticated}}
     <div>
-        <a href='/'>Home</a>
-        {{if .IsAuthenticated}}
-        <a href='/users/{{.User.Name}}/materials'>Materialübersicht</a>
-        {{end}}
+        <a href='/users/{{.User.Name}}'>Übersicht</a>
+        <a href='/create'>Charakter erstellen</a>
     </div>
     <div>
-        {{if .IsAuthenticated}}
-        <a href='/create'>Charakter erstellen</a>
         <form action='/logout' method='POST'>
             <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <button>Ausloggen</button>
         </form>
-        {{else}}
-        <a href='/signup'>Registrieren</a>
-        <a href='/login'>Einloggen</a>
-        {{end}}
     </div>
+    {{else}}
+    <div>
+        <a href='/login'>Einloggen</a>
+        <a href='/signup'>Registrieren</a>
+    </div>
+    {{end}}
 </nav>
 {{end}}

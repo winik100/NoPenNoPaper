@@ -12,7 +12,7 @@ import (
 	"github.com/winik100/NoPenNoPaper/internal/testHelpers"
 )
 
-func TestHome(t *testing.T) {
+func TestUser(t *testing.T) {
 	app := newTestApplication(t)
 
 	tests := []struct {
@@ -25,26 +25,18 @@ func TestHome(t *testing.T) {
 	}{
 		{
 			name:                  "Authenticated",
-			authenticatedUserId:   1,
-			authenticatedUserName: "Testnutzer",
-			role:                  "player",
+			authenticatedUserId:   mocks.MockUser.ID,
+			authenticatedUserName: mocks.MockUser.Name,
+			role:                  core.RolePlayer,
 			wantContent:           []string{"<td><a href='/characters/1'>Otto Hightower</a></td>"},
 			wantCode:              http.StatusOK,
 		},
 		{
 			name:                  "Authenticated as GM",
-			authenticatedUserId:   2,
-			authenticatedUserName: "Test-GM",
-			role:                  "gm",
+			authenticatedUserId:   mocks.MockGM.ID,
+			authenticatedUserName: mocks.MockGM.Name,
+			role:                  core.RoleGM,
 			wantContent:           []string{"<td><a href='/characters/1'>Otto Hightower</a></td>", "<td><a href='/characters/2'>Viserys Targaryen</a></td>"},
-			wantCode:              http.StatusOK,
-		},
-		{
-			name:                  "Unauthenticated",
-			authenticatedUserId:   0,
-			authenticatedUserName: "",
-			role:                  "anonymous",
-			wantContent:           []string{"<p>Um Charaktere zu erstellen oder einzusehen, bitte einloggen.</p>"},
 			wantCode:              http.StatusOK,
 		},
 	}
@@ -58,7 +50,7 @@ func TestHome(t *testing.T) {
 			})))
 			defer ts.Close()
 
-			code, _, body := ts.get(t, "/")
+			code, _, body := ts.get(t, "/users/"+testCase.authenticatedUserName)
 			testHelpers.Equal(t, code, testCase.wantCode)
 			for _, tag := range testCase.wantContent {
 				testHelpers.StringContains(t, body, tag)

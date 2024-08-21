@@ -59,9 +59,6 @@ const authenticatedUserIdKey = "authenticatedUserID"
 const authenticatedUserNameKey = "authenticatedUserName"
 const characterIdKey = "characterId"
 const roleKey = "role"
-const roleAnon = "anonymous"
-const rolePlayer = "player"
-const roleGM = "gm"
 
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

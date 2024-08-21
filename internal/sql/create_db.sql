@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(10) NOT NULL
 );
 
-INSERT INTO users (name, hashed_password, role) VALUES ('testgm', '$2a$12$EeAcZSu5HYgydNKQVKaAW.qdBMSNVEeGugDA1yoyrMQF12BZTxf76', 'gm');
+-- pw: testpwgm
+INSERT INTO users (name, hashed_password, role) VALUES ('testgm', '$2a$12$4KJHNWZiGMdh32q7QlEz4.Z6uhFXud81ChjdEwqDFDN9mZL..r2vq', 'gm');
 
 CREATE TABLE IF NOT EXISTS materials (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
