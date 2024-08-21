@@ -31,7 +31,11 @@ func (u *UserModel) Insert(name, password string) (int, error) {
 	stmt := "INSERT INTO users (name, hashed_password, role) VALUES (?,?,?);"
 	//placeholder role
 	res, err := u.DB.Exec(stmt, name, hashedPassword, "player")
+	var mysqlErr *mysql.MySQLError
 	if err != nil {
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return 0, ErrNameTaken
+		}
 		return 0, err
 	}
 	userId, err := res.LastInsertId()

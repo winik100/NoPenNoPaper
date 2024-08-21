@@ -1,9 +1,11 @@
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(30) NOT NULL,
+    name VARCHAR(30) UNIQUE NOT NULL,
     hashed_password VARCHAR(60) NOT NULL,
     role VARCHAR(10) NOT NULL
 );
+
+INSERT INTO users (name, hashed_password, role) VALUES ("testgm", "$2a$12$4KJHNWZiGMdh32q7QlEz4.Z6uhFXud81ChjdEwqDFDN9mZL..r2vq", "gm");
 
 CREATE TABLE IF NOT EXISTS materials (
     id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
