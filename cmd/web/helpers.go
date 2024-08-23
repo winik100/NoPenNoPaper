@@ -66,7 +66,7 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (form *characterCreateForm) InfoChecks() {
+func (form *characterForm) InfoChecks() {
 	for key, info := range form.Info.AsMap() {
 		form.CheckField(validators.NotBlank(info), key, "Dieses Feld kann nicht leer sein.")
 		if key != "Geschlecht" && key != "Alter" {
@@ -79,7 +79,7 @@ func (form *characterCreateForm) InfoChecks() {
 	form.CheckField(validators.PermittedValue(form.Info.Gender, "männlich", "weiblich"), "Geschlecht", "Geschlecht muss männlich oder weiblich sein.")
 }
 
-func (form *characterCreateForm) AttributeChecks() {
+func (form *characterForm) AttributeChecks() {
 	for key, attr := range form.Attributes.AsMap() {
 		if key != "BW" {
 			form.CheckField(validators.PermittedValue(attr, 40, 50, 60, 70, 80), key, "Ungültiger Wert.")

@@ -35,6 +35,10 @@ func (m *UserModel) Get(name string) (core.User, error) {
 	return core.User{}, models.ErrNoRecord
 }
 
+func (m *UserModel) Delete(name string) error {
+	return nil
+}
+
 func (m *UserModel) Authenticate(name, password string) (int, error) {
 	if name == "Testnutzer" && password == "Klartext ole" {
 		return 1, nil

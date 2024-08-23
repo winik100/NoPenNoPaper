@@ -45,4 +45,10 @@
             <a href='/users/{{.User.Name}}/uploadMaterial'>Material hochladen</a>
         </div>
     </div>
+    <div>
+    <details>
+        <summary>...</summary>
+        <button id="deleteUser" hx-get="/users/{{.User.Name}}/delete" hx-target="this" hx-swap="outerHTML">Nutzerkonto löschen</button>
+    </details>
+</div>
 {{end}}

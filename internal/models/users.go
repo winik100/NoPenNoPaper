@@ -12,6 +12,7 @@ import (
 type UserModelInterface interface {
 	Insert(name, password string) (int, error)
 	Get(name string) (core.User, error)
+	Delete(name string) error
 	Authenticate(name, password string) (int, error)
 	Exists(userName string) (bool, error)
 	AddMaterial(title string, fileName string, uploadedBy int) error
@@ -87,6 +88,16 @@ func (u *UserModel) Get(name string) (core.User, error) {
 	}
 	user.Name = name
 	return user, nil
+}
+
+func (u *UserModel) Delete(name string) error {
+	stmt := "DELETE FROM users WHERE name=?;"
+
+	_, err := u.DB.Exec(stmt, name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *UserModel) Authenticate(name, password string) (int, error) {
