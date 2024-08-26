@@ -11,12 +11,7 @@ import (
 )
 
 func (app *application) index(w http.ResponseWriter, r *http.Request) {
-	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
 	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
-	if userId == 0 || userName == "" {
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		return
-	}
 	redirect := fmt.Sprintf("/users/%s", userName)
 	http.Redirect(w, r, redirect, http.StatusPermanentRedirect)
 }

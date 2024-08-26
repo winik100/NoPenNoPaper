@@ -14,7 +14,6 @@ func (app *application) routes() http.Handler {
 
 	dynamicChain := alice.New(app.sessionManager.LoadAndSave, app.authenticate, noSurf)
 
-	mux.Handle("GET /{$}", dynamicChain.ThenFunc(app.index))
 	mux.Handle("GET /signup", dynamicChain.ThenFunc(app.signup))
 	mux.Handle("POST /signup", dynamicChain.ThenFunc(app.signupPost))
 	mux.Handle("GET /login", dynamicChain.ThenFunc(app.login))
@@ -22,6 +21,8 @@ func (app *application) routes() http.Handler {
 
 	protectedChain := dynamicChain.Append(app.requireAuthentication, app.requireAuthorization)
 	mux.Handle("POST /logout", protectedChain.ThenFunc(app.logoutPost))
+
+	mux.Handle("GET /{$}", protectedChain.ThenFunc(app.index))
 
 	mux.Handle("GET /users/{name}", protectedChain.ThenFunc(app.user))
 	mux.Handle("GET /users/{name}/delete", protectedChain.ThenFunc(app.deleteUser))
