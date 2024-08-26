@@ -5,7 +5,7 @@ import (
 	"github.com/winik100/NoPenNoPaper/internal/models"
 )
 
-var MockUser = core.User{
+var MockPlayer = core.User{
 	ID:             1,
 	Name:           "Testnutzer",
 	HashedPassword: "$2a$12$uK5Qivao7pieZMOZWtRTGubxPV3PgBf6ljFr3ACYtGPYZOrinx3ie", //"Klartext ole"
@@ -26,10 +26,10 @@ func (m *UserModel) Insert(name, password string) (int, error) {
 }
 
 func (m *UserModel) Get(name string) (core.User, error) {
-	if name == "Testnutzer" {
-		return MockUser, nil
+	if name == MockPlayer.Name {
+		return MockPlayer, nil
 	}
-	if name == "Test-GM" {
+	if name == MockGM.Name {
 		return MockGM, nil
 	}
 	return core.User{}, models.ErrNoRecord
@@ -40,17 +40,17 @@ func (m *UserModel) Delete(name string) error {
 }
 
 func (m *UserModel) Authenticate(name, password string) (int, error) {
-	if name == "Testnutzer" && password == "Klartext ole" {
+	if name == MockPlayer.Name && password == "Klartext ole" {
 		return 1, nil
 	}
-	if name == "Test-GM" && password == "Klartext ole" {
+	if name == MockGM.Name && password == "Klartext ole" {
 		return 2, nil
 	}
 	return 0, models.ErrInvalidCredentials
 }
 
 func (m *UserModel) Exists(userName string) (bool, error) {
-	if userName == "Testnutzer" || userName == "Test-GM" {
+	if userName == MockPlayer.Name || userName == MockGM.Name {
 		return true, nil
 	}
 	return false, nil

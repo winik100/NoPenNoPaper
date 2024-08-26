@@ -21,7 +21,6 @@ func (app *application) routes() http.Handler {
 
 	protectedChain := dynamicChain.Append(app.requireAuthentication, app.requireAuthorization)
 	mux.Handle("POST /logout", protectedChain.ThenFunc(app.logoutPost))
-
 	mux.Handle("GET /{$}", protectedChain.ThenFunc(app.index))
 
 	mux.Handle("GET /users/{name}", protectedChain.ThenFunc(app.user))
@@ -65,20 +64,29 @@ func (app *application) routes() http.Handler {
 
 func (app *application) routesNoMW() http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("GET /static/img/uploads/", http.FileServer(http.Dir("./ui")))
 	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
-	mux.HandleFunc("GET /{$}", app.index)
 	mux.HandleFunc("GET /signup", app.signup)
 	mux.HandleFunc("POST /signup", app.signupPost)
 	mux.HandleFunc("GET /login", app.login)
 	mux.HandleFunc("POST /login", app.loginPost)
+
 	mux.HandleFunc("POST /logout", app.logoutPost)
+	mux.HandleFunc("GET /{$}", app.index)
 
 	mux.HandleFunc("GET /users/{name}", app.user)
+	mux.HandleFunc("GET /users/{name}/delete", app.deleteUser)
+	mux.HandleFunc("POST /users/{name}/delete", app.deleteUserPost)
+	mux.HandleFunc("GET /users/{name}/uploadMaterial", app.uploadMaterial)
+	mux.HandleFunc("POST /users/{name}/uploadMaterial", app.uploadMaterialPost)
+	mux.HandleFunc("POST /users/{name}/deleteMaterial", app.deleteMaterial)
+
 	mux.HandleFunc("GET /create", app.createCharacter)
 	mux.HandleFunc("POST /create", app.createCharacterPost)
 	mux.HandleFunc("GET /characters/{id}/delete", app.deleteCharacter)
 	mux.HandleFunc("POST /characters/{id}/delete", app.deleteCharacterPost)
+
 	mux.HandleFunc("GET /characters/{id}", app.character)
 	mux.HandleFunc("GET /characters/{id}/editStat", app.editStat)
 	mux.HandleFunc("GET /characters/{id}/addSkill", app.addSkill)
@@ -89,14 +97,14 @@ func (app *application) routesNoMW() http.Handler {
 	mux.HandleFunc("POST /characters/{id}/addCustomSkill", app.addCustomSkillPost)
 	mux.HandleFunc("GET /characters/{id}/editCustomSkill", app.editCustomSkill)
 	mux.HandleFunc("POST /characters/{id}/editCustomSkill", app.editCustomSkillPost)
+
 	mux.HandleFunc("GET /characters/{id}/addItem", app.addItem)
 	mux.HandleFunc("POST /characters/{id}/addItem", app.addItemPost)
 	mux.HandleFunc("POST /characters/{id}/deleteItem", app.deleteItemPost)
+
 	mux.HandleFunc("GET /characters/{id}/addNote", app.addNote)
 	mux.HandleFunc("POST /characters/{id}/addNote", app.addNotePost)
 	mux.HandleFunc("POST /characters/{id}/deleteNote", app.deleteNotePost)
-	mux.HandleFunc("GET /users/{name}/uploadMaterial", app.uploadMaterial)
-	mux.HandleFunc("POST /users/{name}/uploadMaterial", app.uploadMaterialPost)
 
 	//some helpers
 	mux.HandleFunc("GET /customSkillInput", app.customSkillInput)

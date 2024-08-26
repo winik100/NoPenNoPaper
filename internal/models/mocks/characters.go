@@ -97,6 +97,9 @@ func (m *CharacterModel) GetAllFrom(userId int) ([]core.Character, error) {
 	if userId == 1 {
 		return []core.Character{MockCharacterOtto}, nil
 	}
+	if userId == 2 {
+		return []core.Character{MockCharacterOtto, MockCharacterViserys}, nil
+	}
 	return nil, models.ErrNoRecord
 }
 

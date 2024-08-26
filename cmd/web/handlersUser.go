@@ -31,6 +31,7 @@ type uploadForm struct {
 func (app *application) user(w http.ResponseWriter, r *http.Request) {
 	userId := app.sessionManager.GetInt(r.Context(), authenticatedUserIdKey)
 	userName := app.sessionManager.GetString(r.Context(), authenticatedUserNameKey)
+	role := app.sessionManager.GetString(r.Context(), roleKey)
 
 	user, err := app.users.Get(userName)
 	if err != nil {
@@ -39,8 +40,7 @@ func (app *application) user(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := app.newTemplateData(r)
-	data.User = user
-	if user.IsGM() {
+	if role == core.RoleGM {
 		characters, err := app.characters.GetAll()
 		if err != nil {
 			app.serverError(w, r, err)
@@ -55,6 +55,7 @@ func (app *application) user(w http.ResponseWriter, r *http.Request) {
 		}
 		data.Characters = characters
 	}
+	data.User = user
 
 	w.WriteHeader(http.StatusOK)
 	app.render(w, r, "user.tmpl.html", data)

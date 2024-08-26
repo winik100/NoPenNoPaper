@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/winik100/NoPenNoPaper/internal/models/mocks"
 	"github.com/winik100/NoPenNoPaper/internal/testHelpers"
 )
 
@@ -61,4 +64,57 @@ func TestNoSurf(t *testing.T) {
 	testHelpers.Equal(t, actual.HttpOnly, true)
 	testHelpers.Equal(t, actual.Secure, true)
 	testHelpers.Equal(t, actual.Path, "/")
+}
+
+func TestAuthenticate(t *testing.T) {
+	app := newTestApplication(t)
+
+	mockNext := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.sessionManager.GetBool(r.Context(), isAuthenticatedKey) {
+			w.Write([]byte("Authenticated"))
+		} else {
+			w.Write([]byte("Not Authenticated"))
+		}
+
+	})
+
+	tests := []struct {
+		name     string
+		userName string
+		result   string
+	}{
+		{
+			name:     "Successful",
+			userName: mocks.MockPlayer.Name,
+			result:   "Authenticated",
+		},
+		{
+			name:     "Unsuccessful",
+			userName: "",
+			result:   "Not Authenticated",
+		},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			r, err := http.NewRequest(http.MethodGet, "/", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			app.sessionManager.LoadAndSave(app.mockSession(app.authenticate(mockNext), map[string]any{
+				authenticatedUserNameKey: testCase.userName,
+			})).ServeHTTP(rec, r)
+
+			result := rec.Result()
+			body, err := io.ReadAll(result.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			body = bytes.TrimSpace(body)
+
+			testHelpers.Equal(t, string(body), testCase.result)
+		})
+	}
 }
