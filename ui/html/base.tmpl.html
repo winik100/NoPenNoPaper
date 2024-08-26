@@ -3,16 +3,16 @@
 <html lang='en'>
     <head>
         <meta charset='utf-8'>
-        <title>{{template "title" .}} - Cthulhu hates paper</title>
+        <title>{{template "title" .}}</title>
         <link rel='stylesheet' href='/static/css/main.css'>
         <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700'>
         <script src="https://unpkg.com/htmx.org@2.0.1"></script>
     </head>
     <body>
+        {{template "nav" .}}
         {{with .Flash}}
             <div class='flash'>{{.}}</div>
         {{end}}
-        {{template "nav" .}}
         <main>
             {{template "main" .}}
         </main>
